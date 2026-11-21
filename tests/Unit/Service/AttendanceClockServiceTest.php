@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md
+ * @spec openspec/specs/time-attendance/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use RuntimeException;
 /**
  * Clock in, clock out, and the one-open-day rule (REQ-TA-008).
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+ * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
  */
 #[CoversClass(AttendanceClockService::class)]
 final class AttendanceClockServiceTest extends TestCase {

@@ -168,7 +168,7 @@ class CompCycleController extends Controller {
 	 *
 	 * @return JSONResponse The budget figures.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles/spec.md
+	 * @spec openspec/specs/comp-cycles/spec.md
 	 */
 	#[NoAdminRequired]
 	public function budget(?string $cycleId = null): JSONResponse {

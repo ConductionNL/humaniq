@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md
+ * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The billable share per team and per person (REQ-DSI-010).
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+ * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
  */
 #[CoversClass(BillableShareService::class)]
 #[UsesClass(UnitMembership::class)]

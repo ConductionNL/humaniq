@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md
+ * @spec openspec/specs/time-attendance/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCP\IUserSession;
 /**
  * Clock in and clock out for the caller.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+ * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
  */
 class AttendanceClockController extends Controller {
 
@@ -67,7 +67,7 @@ class AttendanceClockController extends Controller {
 	 *
 	 * @return JSONResponse 201 {record}, 401 when signed out, 404 without a linked employee, 409 when a day is already open.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
 	 */
 	#[NoAdminRequired]
 	public function clockIn(): JSONResponse {
@@ -88,7 +88,7 @@ class AttendanceClockController extends Controller {
 	 *
 	 * @return JSONResponse 200 {record}, 400 for a negative break, 401 when signed out, 409 when no day is open.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-an-employee-shall-clock-in-and-clock-out-from-my-attendance-req-ta-008
 	 */
 	#[NoAdminRequired]
 	public function clockOut(?int $breakMinutes = null): JSONResponse {
@@ -108,7 +108,7 @@ class AttendanceClockController extends Controller {
 	 *
 	 * @return JSONResponse 200 {date, counts, people}, 401 when signed out, 403 without an administration.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
 	 */
 	#[NoAdminRequired]
 	public function today(): JSONResponse {

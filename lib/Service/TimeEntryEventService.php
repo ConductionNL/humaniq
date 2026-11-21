@@ -216,7 +216,7 @@ class TimeEntryEventService implements TimeEntryEventServiceInterface {
 	 *
 	 * @return list<array{projectId: string, hours: float, amount: float}>
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+	 * @spec openspec/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
 	 */
 	public function projectAmounts(string $timesheetId): array {
 		if ($this->store === null || $timesheetId === '') {

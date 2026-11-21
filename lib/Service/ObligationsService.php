@@ -227,7 +227,7 @@ class ObligationsService implements ObligationsServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 * @spec openspec/specs/hr-signals/spec.md#REQ-SIG-007
 	 */
 	private function probationEndingRows(array $contracts): array {
 		return $this->contractDueRows(contracts: $contracts, dateField: 'proeftijdEndDate', windowDays: self::PROBATION_END_WINDOW_DAYS, subject: 'proeftijdEndDate');
@@ -246,7 +246,7 @@ class ObligationsService implements ObligationsServiceInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) DateValues is a static date-parsing helper.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 * @spec openspec/specs/hr-signals/spec.md#REQ-SIG-007
 	 */
 	private function contractDueRows(array $contracts, string $dateField, int $windowDays, ?string $subject): array {
 		$rows = [];

@@ -512,7 +512,7 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+	 * @spec openspec/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
 	 */
 	private function reclaimableVatCents(string $runId): int {
 		try {

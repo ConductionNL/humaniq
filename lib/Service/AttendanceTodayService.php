@@ -29,7 +29,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md
+ * @spec openspec/specs/time-attendance/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 /**
  * Today's presence of the caller's people.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
+ * @spec openspec/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
  */
 final class AttendanceTodayService {
 
@@ -65,7 +65,7 @@ final class AttendanceTodayService {
 	 * @param RecordStoreInterface $store       Today's roster assignments, which carry no administration.
 	 * @param ITimeFactory         $timeFactory The clock.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
 	 */
 	public function __construct(
 		private readonly AnalyticsService $analytics,
@@ -84,7 +84,7 @@ final class AttendanceTodayService {
 	 *
 	 * @return array{date: string, counts: array<string, int>, people: list<array<string, mixed>>}|null
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
+	 * @spec openspec/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
 	 */
 	public function today(string $userId): ?array {
 		$administrationId = $this->access->activeAdministration($userId);

@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+ * @spec openspec/specs/performance-reviews/spec.md
  */
 
 declare(strict_types=1);

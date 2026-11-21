@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-07-15-receipt-ocr
 **Scope**: humaniq (docudesk financial-extraction consumption leaf — receipt OCR prefill for Expense claims)
 **OpenSpec changes**:
 - [receipt-ocr](../../changes/archive/2026-07-15-receipt-ocr/) _(archived 2026-07-15)_ — `Expense` v0.6.0 (`vendor`/`vatAmount` additive fields) + new `ReceiptExtraction` v0.1.0 attempt log; `ReceiptExtractionService`/`ReceiptExtractionRepository` calling docudesk's `FinancialExtractionService::extractFinancial()` (duck-typed, same-instance, `skipped-no-docudesk` degradation) and prefilling only empty Expense fields, never overwriting a human-entered value and never touching `Expense.status`; occ trigger `humaniq:expense:extract-receipt` + one guarded api-call endpoint (`ExpenseController::extractReceipt()`); `ExpenseDetail` manifest action (kind: code)
+- [matrix-rows-without-a-requirement](../../changes/archive/2026-11-21-matrix-rows-without-a-requirement/) _(archived 2026-11-21)_ — adds the requirements above that the HR matrix rows named without one
 
 ## Purpose
 
@@ -143,3 +144,31 @@ For an `Expense` with a non-empty `receiptFile`, `ReceiptExtractionService` SHAL
 
 - **WHEN** `npm run check:manifest` runs
 - **THEN** it exits 0 and the `ExpenseDetail` "Extract receipt data" action is present
+
+### Requirement: A claim SHALL record its VAT and finance SHALL see the VAT to reclaim per period (REQ-RCPT-008)
+
+An expense claim SHALL record the VAT amount on its receipt, typed by the employee or read from
+the receipt. Finance SHALL see the VAT of the reimbursed claims per period and per
+administration, so the employer can reclaim it in its VAT return. The payroll journal SHALL
+book that VAT on the VAT account instead of on the cost account.
+
+Rows: `dm-expense-vat` (humaniq matrix).
+
+#### Scenario: An employee records the VAT on a receipt
+
+@e2e exclude The VAT amount field already exists on the claim and in the ExpenseDetail data widget; this change adds no screen for it.
+- **GIVEN** a hotel receipt of 121.00 euros with 21.00 euros VAT
+- **WHEN** the employee submits the claim with the VAT amount filled in
+- **THEN** `ExpenseDetail` shows a VAT amount of 21.00 on the claim
+
+#### Scenario: Finance reads the VAT to reclaim for May
+- **GIVEN** three claims reimbursed in May with 21.00, 9.00 and no VAT
+- **WHEN** finance opens the VAT overview for May
+- **THEN** it lists the two claims with VAT and a total of 30.00 to reclaim
+
+#### Scenario: The journal books the VAT apart
+
+@e2e exclude Needs shillinq to receive the journal; verified by PayrollGLPostServiceTest::testTheJournalBooksTheVatApart and testPostRunBooksTheVatOfTheRunsClaims.
+- **GIVEN** the May payroll run that reimburses the hotel claim
+- **WHEN** the journal is posted to shillinq
+- **THEN** it carries 100.00 on the cost account and 21.00 on the VAT account

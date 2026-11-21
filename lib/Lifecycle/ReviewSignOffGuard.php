@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+ * @spec openspec/specs/performance-reviews/spec.md
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 /**
  * Lets only the reviewed employee sign their own review.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+ * @spec openspec/specs/performance-reviews/spec.md
  */
 class ReviewSignOffGuard implements LifecycleGuardInterface {
 
@@ -51,7 +51,7 @@ class ReviewSignOffGuard implements LifecycleGuardInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only static factories.
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action is part of the interface.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/performance-reviews/spec.md
+	 * @spec openspec/specs/performance-reviews/spec.md
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		$userId = trim($userId);

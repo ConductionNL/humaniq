@@ -7,22 +7,22 @@
  * change's spec deltas is referenced here by its verbatim name; the excluded
  * ones carry a reason-bearing `@e2e exclude` in the spec files themselves.
  *
- * openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md
+ * openspec/specs/time-attendance/spec.md
  *   Scenario: A team at 09:30
  *   Scenario: An employee clocks in at the start of the day
  *   Scenario: An employee clocks out at the end of the day
  *   Scenario: A second clock in on an open day is refused
  *
- * openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md
+ * openspec/specs/hrm-rule-engine/spec.md
  *   Scenario: Coverage is shown beside the findings
  *
- * openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md
+ * openspec/specs/receipt-ocr/spec.md
  *   Scenario: Finance reads the VAT to reclaim for May
  *
- * openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md
+ * openspec/specs/humaniq-dashboard-steering-indicators/spec.md
  *   Scenario: A manager compares the teams they lead
  *
- * openspec/changes/matrix-rows-without-a-requirement/specs/hris-api-public/spec.md
+ * openspec/specs/hris-api-public/spec.md
  *   Scenario: An account without the role gets nothing
  *
  * The instance comes from PLAYWRIGHT_BASE_URL (tests/e2e/base-url.ts), never a

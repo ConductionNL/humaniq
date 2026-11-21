@@ -27,7 +27,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md
+ * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use InvalidArgumentException;
 /**
  * Billable share per team and per person.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+ * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
  */
 final class BillableShareService {
 
@@ -56,7 +56,7 @@ final class BillableShareService {
 	 * @param UnitMembership   $membership Unit trees, placements and managed units.
 	 * @param AnalyticsAccess  $access     Who may read which units.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+	 * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
 	 */
 	public function __construct(
 		private readonly AnalyticsService $analytics,
@@ -77,7 +77,7 @@ final class BillableShareService {
 	 *
 	 * @throws InvalidArgumentException For a period that is not `YYYY-MM`.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+	 * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
 	 */
 	public function perUnit(string $userId, string $period): ?array {
 		$window = self::window(period: $period);
@@ -119,7 +119,7 @@ final class BillableShareService {
 	 *
 	 * @throws InvalidArgumentException For a period that is not `YYYY-MM`.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
+	 * @spec openspec/specs/humaniq-dashboard-steering-indicators/spec.md#requirement-the-billable-share-shall-be-readable-per-team-and-per-person-req-dsi-010
 	 */
 	public function perEmployee(string $userId, string $orgUnitId, string $period): ?array {
 		$window = self::window(period: $period);

@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md
+ * @spec openspec/specs/time-attendance/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Who is present, late, away or not clocked in today (REQ-TA-007).
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
+ * @spec openspec/specs/time-attendance/spec.md#requirement-a-manager-shall-see-who-is-present-absent-or-late-today-req-ta-007
  */
 #[CoversClass(AttendanceTodayService::class)]
 #[CoversClass(AttendanceClockController::class)]

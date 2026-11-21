@@ -11,6 +11,7 @@ built_by: openspec/changes/archive/2026-07-14-time-entry-capture
 **OpenSpec changes**:
 - [time-entry-capture](../../changes/archive/2026-07-14-time-entry-capture/) _(archived 2026-07-14)_ — verify-first: humaniq already owned time-entry capture + the submit→approve lifecycle (the `Timesheet` schema, its `x-openregister-lifecycle`, and `NoSelfApprovalGuard`); this change added the missing hand-off — a `nl.conduction.hrmq.timeentry.approved` CloudEvent emitted on the approval edge via OpenRegister's `WebhookService` so a finance app (shillinq) can consume approved hours for invoice-from-time / WBSO.
 - [hrmq-hours-process-redesign](../../changes/archive/2026-08-22-hrmq-hours-process-redesign/) _(archived 2026-08-22, merged as humaniq#128)_ — splits capture into the `TimeEntry` booking and the `Timesheet` period aggregate (the lifecycle lives on the aggregate alone), derives `hours` server-side, recomputes the timesheet aggregates from the entries, freezes entries once their timesheet leaves `draft`/`rejected`, and fixes the empty approval provenance the transition-endpoint path used to emit — the CloudEvent envelope and its `data` keys are unchanged (kind: code+config)
+- [matrix-rows-without-a-requirement](../../changes/archive/2026-11-21-matrix-rows-without-a-requirement/) _(archived 2026-11-21)_ — adds the requirements above that the HR matrix rows named without one
 
 ## Purpose
 
@@ -233,3 +234,25 @@ PHPUnit suite.
 - **THEN** `RegisterParityTest` fails naming the property
 
 @e2e exclude a unit-level guard on two JSON files; no UI
+
+### Requirement: A billable booking SHALL carry the rate it is billed at (REQ-TEC-009)
+
+A `TimeEntry` with `billable: true` SHALL carry an `hourlyRate` in integer cents, taken from the
+project's rate when the entry is written and editable by the project manager. The approved-time
+event SHALL carry the hours and the amount, hours times rate, per project.
+
+Rows: `tim-billable-rates` (humaniq matrix).
+
+#### Scenario: A billable booking takes the project's rate
+
+@e2e exclude Needs planninq with a rated project; verified by TimeEntryBillableRateTest (rate stamp, merge into the stamp listener, event amount per project).
+- **GIVEN** a project billed at 95 euros an hour
+- **WHEN** an employee books 3 billable hours on it
+- **THEN** the entry carries an `hourlyRate` of 9500 cents
+- **AND** once its timesheet is approved, the event carries 3 hours and 285 euros for that project
+
+#### Scenario: A non-billable booking has no rate
+
+@e2e exclude Rate stamp rule; verified by TimeEntryBillableRateTest::testANonBillableBookingHasNoRate.
+- **WHEN** an employee books hours with `billable: false`
+- **THEN** the entry carries no `hourlyRate`

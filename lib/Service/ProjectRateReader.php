@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md
+ * @spec openspec/specs/time-entry-capture/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
 /**
  * A planninq project's hourly rate in cents.
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+ * @spec openspec/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
  */
 class ProjectRateReader {
 
@@ -50,7 +50,7 @@ class ProjectRateReader {
 	 * @param OpenRegisterAvailabilityInterface $openRegister OpenRegister availability.
 	 * @param LoggerInterface                   $logger       Logger.
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+	 * @spec openspec/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
@@ -68,7 +68,7 @@ class ProjectRateReader {
 	 *
 	 * @return int|null
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
+	 * @spec openspec/specs/time-entry-capture/spec.md#requirement-a-billable-booking-shall-carry-the-rate-it-is-billed-at-req-tec-009
 	 */
 	public function rateCents(string $projectId): ?int {
 		$projectId = trim($projectId);

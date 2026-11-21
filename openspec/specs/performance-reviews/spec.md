@@ -10,6 +10,7 @@ built_by: openspec/changes/archive/2026-07-13-performance-reviews-mvp
 **Scope**: humaniq
 **OpenSpec changes**:
 - [performance-reviews-mvp](../../changes/archive/2026-07-13-performance-reviews-mvp/) _(archived 2026-07-13)_ — `PerformanceReview` schema (goals inside the review, no Goal entity) with declarative concept→ingediend→besproken→vastgesteld/heropenen lifecycle, `NoSelfApprovalGuard` reuse on vaststellen, `nl-performance-dossiervorming` corpus rule + `NlPerformanceChecks` provider, EmployeeDetail Beoordelingen row + PerformanceReviewDetail + MijnBeoordelingen, seeded complete + intentionally incomplete reviews (kind: config)
+- [matrix-rows-without-a-requirement](../../changes/archive/2026-11-21-matrix-rows-without-a-requirement/) _(archived 2026-11-21)_ — adds the requirements above that the HR matrix rows named without one
 
 ## Purpose
 
@@ -136,3 +137,24 @@ The fragment `lib/Settings/register.d/hr-performance.json` SHALL declare `Perfor
 #### Scenario: Idempotent seed
 - **WHEN** the register Repair import runs twice
 - **THEN** each review exists exactly once
+
+### Requirement: The employee SHALL sign off their own review (REQ-PRV-007)
+
+After the reviewer sets a review, the employee SHALL confirm they have read it, with an optional
+comment. The review SHALL record who signed and when on both sides. The employee's sign-off
+SHALL NOT change the rating or the agreements.
+
+Rows: `tal-review-forms` (humaniq matrix).
+
+#### Scenario: The employee signs a set review
+
+@e2e exclude Needs the reviewed employee signed in as a separate account; verified by ReviewSignOffGuardTest and ReviewSignOffStampListenerTest.
+- **GIVEN** a review in status `vastgesteld` for employee Sanne
+- **WHEN** Sanne signs it from `MijnBeoordelingen` with the comment "Agreed"
+- **THEN** the review records her sign-off with today's date and the comment, next to the reviewer's
+
+#### Scenario: Someone else cannot sign for the employee
+
+@e2e exclude Needs a second account; verified by ReviewSignOffGuardTest (anyone but the reviewed employee is refused).
+- **WHEN** a user who is not the review's employee tries to sign it as the employee
+- **THEN** the sign-off is refused and the review is unchanged

@@ -12,7 +12,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/humaniq-timesheet-approval/spec.md
+ * @spec openspec/specs/humaniq-timesheet-approval/spec.md
  */
 
 declare(strict_types=1);

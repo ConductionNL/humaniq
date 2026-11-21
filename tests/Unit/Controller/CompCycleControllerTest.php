@@ -213,7 +213,7 @@ class CompCycleControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/comp-cycles/spec.md
+	 * @spec openspec/specs/comp-cycles/spec.md
 	 */
 	public function testHrReadsTheCycleBudget(): void {
 		$controller = $this->controller(true, false, 'hr');

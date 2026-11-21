@@ -152,7 +152,7 @@ final class NlSignalChecks implements CheckProvider {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hr-signals/spec.md#REQ-SIG-007
+	 * @spec openspec/specs/hr-signals/spec.md#REQ-SIG-007
 	 */
 	private static function proeftijdEindigtSatisfied(array $o): bool {
 		$endDate = strtotime((string)($o['proeftijdEndDate'] ?? ''));

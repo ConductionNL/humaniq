@@ -159,7 +159,7 @@ class RuleAuditService implements RuleAuditServiceInterface {
 	 *
 	 * @return array{report: array<string, mixed>, violations: list<array{schema: string, objectId: string, ruleId: string, severity: string, source: string, statement: string}>}
 	 *
-	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
 	 */
 	public function findings(array $context = []): array {
 		$context = $this->withPayrollIndexes($this->withRecordIndexes($context));

@@ -14,7 +14,7 @@
  * @param {string} routeField The row field that names the row's schema.
  * @param {object} row The row.
  * @return {object|null} A `{ name, params: { id } }` location, or null.
- * @spec openspec/changes/matrix-rows-without-a-requirement/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
+ * @spec openspec/specs/hrm-rule-engine/spec.md#requirement-hr-shall-see-the-audits-violations-and-coverage-on-a-page-req-rule-010
  */
 export function recordRoute(routes, routeField, row) {
 	if (!row || !routes) {
