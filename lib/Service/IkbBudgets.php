@@ -62,20 +62,23 @@ final class IkbBudgets {
 	}//end __construct()
 
 	/**
-	 * Add a run's accrual, once per run. A missing budget is created.
+	 * Add a payslip's accrual, once per run. A missing budget is created.
 	 *
-	 * @param array{employeeId: string, userId?: string|null} $owner  The employee, and their account for a new budget.
-	 * @param int                                             $year   The year.
-	 * @param float                                           $amount The accrual, in euros.
-	 * @param string                                          $runId  The run.
+	 * The payslip names the employee (and their account, for a new budget),
+	 * the period whose year the budget is for, and the accrual in euros.
+	 *
+	 * @param array<string, mixed> $payslip The payslip: employeeId, userId, period, ikbAccrued.
+	 * @param string               $runId   The run.
 	 *
 	 * @return bool Whether it was added; false when the run was already added.
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-individual-choice-budget-shall-accrue-and-be-spent-by-approved-request-req-rsp-004
 	 */
-	public function accrue(array $owner, int $year, float $amount, string $runId): bool {
-		$employeeId = (string)$owner['employeeId'];
-		$userId = $owner['userId'] ?? null;
+	public function accrue(array $payslip, string $runId): bool {
+		$employeeId = (string)($payslip['employeeId'] ?? '');
+		$userId = ($payslip['userId'] ?? null);
+		$year = (int)substr((string)($payslip['period'] ?? ''), 0, 4);
+		$amount = (float)($payslip['ikbAccrued'] ?? 0);
 		if ($employeeId === '' || $year <= 0 || $amount <= 0) {
 			return false;
 		}
@@ -96,17 +99,18 @@ final class IkbBudgets {
 	}//end accrue()
 
 	/**
-	 * Take a settled spend off the budget.
+	 * Take a settled spend request off the budget.
 	 *
-	 * @param string $employeeId The employee.
-	 * @param int    $year       The year.
-	 * @param float  $amount     The spend, in euros.
+	 * @param array<string, mixed> $request The IkbSpendRequest: employeeId, year and amount in euros.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-individual-choice-budget-shall-accrue-and-be-spent-by-approved-request-req-rsp-004
 	 */
-	public function spend(string $employeeId, int $year, float $amount): void {
+	public function spend(array $request): void {
+		$employeeId = (string)($request['employeeId'] ?? '');
+		$year = (int)($request['year'] ?? 0);
+		$amount = (float)($request['amount'] ?? 0);
 		if ($employeeId === '' || $year <= 0 || $amount <= 0) {
 			return;
 		}

@@ -147,13 +147,7 @@ class ReservationPayoutApprovalService {
 		['runId' => $runId, 'payslips' => $payslips, 'budgets' => $budgets] = $run;
 		$accrued = 0;
 		foreach ($payslips as $payslip) {
-			$amount = (float)($payslip['ikbAccrued'] ?? 0);
-			if ($amount <= 0) {
-				continue;
-			}
-
-			$year = (int)substr((string)($payslip['period'] ?? ''), 0, 4);
-			if ($budgets->accrue(owner: ['employeeId' => (string)($payslip['employeeId'] ?? ''), 'userId' => ($payslip['userId'] ?? null)], year: $year, amount: $amount, runId: $runId) === true) {
+			if ($budgets->accrue(payslip: $payslip, runId: $runId) === true) {
 				++$accrued;
 			}
 		}
@@ -195,7 +189,7 @@ class ReservationPayoutApprovalService {
 				$this->creditLeave(request: $request);
 			}
 
-			$budgets->spend(employeeId: (string)($request['employeeId'] ?? ''), year: (int)($request['year'] ?? 0), amount: (float)($request['amount'] ?? 0));
+			$budgets->spend(request: $request);
 			$this->save(payload: array_merge($request, ['status' => 'settled', 'settledInRunId' => $runId]), schema: 'IkbSpendRequest', uuid: self::idOf(row: $request));
 			++$settled;
 		}

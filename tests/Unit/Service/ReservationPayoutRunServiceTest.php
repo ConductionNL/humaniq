@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Payroll\TaxTables;
+use OCA\Humaniq\Service\AllowanceRateResolver;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\ReservationPayoutRunService;
@@ -236,6 +237,22 @@ class ReservationPayoutRunServiceTest extends TestCase {
 		self::assertSame(0.0, $fold['endOfYearRate']);
 		self::assertSame(0, $fold['ikbAccruedCents'], 'the Gemeenten IKB figure is a placeholder too');
 	}//end testAPlaceholderAgreementGivesNoEndOfYearRate()
+
+	/**
+	 * The contract's own rate comes first; an unknown allowance has no rate.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-an-end-of-year-payment-shall-be-reserved-and-paid-when-a-rate-applies-req-rsp-003
+	 */
+	public function testTheAllowanceNamesTheContractFieldAndAnUnknownOneHasNoRate(): void {
+		$rates = new AllowanceRateResolver();
+		$contract = ['endOfYearRate' => 8.33, 'ikbRate' => 16.37];
+
+		self::assertSame(8.33, $rates->rate(contract: $contract, allowance: 'endOfYear'));
+		self::assertSame(16.37, $rates->rate(contract: $contract, allowance: 'ikb'));
+		self::assertNull($rates->rate(contract: $contract, allowance: 'endOfYearRate'));
+	}//end testTheAllowanceNamesTheContractFieldAndAnUnknownOneHasNoRate()
 
 	/**
 	 * Paying per period pays this period's own reserve, every period.

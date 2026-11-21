@@ -41,11 +41,21 @@ use OCA\Humaniq\Standards\CaoRegistry;
 class AllowanceRateResolver {
 
 	/**
+	 * Per allowance: the contract's own rate field and the key in the CAO
+	 * `allowances` leaf.
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	public const ALLOWANCES = [
+		'endOfYear' => ['endOfYearRate', 'eindejaarsuitkering'],
+		'ikb' => ['ikbRate', 'ikb'],
+	];
+
+	/**
 	 * The rate of one allowance for a contract.
 	 *
-	 * @param array<string, mixed> $contract      The EmploymentContract.
-	 * @param string               $contractField The contract's own rate field, such as `ikbRate`.
-	 * @param string               $caoKey        The key in the CAO `allowances` leaf, such as `ikb`.
+	 * @param array<string, mixed> $contract  The EmploymentContract.
+	 * @param string               $allowance A key of ALLOWANCES, such as `ikb`; an unknown key has no rate.
 	 *
 	 * @return float|null The percentage (0-100), or null when neither applies.
 	 *
@@ -53,7 +63,12 @@ class AllowanceRateResolver {
 	 *
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-an-end-of-year-payment-shall-be-reserved-and-paid-when-a-rate-applies-req-rsp-003
 	 */
-	public function rate(array $contract, string $contractField, string $caoKey): ?float {
+	public function rate(array $contract, string $allowance): ?float {
+		if (isset(self::ALLOWANCES[$allowance]) === false) {
+			return null;
+		}
+
+		[$contractField, $caoKey] = self::ALLOWANCES[$allowance];
 		$own = self::percent(value: ($contract[$contractField] ?? null));
 		if ($own !== null) {
 			return $own;

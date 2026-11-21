@@ -225,10 +225,11 @@ class ReservationPayoutApprovalServiceTest extends TestCase {
 	public function testBudgetsAccrueOncePerRunAndKeepTheBalance(): void {
 		$budgets = new IkbBudgets(rows: [['id' => 'b-1', 'employeeId' => 'emp-1', 'year' => 2026, 'accrued' => 100.0, 'spent' => 0.0, 'balance' => 100.0]]);
 
-		self::assertTrue($budgets->accrue(['employeeId' => 'emp-1'], 2026, 50.0, 'run-1'));
-		self::assertFalse($budgets->accrue(['employeeId' => 'emp-1'], 2026, 50.0, 'run-1'));
-		self::assertFalse($budgets->accrue(['employeeId' => 'emp-1'], 2026, 0.0, 'run-2'));
-		$budgets->spend('emp-1', 2026, 30.0);
+		self::assertTrue($budgets->accrue(['employeeId' => 'emp-1', 'period' => '2026-03', 'ikbAccrued' => 50.0], 'run-1'));
+		self::assertFalse($budgets->accrue(['employeeId' => 'emp-1', 'period' => '2026-03', 'ikbAccrued' => 50.0], 'run-1'));
+		self::assertFalse($budgets->accrue(['employeeId' => 'emp-1', 'period' => '2026-04', 'ikbAccrued' => 0.0], 'run-2'));
+		self::assertFalse($budgets->accrue(['employeeId' => 'emp-1', 'ikbAccrued' => 50.0], 'run-3'), 'a payslip without a period names no year');
+		$budgets->spend(['employeeId' => 'emp-1', 'year' => 2026, 'amount' => 30.0]);
 
 		self::assertSame(120.0, $budgets->get('emp-1', 2026)['balance']);
 		self::assertSame(['b-1'], array_keys($budgets->changed()));

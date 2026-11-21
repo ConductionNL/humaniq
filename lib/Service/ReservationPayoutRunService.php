@@ -222,8 +222,8 @@ class ReservationPayoutRunService {
 		$payslips = ($inputs['payslips'][$employeeId] ?? []);
 		$payouts = ($inputs['payouts'][$employeeId] ?? []);
 		$holidayRate = $tables->vakantiebijslagRate();
-		$endOfYearRate = (float)($this->rates->rate($contract, 'endOfYearRate', 'eindejaarsuitkering') ?? 0.0);
-		$ikbRate = (float)($this->rates->rate($contract, 'ikbRate', 'ikb') ?? 0.0);
+		$endOfYearRate = (float)($this->rates->rate(contract: $contract, allowance: 'endOfYear') ?? 0.0);
+		$ikbRate = (float)($this->rates->rate(contract: $contract, allowance: 'ikb') ?? 0.0);
 		$leaving = ReservationPeriods::leavesIn(employee: (array)$slip['employee'], period: $period);
 
 		$fold = [
