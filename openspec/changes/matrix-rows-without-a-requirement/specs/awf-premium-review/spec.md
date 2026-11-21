@@ -13,17 +13,23 @@ recalculation and for the rules audit, so the three cannot disagree.
 Rows: `fil-premium-differentiation` (humaniq matrix).
 
 #### Scenario: A permanent contract in writing is charged the low premium
+
+@e2e exclude Tariff choice with no screen of its own; verified by AwfTariffResolverTest (permanent written contract, low rate).
 - **GIVEN** an employee with a permanent contract that is in writing
 - **WHEN** a payroll officer calculates the June run
 - **THEN** the payslip's employer charges use the low Awf rate and name `permanent-written` as
   the basis
 
 #### Scenario: A fixed-term contract is charged the high premium
+
+@e2e exclude Tariff choice with no screen of its own; verified by AwfTariffResolverTest (fixed-term contract, high rate).
 - **GIVEN** an employee with a fixed-term contract of 32 hours a week, aged 30
 - **WHEN** the June run is calculated
 - **THEN** the payslip's employer charges use the high Awf rate and name `flex` as the basis
 
 #### Scenario: A permanent contract that is not in writing is charged the high premium
+
+@e2e exclude Tariff choice with no screen of its own; verified by AwfTariffResolverTest (permanent contract not in writing, high rate).
 - **GIVEN** an employee with a permanent contract whose `writtenContract` is false
 - **WHEN** the June run is calculated
 - **THEN** the payslip uses the high Awf rate, and the rules audit reports no Awf violation for

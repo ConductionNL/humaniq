@@ -99,6 +99,19 @@ final class PayrollBookkeepingSettings {
 	}//end getGlPostAccountReimbursements()
 
 	/**
+	 * The GL account the VAT on reimbursed claims is booked on, so the
+	 * employer can reclaim it (REQ-RCPT-008: te vorderen btw), configurable
+	 * via app config key `glpost_account_vat`.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+	 */
+	public function getGlPostAccountVat(): string {
+		return $this->glPostAccount('glpost_account_vat', '1520');
+	}//end getGlPostAccountVat()
+
+	/**
 	 * Read a `glpost_account_*` config key, falling back to its placeholder
 	 * default when unset or blank.
 	 *

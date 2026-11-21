@@ -115,7 +115,7 @@
             "CompReviewCycle": {
                 "slug": "CompReviewCycle",
                 "icon": "CalendarRange",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Compensation review cycle",
                 "description": "A periodic compensation-review round (comp-cycles) grouping the per-employee CompAdjustment proposals raised during it. A light open/closed container only: approval happens per adjustment (CompAdjustment carries the draft→proposed→approved→effective lifecycle), so a cycle MAY close while still holding adjustments in any state.",
                 "type": "object",
@@ -196,6 +196,13 @@
                         "title": "Raise percentage",
                         "description": "For a collective raise: the percentage every salary goes up, for example 2.5.",
                         "x-notes": "Applied as round(currentCents x (1 + raisePercentage / 100)) per adjustment, and to EmploymentContract.hourlyWage as proposedHourlyWage. Wins over raiseAmountCents when both are set."
+                    },
+                    "budgetAmount": {
+                        "type": "integer",
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Budget",
+                        "description": "The raise budget of this cycle in cents: what the monthly raises of its proposed, approved and effective adjustments may add up to. Going over it is flagged on the cycle page, never refused (REQ-COMP-009)."
                     },
                     "raiseAmountCents": {
                         "type": "integer",

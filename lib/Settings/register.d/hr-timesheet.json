@@ -7,7 +7,7 @@
                 "slug": "TimeEntry",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}], "delete": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}]},
                 "icon": "ClockPlusOutline",
-                "version": "0.3.0",
+                "version": "0.4.0",
                 "title": "Time entry",
                 "description": "One individual booking of worked hours (urenregistratie): when the work started and ended, what it was, and optionally which project it was for. Bookings are collected automatically into the employee's monthly timesheet, which is what gets submitted for approval.",
                 "x-notes": "hours-process-redesign Decision 1: the booking granularity split out of the former all-in-one Timesheet schema. English property names per fleet decision; NL only via l10n labels (verb surface 'uren boeken'). No status and no lifecycle here — the process lives on the parent Timesheet, and entry mutability is governed by the parent's state (Decision 3, enforced by TimeEntryStampListener). approvalState/approvedAt are a read-only copy of the parent's state for one-schema queries (time-entry-approval-state), never a lifecycle of their own. Concurrency: the aggregate listener recomputes from truth on every entry write, so a stale intermediate total is self-healed by the next write (accepted for dev-stage volumes).",
@@ -100,6 +100,15 @@
                         "default": false,
                         "title": "Billable",
                         "description": "Whether these hours are billable to a client or project."
+                    },
+                    "hourlyRate": {
+                        "type": "integer",
+                        "order": 61,
+                        "nullable": true,
+                        "minimum": 0,
+                        "title": "Hourly rate",
+                        "description": "The rate these billable hours are billed at, in cents an hour. Taken from the project's rate when the booking is written; empty for hours that are not billable.",
+                        "x-notes": "REQ-TEC-009. Stamped by TimeEntryRateListener from the planninq project's hourlyRate (euros) when billable is true and no rate is given; a rate already on the entry is kept, so a correction stands; cleared when billable is false. The approved-time event carries hours times rate per project."
                     },
                     "costCenter": {
                         "type": "string",
@@ -272,7 +281,7 @@
                 "slug": "Timesheet",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "create": ["humaniq-hr", "authenticated"], "update": ["humaniq-hr", {"group": "authenticated", "match": {"userId": "$userId"}}, {"group": "authenticated", "match": {"managerUserId": "$userId"}}], "delete": ["humaniq-hr"]},
                 "icon": "ClockCheckOutline",
-                "version": "0.10.0",
+                "version": "0.11.0",
                 "title": "Timesheet",
                 "description": "The monthly collection of an employee's hour bookings (urenstaat). Totals are kept up to date automatically while the employee books; once submitted, a manager approves or rejects the whole month.",
                 "x-notes": "hours-process-redesign Decision 2: the period aggregate half of the former all-in-one schema — the approval lifecycle stays here and only here (a TimeEntry has none). The approval lifecycle is the correctly-homed HR/labour surface pipelinq's 'Timesheet approval' deep-link previously pointed at shillinq for; shillinq's UrenRegistratie is an append-only billing time-log with no approval state. hours/entryCount/projectId/costCenter/billable are server-recomputed aggregates (TimesheetAggregateListener, REQ-TEC-004) and the process fields are stamped on lifecycle edges (TimesheetProcessStampListener) — none of them is readOnly because humaniq's own listeners must write them and OpenRegister enforces readOnly on every UPDATE with no backend bypass; forms hide them via page-level includeFields allowlists instead. Two listeners write this schema (stamp + aggregate); both are recompute-style, so a stale intermediate total from concurrent entry writes is self-healed by the next write (accepted for dev-stage volumes).",
@@ -425,7 +434,8 @@
                                     "approved"
                                 ],
                                 "to": "draft",
-                                "description": "Return an approved timesheet to draft for correction before it is consumed by payroll."
+                                "requires": "OCA\\Humaniq\\Lifecycle\\TimesheetReopenGuard",
+                                "description": "Return an approved timesheet to draft for correction before it is consumed by payroll. TimesheetReopenGuard refuses it once a payroll run that is approved or later has paid its hours, naming that run."
                             }
                         }
                     }

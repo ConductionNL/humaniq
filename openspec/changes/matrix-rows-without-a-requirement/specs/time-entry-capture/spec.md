@@ -11,11 +11,15 @@ event SHALL carry the hours and the amount, hours times rate, per project.
 Rows: `tim-billable-rates` (humaniq matrix).
 
 #### Scenario: A billable booking takes the project's rate
+
+@e2e exclude Needs planninq with a rated project; verified by TimeEntryBillableRateTest (rate stamp, merge into the stamp listener, event amount per project).
 - **GIVEN** a project billed at 95 euros an hour
 - **WHEN** an employee books 3 billable hours on it
 - **THEN** the entry carries an `hourlyRate` of 9500 cents
 - **AND** once its timesheet is approved, the event carries 3 hours and 285 euros for that project
 
 #### Scenario: A non-billable booking has no rate
+
+@e2e exclude Rate stamp rule; verified by TimeEntryBillableRateTest::testANonBillableBookingHasNoRate.
 - **WHEN** an employee books hours with `billable: false`
 - **THEN** the entry carries no `hourlyRate`

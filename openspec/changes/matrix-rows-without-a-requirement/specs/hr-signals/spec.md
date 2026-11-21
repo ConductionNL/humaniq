@@ -11,12 +11,16 @@ SHALL show on the Dashboard obligations list beside expiring contracts.
 Rows: `ppl-contract-expiry-signal` (humaniq matrix).
 
 #### Scenario: A probation period ends next week
+
+@e2e exclude Audit rule with no journey of its own; verified by NlSignalChecksTest (probation end within the window).
 - **GIVEN** a contract whose `proeftijdEndDate` is 10 days from today
 - **WHEN** `occ humaniq:rules:audit` runs
 - **THEN** the contract carries an advisory probation-end signal with that date
 - **AND** the Dashboard obligations list shows it
 
 #### Scenario: A probation period that ended raises nothing
+
+@e2e exclude Audit rule with no journey of its own; verified by NlSignalChecksTest (ended probation raises nothing).
 - **GIVEN** a contract whose `proeftijdEndDate` was yesterday
 - **WHEN** the audit runs
 - **THEN** no probation-end signal is reported for that contract

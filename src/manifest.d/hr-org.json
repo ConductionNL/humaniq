@@ -8,7 +8,7 @@
 			"config": {
 				"register": "humaniq",
 				"schema": "OrgUnit",
-				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): four stat tiles (budgeted, filled, vacant, net FTE for the unit) and an object-table of the unit's places, all bound through endpointSource to GET /api/formation/occupancy, which computes them on read; built-in widgets only (ADR-049), the endpoint does the cross-schema, absence-weighted count.",
+				"_note": "org-chart-basic (2026-07-13): humaniq's first organisational-hierarchy schema. The data widget excludes parentUnitId/managerId since Related already resolves and links both by name (the EmployeeDetail exclude convention). Two FK-scoped object-lists cover the hierarchy's two directions: 'Child units' (OrgUnit.parentUnitId = @objectId, the self-referencing tree) and 'Assignments' (OrgAssignment.orgUnitId = @objectId, who is currently/historically placed here). No lifecycleActions: neither OrgUnit nor OrgAssignment carries an x-openregister-lifecycle (design.md D-table) — a plain record toggled active/inactive, not a workflow (PayrollRunDetail 'never invent a transition' precedent). No stat/stats-block KPI: a unit's headline facts (type/costCenter/active) are plain enum/string/boolean fields the stat widget's count/sum metric cannot echo (LoonaangifteFilingDetail/PensionFilingDetail precedent), so they surface in the data widget instead. Audit history is a sidebar tab. people-formation-positions (2026-09-28): four stat tiles (budgeted, filled, vacant, net FTE for the unit) and an object-table of the unit's places, all bound through endpointSource to GET /api/formation/occupancy, which computes them on read; built-in widgets only (ADR-049), the endpoint does the cross-schema, absence-weighted count. matrix-rows-without-a-requirement REQ-DSI-010: 'Billable share per person' lists last month's approved and billable hours per person placed in the unit, from GET /api/analytics/billable-share/people (403 for a unit the caller does not lead, so the table stays empty).",
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
@@ -247,6 +247,46 @@
 							"rowRoute": "FormatieplaatsDetail",
 							"emptyText": "No formation places yet"
 						}
+					},
+					{
+						"id": "billable-per-person",
+						"type": "endpoint-table",
+						"title": "Billable share per person",
+						"icon": "ClockCheckOutline",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/humaniq/api/analytics/billable-share/people",
+								"params": {
+									"orgUnitId": "@objectId"
+								},
+								"responsePath": "people"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Employee",
+									"cellClass": "cn-cell--strong"
+								},
+								{
+									"key": "employeeNumber",
+									"label": "Employee number"
+								},
+								{
+									"key": "approvedHours",
+									"label": "Approved hours"
+								},
+								{
+									"key": "billableHours",
+									"label": "Billable hours"
+								},
+								{
+									"key": "billableShare",
+									"label": "Billable share (%)"
+								}
+							],
+							"rowRoute": "EmployeeDetail",
+							"emptyText": "No approved hours last month, or this is not a team you lead"
+						}
 					}
 				],
 				"layout": [
@@ -319,6 +359,14 @@
 						"widgetId": "formation-places",
 						"gridX": 0,
 						"gridY": 12,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": 10,
+						"widgetId": "billable-per-person",
+						"gridX": 0,
+						"gridY": 17,
 						"gridWidth": 12,
 						"gridHeight": 5
 					}

@@ -540,6 +540,58 @@ class PayrollGLPostServiceTest extends TestCase {
 	}//end testBuildLinesStillPostsZeroTotalsInsideAJournalWithADebit()
 
 	/**
+	 * REQ-RCPT-008 "The journal books the VAT apart": the hotel claim of
+	 * 121.00 with 21.00 VAT books 100.00 on the reimbursements account and
+	 * 21.00 on the VAT account; the debits still equal the credits, and the
+	 * VAT never exceeds the reimbursements.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+	 */
+	public function testTheJournalBooksTheVatApart(): void {
+		[$service] = $this->service();
+		$totals = ['totalGross' => 0.0, 'totalEmployerCharges' => 0.0, 'totalLoonheffing' => 0.0, 'totalNet' => 121.0, 'totalReimbursements' => 121.0];
+
+		$built = $service->buildLines($this->payrollRun($totals), [], 2100);
+		$this->assertNull($built['error']);
+		$this->assertSame(['4010' => 100.0, '1520' => 21.0, '1702' => 121.0], array_column($built['lines'], 'amount', 'accountNumber'));
+		$this->assertSame(121.0, $built['glExpensePosted']);
+
+		$capped = $service->buildLines($this->payrollRun($totals), [], 50000);
+		$this->assertSame(['1520' => 121.0, '1702' => 121.0], array_column($capped['lines'], 'amount', 'accountNumber'));
+
+	}//end testTheJournalBooksTheVatApart()
+
+	/**
+	 * postRun reads the VAT of the claims the run reimburses from the register.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+	 */
+	public function testPostRunBooksTheVatOfTheRunsClaims(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Expense' => [
+					['id' => 'exp-hotel', 'payrollRunId' => 'run-1', 'amount' => 121.0, 'vatAmount' => 21.0],
+					['id' => 'exp-other-run', 'payrollRunId' => 'run-2', 'amount' => 50.0, 'vatAmount' => 9.0],
+					['id' => 'exp-novat', 'payrollRunId' => 'run-1', 'amount' => 20.0, 'vatAmount' => null],
+				],
+			]
+		);
+
+		$result = $service->postRun($this->payrollRun(['totalNet' => 2839.0, 'totalReimbursements' => 141.0]));
+
+		$this->assertSame('posted', $result['status']);
+		$journal = $this->savedFor($fake, 'JournalEntry')[0];
+		$amounts = array_column($journal['lines'], 'amount', 'accountNumber');
+		$this->assertSame(120.0, $amounts['4010']);
+		$this->assertSame(21.0, $amounts['1520']);
+
+	}//end testPostRunBooksTheVatOfTheRunsClaims()
+
+	/**
 	 * @return void
 	 */
 	public function testPostRunRecordsSkippedNoShillinqWhenNotInstalled(): void {

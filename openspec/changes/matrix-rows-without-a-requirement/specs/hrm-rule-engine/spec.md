@@ -13,6 +13,8 @@ violations.
 Rows: `cmp-rule-engine` (humaniq matrix).
 
 #### Scenario: HR finds a contract below the CAO minimum
+
+@e2e exclude Needs a contract seeded below its CAO scale minimum; the listing and its record link are verified by ComplianceCheckServiceTest, RuleAuditServiceTest::testFindingsNameTheRecordOfEachViolation and recordRoute.test.mjs.
 - **GIVEN** a contract paid below the minimum of its CAO scale
 - **WHEN** an HR adviser runs the check on `Compliance check`
 - **THEN** the page lists a mandatory `nl-cao-minimumloon-schaal` violation that opens the contract
@@ -22,6 +24,8 @@ Rows: `cmp-rule-engine` (humaniq matrix).
 - **THEN** the page shows how many catalogued rules are enforced and how many are not
 
 #### Scenario: A manager sees only their own people
+
+@e2e exclude Needs a second, manager-only account; the caller-scoped filter is verified by ComplianceCheckServiceTest::testAManagerSeesOnlyRecordsTheyMayRead.
 - **GIVEN** a manager of one team
 - **WHEN** they open `Compliance check`
 - **THEN** no violation about an employee outside their team is listed

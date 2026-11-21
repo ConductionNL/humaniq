@@ -188,7 +188,7 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 			return $this->outcome($runId, 'skipped-no-shillinq', (string)($glPost['errorMessage'] ?? ''), $glPost);
 		}
 
-		$built = $this->buildLines($run, $this->allocationRowsForRun($runId));
+		$built = $this->buildLines($run, $this->allocationRowsForRun($runId), $this->reclaimableVatCents($runId));
 		if ($built['error'] !== null) {
 			$glPost = $this->createGlPost(
 				[
@@ -335,8 +335,13 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 	 * project, each with its codes; whatever the rows do not cover stays one
 	 * line without codes, so the debits still equal the run totals.
 	 *
+	 * REQ-RCPT-008: the VAT on the claims the run reimburses is booked on the
+	 * VAT account, and only the rest on the reimbursements account; the debit
+	 * total does not change. The VAT never exceeds the reimbursements.
+	 *
 	 * @param array<string, mixed>       $run         The PayrollRun object.
 	 * @param list<array<string, mixed>> $allocations The run's allocation lines (none: one line per total).
+	 * @param int                        $vatCents    The VAT on the claims the run reimburses, in cents.
 	 *
 	 * @return array<string, mixed> {lines, error, glExpensePosted, glLiabilityPosted}.
 	 *
@@ -344,7 +349,7 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
 	 */
-	public function buildLines(array $run, array $allocations = []): array {
+	public function buildLines(array $run, array $allocations = [], int $vatCents = 0): array {
 		$totals = new PayrollJournalTotals($run);
 		$refusal = $totals->refusal();
 		if ($refusal !== null) {
@@ -384,7 +389,9 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
 		];
 		if ($reimbursementCents > 0) {
-			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->bookkeeping->getGlPostAccountReimbursements(), 'amount' => $reimbursementCents, 'description' => 'Declaraties en onbelaste vergoedingen'];
+			$vatCents = min(max(0, $vatCents), $reimbursementCents);
+			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->bookkeeping->getGlPostAccountReimbursements(), 'amount' => ($reimbursementCents - $vatCents), 'description' => 'Declaraties en onbelaste vergoedingen'];
+			$candidates[] = ['side' => 'debit', 'accountNumber' => $this->bookkeeping->getGlPostAccountVat(), 'amount' => $vatCents, 'description' => 'Te vorderen btw op declaraties'];
 		}
 
 		$candidates = array_merge($candidates, $liabilities);
@@ -495,6 +502,36 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 
 		return array_values(array_filter($this->normaliseRows($rows), static fn (array $row): bool => (string)($row['payrollRunId'] ?? '') === $runId));
 	}//end allocationRowsForRun()
+
+	/**
+	 * The VAT on the claims this run reimburses, in cents (REQ-RCPT-008). A
+	 * failed read books no VAT apart: the whole reimbursement then stays on
+	 * the reimbursements account, as before.
+	 *
+	 * @param string $runId The run.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/matrix-rows-without-a-requirement/specs/receipt-ocr/spec.md#requirement-a-claim-shall-record-its-vat-and-finance-shall-see-the-vat-to-reclaim-per-period-req-rcpt-008
+	 */
+	private function reclaimableVatCents(string $runId): int {
+		try {
+			$rows = $this->objectService()->setRegister($this->register())->setSchema('Expense')->findAll(['limit' => 100000, 'filters' => ['payrollRunId' => $runId]]);
+		} catch (\Throwable $e) {
+			$this->logger->warning('PayrollGLPostService: kon de btw van de declaraties niet laden: ' . $e->getMessage());
+			return 0;
+		}
+
+		$cents = 0;
+		foreach ($this->normaliseRows($rows) as $row) {
+			$vat = ($row['vatAmount'] ?? null);
+			if ((string)($row['payrollRunId'] ?? '') === $runId && is_numeric($vat) === true && (float)$vat > 0.0) {
+				$cents += (int)round(((float)$vat) * 100);
+			}
+		}
+
+		return $cents;
+	}//end reclaimableVatCents()
 
 	/**
 	 * Build a `failed` buildLines() result shape.
