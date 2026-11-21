@@ -2102,6 +2102,18 @@ class PayrollRunService implements PayrollRunServiceInterface {
 
 		$slip['regime'] = BenefitEntitlementPay::readRegime(tables: $state['tables'], regime: (string)$slip['regimeKey'])['regime'];
 		$slip['grossCents'] = BenefitEntitlementPay::grossFor(entitlement: $entitlement, period: $state['period'])['cents'];
+		$slip['special'] = null;
+		if (BenefitEntitlementPay::isLumpSum(entitlement: $entitlement) === true) {
+			// D4: a lump sum is the special payment of the special-rate path,
+			// never a monthly wage.
+			$slip['special'] = $this->lumpSumPayment(state: $state, slip: $slip);
+			$slip['grossCents'] = 0;
+			if ($slip['special'] === null) {
+				$slip['skip'] = 'lump-sum-no-annual-wage (geen jaarloon om het bijzonder tarief van de uitkering ineens mee te kiezen)';
+				return $slip;
+			}
+		}
+
 		$slip['input'] = $this->benefitInput(state: $state, slip: $slip);
 		$slip['result'] = $this->calculator->calculate($slip['input'], $state['tables']);
 
@@ -2110,8 +2122,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 
 	/**
 	 * Why a benefit slip is not paid: no person, an unknown kind, a lump sum
-	 * before its special-rate path, no amount, an unverified regime, or no
-	 * verified identity.
+	 * without its term, no amount, an unverified regime, or no verified
+	 * identity.
 	 *
 	 * @param array<string, mixed> $state The run state.
 	 * @param array<string, mixed> $slip  The benefit slip so far.
@@ -2126,7 +2138,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 
 	/**
 	 * Why a benefit cannot be paid by this run at all: no person, an unknown
-	 * kind of benefit, or a lump sum.
+	 * kind of benefit, or a lump sum without the months it covers.
 	 *
 	 * @param array<string, mixed> $slip The benefit slip.
 	 *
@@ -2144,10 +2156,10 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			return 'unknown-benefit (onbekende soort uitkering)';
 		}
 
-		if ((string)($entitlement['paymentMode'] ?? '') === 'lump-sum') {
-			// D4: a lump sum is taxed at the special rate, which the run
-			// does not compute yet; never pay it as a monthly wage.
-			return 'lump-sum-pending (een uitkering ineens vraagt het bijzonder tarief, dat deze loonrun nog niet berekent)';
+		if (BenefitEntitlementPay::isLumpSum(entitlement: $entitlement) === true && BenefitEntitlementPay::monthsCovered(entitlement: $entitlement) === null) {
+			// D4: the final-levy threshold counts once per month the lump sum
+			// covers, so a lump sum without its term cannot be levied.
+			return 'lump-sum-no-term (een uitkering ineens vraagt een begin- en einddatum: de drempel telt per maand die zij dekt)';
 		}
 
 		return null;
@@ -2186,7 +2198,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	/**
 	 * The calculation input of a benefit: the regime's table colour,
 	 * insurances and Zvw mode, and for an early-retirement benefit its
-	 * final-levy threshold and rate.
+	 * final-levy threshold and rate. A lump sum is the special payment, and
+	 * its threshold counts once per month it covers (D4).
 	 *
 	 * @param array<string, mixed> $state The run state.
 	 * @param array<string, mixed> $slip  The benefit slip.
@@ -2194,21 +2207,61 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @return CalculationInput
 	 *
 	 * @spec openspec/changes/payroll-special-regimes
+	 * @spec openspec/changes/payroll-special-regimes/specs/payroll-special-regimes/spec.md#scenario-a-lump-sum-at-the-special-rate
 	 */
 	private function benefitInput(array $state, array $slip): CalculationInput {
 		$employee = $slip['employee'];
 		$regime = $slip['regime'];
+		$thresholdMonths = ($slip['special'] === null ? 1 : (int)BenefitEntitlementPay::monthsCovered(entitlement: $slip['entitlement']));
 
 		return new CalculationInput(
 			wage: new CalculationWage(grossMonthlySalaryCents: $slip['grossCents'], dateOfBirth: (($employee['dateOfBirth'] ?? null) !== null ? (string)$employee['dateOfBirth'] : null), period: $state['period'], jurisdiction: $state['jurisdiction']),
 			levies: new CalculationLevies(
 				wageTax: new WageTaxElection(taxTableColor: (string)$regime['taxTableColor'], loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true)),
 				insurance: new InsuranceTariffs(awfTariff: 'low', aofTariff: $state['aofTariff'], whkPercentage: $state['whkPercentage'], verzekeringsplichtig: ($regime['werknemersverzekeringen'] === true), zvwMode: (string)$regime['zvwMode']),
-				rvuThresholdCents: (int)$regime['thresholdPerMonthCents'],
+				rvuThresholdCents: ((int)$regime['thresholdPerMonthCents'] * $thresholdMonths),
 				rvuFinalLevyRate: (float)$regime['finalLevyRate']
-			)
+			),
+			special: $slip['special']
 		);
 	}//end benefitInput()
+
+	/**
+	 * A lump sum as the special payment: its amount, and the annual wage that
+	 * selects its special rate by the reservation payouts' rule (the person's
+	 * payslips of the previous calendar year when all twelve months have one,
+	 * otherwise their regular monthly wage times twelve plus holiday
+	 * allowance). Null when there is no annual wage to select the rate with.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The benefit slip, with its gross in cents.
+	 *
+	 * @return SpecialPayment|null
+	 *
+	 * @spec openspec/changes/payroll-special-regimes/specs/payroll-special-regimes/spec.md#scenario-a-lump-sum-at-the-special-rate
+	 */
+	private function lumpSumPayment(array $state, array $slip): ?SpecialPayment {
+		$employeeId = (string)$slip['employeeId'];
+		$history = array_values(
+			array_filter(
+				$this->loadAll('Payslip'),
+				static fn (array $payslip): bool => (string)($payslip['employeeId'] ?? '') === $employeeId
+			)
+		);
+		$reference = (new ReservationPayoutService())->annualWageReference(
+			payslips: $history,
+			wage: [
+				'period' => (string)$state['period'],
+				'regularWageCents' => (int)round(((float)($slip['employee']['grossMonthlySalary'] ?? 0)) * 100),
+				'holidayRatePercent' => $state['tables']->vakantiebijslagRate(),
+			]
+		);
+		if ($reference <= 0) {
+			return null;
+		}
+
+		return new SpecialPayment(specialPaymentCents: (int)$slip['grossCents'], annualWageReferenceCents: $reference);
+	}//end lumpSumPayment()
 
 	/**
 	 * Save one benefit payslip, keyed by its entitlement, and tally it.
@@ -2224,7 +2277,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$payload = array_merge(
 			$this->payslipPayload($state, $slip),
 			['benefitEntitlementId' => $slip['entitlementId']],
-			$this->regimeFields(regimeKey: $slip['regimeKey'], result: $slip['result'])
+			$this->regimeFields(regimeKey: $slip['regimeKey'], result: $slip['result']),
+			self::reserveFoldFields(fold: ($slip['special'] === null ? null : ['annualWageReferenceCents' => $slip['special']->annualWageReferenceCents]))
 		);
 		$payload['engineInputSnapshot'] = $slip['input']->toArray();
 

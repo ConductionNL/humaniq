@@ -536,7 +536,7 @@ class PayrollRunServiceSpecialRegimesTest extends TestCase {
 	}//end testAnAldermansPayslip()
 
 	/**
-	 * An RVU above the threshold carries the final levy on the excess; a lump sum and a draft entitlement are not paid.
+	 * An RVU above the threshold carries the final levy on the excess; a lump sum without its term and a draft entitlement are not paid.
 	 *
 	 * @return void
 	 */
@@ -557,8 +557,63 @@ class PayrollRunServiceSpecialRegimesTest extends TestCase {
 		self::assertCount(1, $payslips);
 		self::assertSame(round((3000.00 - 2286.00) * 0.52, 2), $payslips[0]['rvuEindheffing']);
 		self::assertCount(1, $result['skipped']);
-		self::assertStringStartsWith('lump-sum-pending', $result['skipped'][0]['reason']);
+		self::assertStringStartsWith('lump-sum-no-term', $result['skipped'][0]['reason']);
 	}//end testTheFinalLevyAndWhatIsNotPaid()
+
+	/**
+	 * A lump sum covering 24 months is taxed at the special rate, and the final
+	 * levy uses 24 times the monthly threshold.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-special-regimes/specs/payroll-special-regimes/spec.md#scenario-a-lump-sum-at-the-special-rate
+	 */
+	public function testALumpSumAtTheSpecialRate(): void {
+		$rows = [
+			'Employee' => [$this->person()],
+			'BenefitEntitlement' => [
+				$this->entitlement(['paymentMode' => 'lump-sum', 'startDate' => '2024-10-01', 'endDate' => '2026-09-30', 'lumpSumAmount' => 80000.00, 'lumpSumPeriod' => '2026-09']),
+			],
+		];
+		[$service, $fake] = $this->service($rows);
+
+		$result = $service->runFor('2026-09');
+
+		self::assertSame([], $result['skipped']);
+		$payslips = $this->savedFor($fake, 'Payslip');
+		self::assertCount(1, $payslips);
+		self::assertSame(80000.00, $payslips[0]['specialPayment']);
+		self::assertSame(round((80000.00 - (2286.00 * 24)) * 0.52, 2), $payslips[0]['rvuEindheffing'], 'the threshold counts once per month covered');
+		self::assertGreaterThan(0.0, (float)$payslips[0]['annualWageReference']);
+		self::assertLessThan(80000.00, (float)$payslips[0]['nettoPay'], 'the special rate withholds wage tax on the sum');
+
+		$snapshot = $payslips[0]['engineInputSnapshot'];
+		self::assertSame(0, $snapshot['grossMonthlySalaryCents'], 'never paid as a monthly wage');
+		self::assertSame(8000000, $snapshot['specialPaymentCents']);
+		self::assertSame(228600 * 24, $snapshot['rvuThresholdCents']);
+	}//end testALumpSumAtTheSpecialRate()
+
+	/**
+	 * A lump sum without an annual wage to choose its special rate with is not paid.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-special-regimes/specs/payroll-special-regimes/spec.md#scenario-a-lump-sum-at-the-special-rate
+	 */
+	public function testALumpSumWithoutAnAnnualWageIsNotPaid(): void {
+		$rows = [
+			'Employee' => [$this->person(['grossMonthlySalary' => 0])],
+			'BenefitEntitlement' => [
+				$this->entitlement(['paymentMode' => 'lump-sum', 'startDate' => '2024-10-01', 'endDate' => '2026-09-30', 'lumpSumAmount' => 80000.00, 'lumpSumPeriod' => '2026-09']),
+			],
+		];
+		[$service, $fake] = $this->service($rows);
+
+		$result = $service->runFor('2026-09');
+
+		self::assertSame([], $this->savedFor($fake, 'Payslip'));
+		self::assertStringStartsWith('lump-sum-no-annual-wage', $result['skipped'][0]['reason']);
+	}//end testALumpSumWithoutAnAnnualWageIsNotPaid()
 
 	/**
 	 * A benefit payslip whose entitlement ended is removed on recalculation, leaving the salary payslip alone.

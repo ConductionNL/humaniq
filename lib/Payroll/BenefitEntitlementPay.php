@@ -252,6 +252,41 @@ final class BenefitEntitlementPay {
 	}//end amount()
 
 	/**
+	 * Whether the entitlement is paid once, as a lump sum.
+	 *
+	 * @param array<string, mixed> $entitlement The BenefitEntitlement.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/payroll-special-regimes/specs/payroll-special-regimes/spec.md#scenario-a-lump-sum-at-the-special-rate
+	 */
+	public static function isLumpSum(array $entitlement): bool {
+		return (string)($entitlement['paymentMode'] ?? '') === 'lump-sum';
+	}//end isLumpSum()
+
+	/**
+	 * The months a lump sum covers: its start month to its end month, both
+	 * counted, or null when either date is missing or the end lies before
+	 * the start.
+	 *
+	 * @param array<string, mixed> $entitlement The BenefitEntitlement.
+	 *
+	 * @return int|null
+	 *
+	 * @spec openspec/changes/payroll-special-regimes/specs/payroll-special-regimes/spec.md#scenario-a-lump-sum-at-the-special-rate
+	 */
+	public static function monthsCovered(array $entitlement): ?int {
+		$last = self::monthOf((string)($entitlement['endDate'] ?? ''));
+		if ($last === null) {
+			return null;
+		}
+
+		$months = self::monthNumber(startDate: (string)($entitlement['startDate'] ?? ''), period: $last);
+
+		return $months > 0 ? $months : null;
+	}//end monthsCovered()
+
+	/**
 	 * The month of the benefit the period is, counting the start month as 1.
 	 *
 	 * @param string $startDate The entitlement's start date.

@@ -75,6 +75,26 @@ class BenefitEntitlementPayTest extends TestCase {
 	}//end testWhatDoesNotPay()
 
 	/**
+	 * A lump sum covers its start month to its end month, both counted; without
+	 * either date, or with the end before the start, it covers nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-special-regimes/specs/payroll-special-regimes/spec.md#scenario-a-lump-sum-at-the-special-rate
+	 */
+	public function testTheMonthsALumpSumCovers(): void {
+		$lumpSum = ['paymentMode' => 'lump-sum', 'startDate' => '2024-10-01', 'endDate' => '2026-09-30'];
+
+		self::assertTrue(BenefitEntitlementPay::isLumpSum($lumpSum));
+		self::assertFalse(BenefitEntitlementPay::isLumpSum(['paymentMode' => 'periodic']));
+		self::assertSame(24, BenefitEntitlementPay::monthsCovered($lumpSum));
+		self::assertSame(1, BenefitEntitlementPay::monthsCovered(array_merge($lumpSum, ['startDate' => '2026-09-01'])));
+		self::assertNull(BenefitEntitlementPay::monthsCovered(array_merge($lumpSum, ['endDate' => ''])));
+		self::assertNull(BenefitEntitlementPay::monthsCovered(array_merge($lumpSum, ['startDate' => ''])));
+		self::assertNull(BenefitEntitlementPay::monthsCovered(array_merge($lumpSum, ['startDate' => '2026-10-01'])));
+	}//end testTheMonthsALumpSumCovers()
+
+	/**
 	 * A fixed amount less the offset, never below zero; a lump sum pays its amount.
 	 *
 	 * @return void
