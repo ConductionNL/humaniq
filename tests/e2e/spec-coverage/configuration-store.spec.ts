@@ -94,7 +94,7 @@ async function leaveTypeCount(admin: APIRequestContext): Promise<number> {
  * @return Nothing.
  */
 async function openMarketplace(page: Page): Promise<void> {
-	await page.goto(`${APP_URL}/store`, { waitUntil: 'networkidle' })
+	await page.goto(`${APP_URL}/store`, { waitUntil: 'domcontentloaded' })
 	await expect(page.getByTestId('store-page'), 'the Marketplace page renders').toBeVisible({ timeout: 30_000 })
 }
 
