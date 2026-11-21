@@ -86,6 +86,20 @@ class SetupController extends Controller {
 	private const DATASET_KEY = 'demo_dataset';
 
 	/**
+	 * App-config key holding the Werkwijze answer, read back onto the administrations.
+	 *
+	 * @var string
+	 */
+	private const WORKING_MODE_KEY = 'working_mode';
+
+	/**
+	 * App-config key holding the Taal answer, the fallback language of generated documents.
+	 *
+	 * @var string
+	 */
+	private const LANGUAGE_KEY = 'default_language';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest        $request         The request.
@@ -133,6 +147,7 @@ class SetupController extends Controller {
 	 *
 	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-answered-step-stays-closed
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function status(): JSONResponse {
@@ -149,6 +164,10 @@ class SetupController extends Controller {
 				'datasets'  => $this->demoDataService->listChoices(),
 				'steps'     => [
 					'welcome'        => ['done' => true],
+					// Werkwijze and Taal read done once answered: the choice
+					// the app reads back is stored.
+					'working-mode'   => ['done' => $this->isAnswered(key: self::WORKING_MODE_KEY)],
+					'language'       => ['done' => $this->isAnswered(key: self::LANGUAGE_KEY)],
 					// Exactly the ids of `manifest.setup.steps`: a step the
 					// server never reports stays open and reopens the wizard.
 					'demo-data'      => ['done' => ($demoDecided === true || $picked !== '')],
@@ -269,9 +288,22 @@ class SetupController extends Controller {
 		// (the mode is written onto the administrations, the language picks the
 		// documents' language), so an unknown value is refused before anything
 		// is stored, like the dataset.
-		return $this->refuseChoice(key: 'working_mode', known: SetupAdministrations::MODES)
-			?? $this->refuseChoice(key: 'default_language', known: ['nl', 'en']);
+		return $this->refuseChoice(key: self::WORKING_MODE_KEY, known: SetupAdministrations::MODES)
+			?? $this->refuseChoice(key: self::LANGUAGE_KEY, known: ['nl', 'en']);
 	}//end refuseStoredChoices()
+
+	/**
+	 * Whether a choice step's app-config key holds an answer.
+	 *
+	 * @param string $key The app-config key the step stores.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-answered-step-stays-closed
+	 */
+	private function isAnswered(string $key): bool {
+		return $this->appConfig->getValueString(Application::APP_ID, $key, '') !== '';
+	}//end isAnswered()
 
 	/**
 	 * Store every posted value as app config, a scalar as is and anything else as JSON.

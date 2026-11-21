@@ -503,4 +503,82 @@ class SetupControllerTest extends TestCase {
 		$this->assertTrue($res->getData()['success']);
 		$this->assertSame(['working_mode' => 'dga_single_person', 'default_language' => 'en'], $written);
 	}
+
+	/**
+	 * A fresh install: Werkwijze and Taal are reported and read not done.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-the-status-names-every-step
+	 *
+	 * @return void
+	 */
+	public function testWorkingModeAndLanguageReadNotDoneOnAFreshInstall(): void {
+		$this->appConfig->method('getValueString')->willReturn('');
+
+		$steps = $this->controller->status()->getData()['steps'];
+
+		$this->assertSame(['done' => false], $steps['working-mode']);
+		$this->assertSame(['done' => false], $steps['language']);
+	}
+
+	/**
+	 * An answered Werkwijze or Taal step reads done; the other stays open.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-answered-step-stays-closed
+	 *
+	 * @return void
+	 */
+	public function testAnAnsweredWorkingModeOrLanguageReadsDone(): void {
+		$stored = ['working_mode' => 'dga_single_person'];
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use (&$stored): string {
+				return $stored[$key] ?? $default;
+			}
+		);
+
+		$steps = $this->controller->status()->getData()['steps'];
+		$this->assertTrue($steps['working-mode']['done']);
+		$this->assertFalse($steps['language']['done']);
+
+		$stored = ['default_language' => 'en'];
+		$steps  = $this->controller->status()->getData()['steps'];
+		$this->assertFalse($steps['working-mode']['done']);
+		$this->assertTrue($steps['language']['done']);
+	}
+
+	/**
+	 * The manifest's Werkwijze step offers exactly the modes the server
+	 * accepts, and Taal exactly nl and en; neither is required.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-werkwijze-step-shall-set-the-mode-of-the-wizards-administrations-req-fts-009
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-taal-step-shall-set-humaniqs-fallback-language-req-fts-010
+	 *
+	 * @return void
+	 */
+	public function testTheManifestDeclaresTheWorkingModeAndLanguageChoices(): void {
+		foreach (['manifest.json', 'manifest.effective.json'] as $file) {
+			$manifest = json_decode((string)file_get_contents(__DIR__ . '/../../../src/' . $file), true);
+			$steps    = array_column($manifest['setup']['steps'], null, 'id');
+
+			$mode = $steps['working-mode'];
+			$this->assertSame('choice', $mode['type'], $file);
+			$this->assertSame('cards', $mode['display'], $file);
+			$this->assertSame('working_mode', $mode['configKey'], $file);
+			$this->assertFalse($mode['required'], $file);
+			$this->assertSame(\OCA\Humaniq\Service\Setup\SetupAdministrations::MODES, array_column($mode['options'], 'value'), $file);
+
+			$language = $steps['language'];
+			$this->assertSame('choice', $language['type'], $file);
+			$this->assertSame('default_language', $language['configKey'], $file);
+			$this->assertFalse($language['required'], $file);
+			$this->assertSame(['nl', 'en'], array_column($language['options'], 'value'), $file);
+
+			// The example data stays the step right after welcome (ADR-111
+			// rule 4); both are asked after it and before the summary.
+			$ids = array_keys($steps);
+			$this->assertSame(1, array_search('demo-data', $ids, true), $file);
+			$this->assertGreaterThan(array_search('demo-data', $ids, true), array_search('working-mode', $ids, true), $file);
+			$this->assertGreaterThan(array_search('working-mode', $ids, true), array_search('language', $ids, true), $file);
+			$this->assertLessThan(array_search('done', $ids, true), array_search('language', $ids, true), $file);
+		}
+	}
 }
