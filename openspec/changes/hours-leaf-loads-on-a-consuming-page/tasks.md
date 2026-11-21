@@ -67,7 +67,9 @@
 - [ ] 6.1 Run PHPUnit in the container and read the exit code, not the
       summary line.
 - [ ] 6.2 Run vitest and the Playwright spec, and count the tests that ran.
-- [ ] 6.3 Run `npx openspec validate hours-leaf-loads-on-a-consuming-page --strict`.
+- [x] 6.3 Run `npx openspec validate hours-leaf-loads-on-a-consuming-page --strict`.
+      Done 2026-11-21: valid, after dropping the `status: proposed` front matter above the
+      delta spec's first section, which strict mode reported as text archive does not carry.
 - [ ] 6.4 Run `composer check:strict`.
 - [ ] 6.5 On the dev instance, open a host detail page in another app and
       confirm the leaf renders. Confirm `js/humaniq-leaves.js` is requested by
