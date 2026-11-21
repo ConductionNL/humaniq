@@ -508,6 +508,8 @@ class SetupControllerTest extends TestCase {
 	 * A fresh install: Werkwijze and Taal are reported and read not done.
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-the-status-names-every-step
+	 *
+	 * @return void
 	 */
 	public function testWorkingModeAndLanguageReadNotDoneOnAFreshInstall(): void {
 		$this->appConfig->method('getValueString')->willReturn('');
@@ -522,6 +524,8 @@ class SetupControllerTest extends TestCase {
 	 * An answered Werkwijze or Taal step reads done; the other stays open.
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-answered-step-stays-closed
+	 *
+	 * @return void
 	 */
 	public function testAnAnsweredWorkingModeOrLanguageReadsDone(): void {
 		$stored = ['working_mode' => 'dga_single_person'];
@@ -547,6 +551,8 @@ class SetupControllerTest extends TestCase {
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-werkwijze-step-shall-set-the-mode-of-the-wizards-administrations-req-fts-009
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-taal-step-shall-set-humaniqs-fallback-language-req-fts-010
+	 *
+	 * @return void
 	 */
 	public function testTheManifestDeclaresTheWorkingModeAndLanguageChoices(): void {
 		foreach (['manifest.json', 'manifest.effective.json'] as $file) {
