@@ -64,13 +64,21 @@
 
 ## 6. Verification
 
-- [ ] 6.1 Run PHPUnit in the container and read the exit code, not the
+- [x] 6.1 Run PHPUnit in the container and read the exit code, not the
       summary line.
+      Done 2026-11-22 on development 58e3582f: `./vendor/bin/phpunit` exits 0
+      (4,656 tests, 1 skipped); the hours and leaf tests alone (`--filter
+      'Hours|Leaf|Leaves'`) are 269 tests, all passing.
 - [ ] 6.2 Run vitest and the Playwright spec, and count the tests that ran.
 - [x] 6.3 Run `npx openspec validate hours-leaf-loads-on-a-consuming-page --strict`.
       Done 2026-11-21: valid, after dropping the `status: proposed` front matter above the
       delta spec's first section, which strict mode reported as text archive does not carry.
 - [ ] 6.4 Run `composer check:strict`.
+      Measured 2026-11-22 on development 58e3582f, left open: lint, phpcs (warnings
+      only), phpstan and PHPUnit pass; phpmd exits 2 on findings outside the baseline
+      in files this change did not touch (`Application.php` length, `FilingDates`
+      short names, static access in the DSR commands), and psalm does not start on
+      PHP 8.3.6 (it needs 8.3.16 or later). Tick once both run green.
 - [ ] 6.5 On the dev instance, open a host detail page in another app and
       confirm the leaf renders. Confirm `js/humaniq-leaves.js` is requested by
       that page.
