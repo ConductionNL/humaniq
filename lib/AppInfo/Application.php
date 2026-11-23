@@ -167,23 +167,7 @@ class Application extends App implements IBootstrap {
 		// reverse order, so it sees the final response of every other middleware.
 		$context->registerMiddleware(class: ApiContractMiddleware::class);
 
-		// self-service-mobile (design.md D1): link the web manifest from the
-		// head of humaniq's own pages, so a phone browser offers to install Mijn HR.
-		$context->registerEventListener(
-			\OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent::class,
-			\OCA\Humaniq\Listener\PwaHeadListener::class
-		);
-
-		// configuration-store D1: bind OpenRegister's store controller as this app's
-		// StoreController, so the Marketplace page and the Sjablonen step install
-		// through OpenRegister's store. Skipped when OpenRegister is absent.
-		if (class_exists('OCA\\OpenRegister\\AppHost\\Bootstrap') === true) {
-			\OCA\OpenRegister\AppHost\Bootstrap::aliasStoreController(context: $context, appId: self::APP_ID, controllerNs: 'OCA\\Humaniq\\Controller');
-		}
-
-		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
-		// The event is named by string, so humaniq installs without Hermiq.
-		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
+		$this->registerShellHooks(context: $context);
 		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
 		(new ContractBindings())->register(context: $context);
@@ -382,6 +366,37 @@ class Application extends App implements IBootstrap {
 		// recurse). When OpenRegister is absent the lazy get() throws and fails soft.
 
 	}//end register()
+
+	/**
+	 * Register what the app shell hangs on: the web-manifest head link, the
+	 * store controller binding and the Hermiq assistant offer.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+	 */
+	private function registerShellHooks(IRegistrationContext $context): void {
+		// self-service-mobile (design.md D1): link the web manifest from the
+		// head of humaniq's own pages, so a phone browser offers to install Mijn HR.
+		$context->registerEventListener(
+			\OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent::class,
+			\OCA\Humaniq\Listener\PwaHeadListener::class
+		);
+
+		// configuration-store D1: bind OpenRegister's store controller as this app's
+		// StoreController, so the Marketplace page and the Sjablonen step install
+		// through OpenRegister's store. Skipped when OpenRegister is absent.
+		if (class_exists('OCA\\OpenRegister\\AppHost\\Bootstrap') === true) {
+			\OCA\OpenRegister\AppHost\Bootstrap::aliasStoreController(context: $context, appId: self::APP_ID, controllerNs: 'OCA\\Humaniq\\Controller');
+		}
+
+		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
+		// The event is named by string, so humaniq installs without Hermiq.
+		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
+	}//end registerShellHooks()
+
 
 	/**
 	 * Register the lifecycle guards that read the register through the record store.

@@ -41,8 +41,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCA\Humaniq\Service\Setup\SetupAdministrations;
-use OCA\Humaniq\Service\Setup\SetupHealthCheck;
-use OCA\Humaniq\Service\Setup\SetupTemplates;
+use OCA\Humaniq\Service\Setup\SetupStepServices;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -109,8 +108,7 @@ class SetupController extends Controller {
 	 * @param DemoDataServiceInterface $demoDataService Imports the shipped demo dataset.
 	 * @param SetupAdministrations $setupAdministrations Creates the Administraties step's administrations and writes the working mode.
 	 * @param IUserSession    $userSession     The administrator running the wizard.
-	 * @param SetupHealthCheck $healthCheck    The Klaar step's health check.
-	 * @param SetupTemplates  $setupTemplates  The Sjablonen step: lists and installs configuration sets through OpenRegister's store.
+	 * @param SetupStepServices $steps        The Klaar step's health check and the Sjablonen step, which lists and installs configuration sets through OpenRegister's store.
 	 *
 	 * @return void
 	 */
@@ -121,8 +119,7 @@ class SetupController extends Controller {
 		private readonly DemoDataServiceInterface $demoDataService,
 		private readonly SetupAdministrations $setupAdministrations,
 		private readonly IUserSession $userSession,
-		private readonly SetupHealthCheck $healthCheck,
-		private readonly SetupTemplates $setupTemplates,
+		private readonly SetupStepServices $steps,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -169,7 +166,7 @@ class SetupController extends Controller {
 				'datasets'  => $this->demoDataService->listChoices(),
 				// The Sjablonen step declares `optionsSource: templates`: the
 				// sets OpenRegister's store lists for humaniq, "none" first.
-				'templates' => $this->setupTemplates->choices(),
+				'templates' => $this->steps->templates->choices(),
 				'steps'     => [
 					'welcome'        => ['done' => true],
 					// Administraties reads done once administrations were
@@ -185,13 +182,13 @@ class SetupController extends Controller {
 					'demo-data'      => ['done' => ($demoDecided === true || $picked !== '')],
 					// Sjablonen reads done once a set was installed or "none"
 					// was picked: skipping is an answer, so the step stays closed.
-					'templates'      => ['done' => $this->setupTemplates->isAnswered()],
+					'templates'      => ['done' => $this->steps->templates->isAnswered()],
 					'done'           => ['done' => true],
 				],
 				// The Klaar step's health check: what the import left, whether
 				// background jobs run, which payroll tables are loaded. A
 				// failure reads as failed, never as passed.
-				'health'    => $this->healthCheck->check(),
+				'health'    => $this->steps->healthCheck->check(),
 			]
 		);
 
@@ -399,7 +396,7 @@ class SetupController extends Controller {
 	 */
 	private function templatesAction(string $actionId): ?JSONResponse {
 		if ($actionId === 'install-template') {
-			$outcome = $this->setupTemplates->install(slug: $this->request->getParam('dataset'));
+			$outcome = $this->steps->templates->install(slug: $this->request->getParam('dataset'));
 
 			return new JSONResponse(
 				data: ['success' => $outcome['success'], 'message' => $outcome['message']],
@@ -408,7 +405,7 @@ class SetupController extends Controller {
 		}
 
 		if ($actionId === 'skip-templates') {
-			$this->setupTemplates->skip();
+			$this->steps->templates->skip();
 
 			return new JSONResponse(data: ['success' => true, 'message' => 'Templates skipped.']);
 		}
