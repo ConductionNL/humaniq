@@ -1,13 +1,18 @@
 ## 1. nextcloud-vue: generic wizard growth (ConductionNL/nextcloud-vue, its own PR)
 
-- [ ] 1.1 `CnSetupWizard` summary rows: render an optional per-step `summaryHint` line and a
+- [x] 1.1 `CnSetupWizard` summary rows: render an optional per-step `summaryHint` line and a
       Wijzigen button that opens that step, behind an optional `summaryEditable: true` on the
       summary step. Verify: unit test for a row with and without hint, and that Wijzigen emits
       `step-change` to the right index.
-- [ ] 1.2 `CnSetupWizard` config-fields step: support a repeatable group (`repeatable: true` on an
+- [x] 1.2 `CnSetupWizard` config-fields step: support a repeatable group (`repeatable: true` on an
       array-of-objects field) with add and remove row buttons, posting the list as one value.
       Verify: unit test that two rows post as a two-item array.
-- [ ] 1.3 Release nextcloud-vue and bump humaniq's dependency to that version.
+- [x] 1.3 Release nextcloud-vue and bump humaniq's dependency to that version.
+      Done upstream as nextcloud-vue's `setup-wizard-recap-and-repeatable` (its own tests):
+      `summaryHint`, `summaryEditable` with a Change button per recap row, and a repeatable
+      group (`repeatable: true` on an array of objects) in a config-fields step, which posts to
+      the step's `action`. humaniq's lock resolves @conduction/nextcloud-vue 2.193.1, which
+      carries all three, and `npm run check:manifest` validates them against its schema.
 
 ## 2. Manifest (src/manifest.json)
 
@@ -15,8 +20,17 @@
       `demo-data`, `templates` and `done`, in that order; drop `welcome` and move its
       orientation sentence into the `administrations` body. Copy from the board, sentence case.
       Verify: `npm run check:manifest` exits 0.
-- [ ] 2.2 `administrations`: config-fields with a repeatable group (name, loonheffingennummer,
+      Open on a conflict: hydra gate 100 (`check_setup_demo_first.py`, ADR-111 rule 4) requires
+      `steps[0]` to be `welcome` and `steps[1]` the example-data offer, so dropping `welcome`
+      and opening with `administrations` fails the gate. Until that is settled the order is
+      `welcome`, `demo-data`, `administrations`, `working-mode`, `language`, `done`, and
+      `templates` waits on `configuration-store`.
+- [x] 2.2 `administrations`: config-fields with a repeatable group (name, loonheffingennummer,
       KvK number), `runAction: create-administrations`.
+      Done: the step posts its `administrations` group to `create-administrations` (the
+      library key is `action`), is skippable, and sits after `demo-data` and before
+      `working-mode`, which writes the mode on the administrations it created. Verified by
+      `SetupControllerTest::testTheManifestDeclaresTheAdministrationsStep` on both manifests.
 - [x] 2.3 `working-mode`: cards choice, `configKey: working_mode`, values `standard`,
       `eenmanszaak_no_payroll`, `dga_single_person` with the board's labels and hints.
       Done: declared after `demo-data` (ADR-111 rule 4 keeps the example data directly after
@@ -33,6 +47,8 @@
       Progress: the `working-mode` and `language` strings and the updated `welcome` body are in
       `l10n/` (`npm run check:l10n` passes); the `administrations`, `templates` and `done`
       strings follow with 2.1, 2.2 and 2.5.
+      The `administrations` strings (body, "Add administration") and the `welcome` body naming
+      the step are in `l10n/`; the `templates` and `done` strings follow with 2.1 and 2.5.
 
 ## 3. Server (lib/Controller/SetupController.php)
 
@@ -43,6 +59,9 @@
       `default_language` holds an answer (`SetupControllerTest`). `administrations` and
       `templates` join when 2.1 declares them, because the status must report exactly the
       manifest's step ids (`testStatusReportsEveryStepTheManifestDeclares`).
+      `administrations` is now reported, done once `administrations_decided` holds `created` or
+      `skipped` (`testTheAdministrationsStepReadsDoneOnceCreatedOrSkipped`); `templates` joins
+      with `configuration-store`.
 - [x] 3.2 `runAction('create-administrations')`: validate every entry first (400 on a missing
       name or loonheffingennummer, nothing created), then create or reuse `hrAdministration` by
       loonheffingennummer through ObjectService, add an `AdministrationAccess` row of role `hr`
