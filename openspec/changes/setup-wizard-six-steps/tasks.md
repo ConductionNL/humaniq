@@ -52,7 +52,7 @@
 
 ## 3. Server (lib/Controller/SetupController.php)
 
-- [ ] 3.1 `status()`: report the six step ids, each done once answered or skipped (app-config
+- [x] 3.1 `status()`: report the six step ids, each done once answered or skipped (app-config
       keys `administrations_decided`, `working_mode`, `default_language`, existing demo and
       templates keys). Verify: unit tests for fresh, skipped and answered per step.
       Progress: `working-mode` and `language` are reported, done once `working_mode` or
@@ -62,6 +62,10 @@
       `administrations` is now reported, done once `administrations_decided` holds `created` or
       `skipped` (`testTheAdministrationsStepReadsDoneOnceCreatedOrSkipped`); `templates` joins
       with `configuration-store`.
+      Done with `configuration-store` (#1235): `templates` is reported, done once a set was
+      installed or "No templates" was picked (`SetupTemplatesTest`,
+      `SetupControllerTest::testStatusReportsTheTemplatesStepNotAnswered` and
+      `...DoneOnceAnswered`). `welcome` stays reported while 2.1's step order waits on gate 100.
 - [x] 3.2 `runAction('create-administrations')`: validate every entry first (400 on a missing
       name or loonheffingennummer, nothing created), then create or reuse `hrAdministration` by
       loonheffingennummer through ObjectService, add an `AdministrationAccess` row of role `hr`
