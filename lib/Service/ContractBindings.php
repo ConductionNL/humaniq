@@ -116,7 +116,12 @@ use OCA\Humaniq\Kernel\Contracts\WorkingCalendarReaderInterface;
 use OCA\Humaniq\Kernel\Contracts\WorkingHoursServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\WpmReportServiceInterface;
 use OCA\Humaniq\Kernel\Contracts\YearTransitionServiceInterface;
+use OCA\Humaniq\AppInfo\Application;
+use OCA\Humaniq\Service\Setup\SetupTemplates;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\App\IAppManager;
+use OCP\IRequest;
+use Psr\Container\ContainerInterface;
 
 /**
  * Nextcloud autowires concrete classes but not interfaces, so every contract
@@ -136,6 +141,20 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
  */
 final class ContractBindings {
+
+	/**
+	 * OpenRegister's store controller, served as this app's StoreController.
+	 *
+	 * @var string
+	 */
+	private const GENERIC_STORE_CONTROLLER = 'OCA\\OpenRegister\\AppHost\\Controller\\GenericStoreController';
+
+	/**
+	 * The services that controller takes.
+	 *
+	 * @var string
+	 */
+	private const GENERIC_STORE_SERVICES = 'OCA\\OpenRegister\\AppHost\\Controller\\Support\\GenericStoreControllerServices';
 
 	/**
 	 * Alias every Kernel contract to its implementation.
@@ -241,5 +260,39 @@ final class ContractBindings {
 		$context->registerServiceAlias(WorkingHoursServiceInterface::class, WorkingHoursService::class);
 		$context->registerServiceAlias(WpmReportServiceInterface::class, WpmReportService::class);
 		$context->registerServiceAlias(YearTransitionServiceInterface::class, YearTransitionService::class);
+
+		$this->bindStoreController(context: $context);
 	}//end register()
+
+	/**
+	 * Serve OpenRegister's store controller as this app's StoreController.
+	 *
+	 * The Marketplace page and the setup wizard's Sjablonen step read and
+	 * install configuration sets through `/api/store/items`. The controller is
+	 * named by string and built when a request needs it, so registration never
+	 * touches an OpenRegister class before OpenRegister's autoloader exists.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+	 */
+	private function bindStoreController(IRegistrationContext $context): void {
+		$context->registerService(
+			SetupTemplates::STORE_CONTROLLER,
+			static function (ContainerInterface $container): object {
+				if ($container->get(IAppManager::class)->isInstalled('openregister') === false) {
+					throw new \RuntimeException('The store needs OpenRegister, which is not installed.');
+				}
+
+				$controller = self::GENERIC_STORE_CONTROLLER;
+				return new $controller(
+					appName: Application::APP_ID,
+					request: $container->get(IRequest::class),
+					services: $container->get(self::GENERIC_STORE_SERVICES)
+				);
+			}
+		);
+	}//end bindStoreController()
 }//end class

@@ -76,4 +76,52 @@ final class ContractBindingsTest extends TestCase {
 			self::assertContains('OCA\\Humaniq\\Kernel\\Contracts\\' . basename($file, '.php'), $bound);
 		}
 	}
+
+	/**
+	 * The factories ContractBindings registers, by service name.
+	 *
+	 * @return array<string, callable>
+	 */
+	private function recordFactories(): array {
+		$factories = [];
+		$context = $this->createMock(IRegistrationContext::class);
+		$context->method('registerService')->willReturnCallback(
+			static function (string $name, callable $factory) use (&$factories): void {
+				$factories[$name] = $factory;
+			}
+		);
+
+		(new ContractBindings())->register($context);
+
+		return $factories;
+	}
+
+	/**
+	 * The store routes resolve to a StoreController in this app's namespace.
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+	 *
+	 * @return void
+	 */
+	public function testTheStoreControllerIsBoundUnderThisAppsName(): void {
+		self::assertSame(['OCA\\Humaniq\\Controller\\StoreController'], array_keys($this->recordFactories()));
+		self::assertSame('OCA\\Humaniq\\Controller\\StoreController', \OCA\Humaniq\Service\Setup\SetupTemplates::STORE_CONTROLLER);
+	}
+
+	/**
+	 * Without OpenRegister the store controller is refused rather than half-built.
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+	 *
+	 * @return void
+	 */
+	public function testTheStoreControllerNeedsOpenRegister(): void {
+		$apps = $this->createMock(\OCP\App\IAppManager::class);
+		$apps->method('isInstalled')->with('openregister')->willReturn(false);
+		$container = $this->createMock(\Psr\Container\ContainerInterface::class);
+		$container->method('get')->willReturnCallback(static fn (string $id) => $id === \OCP\App\IAppManager::class ? $apps : throw new \LogicException('unexpected lookup of ' . $id));
+
+		$this->expectException(\RuntimeException::class);
+		$this->recordFactories()['OCA\\Humaniq\\Controller\\StoreController']($container);
+	}
 }

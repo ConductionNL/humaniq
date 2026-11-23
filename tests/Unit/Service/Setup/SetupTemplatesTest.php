@@ -78,13 +78,32 @@ class SetupTemplatesTest extends TestCase {
 	private function store(array $search, ?JSONResponse $install = null): object {
 		$test = $this;
 		return new class($search, $install, $test) {
+			/**
+			 * Keep the canned answers.
+			 *
+			 * @param array<string,mixed> $search  The search response data.
+			 * @param JSONResponse|null   $install The install response, or null for a report.
+			 * @param SetupTemplatesTest  $test    Records the installs.
+			 *
+			 * @return void
+			 */
 			public function __construct(private array $search, private ?JSONResponse $install, private SetupTemplatesTest $test) {
 			}
 
+			/**
+			 * Search.
+			 *
+			 * @return JSONResponse
+			 */
 			public function search(): JSONResponse {
 				return new JSONResponse($this->search);
 			}
 
+			/**
+			 * Install.
+			 *
+			 * @return JSONResponse
+			 */
 			public function install(string $slug): JSONResponse {
 				$this->test->recordInstall($slug);
 				return $this->install ?? new JSONResponse(['components' => ['leave-type' => 'created']]);
@@ -103,6 +122,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->installs[] = $slug;
 	}
 
+	/**
+	 * Choices list none first then built in and published sets.
+	 *
+	 * @return void
+	 */
 	public function testChoicesListNoneFirstThenBuiltInAndPublishedSets(): void {
 		$store = $this->store([
 			'outcome' => 'ok',
@@ -123,12 +147,27 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertSame('', $choices[2]['description']);
 	}
 
+	/**
+	 * Choices without a store offer only none.
+	 *
+	 * @return void
+	 */
 	public function testChoicesWithoutAStoreOfferOnlyNone(): void {
 		$this->assertSame(['none'], array_column($this->templates(null)->choices(), 'id'));
 	}
 
+	/**
+	 * Choices with a failing store offer only none.
+	 *
+	 * @return void
+	 */
 	public function testChoicesWithAFailingStoreOfferOnlyNone(): void {
 		$store = new class {
+			/**
+			 * Search.
+			 *
+			 * @return JSONResponse
+			 */
 			public function search(): JSONResponse {
 				throw new RuntimeException('registry down');
 			}
@@ -137,10 +176,20 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertSame(['none'], array_column($this->templates($store)->choices(), 'id'));
 	}
 
+	/**
+	 * A fresh step is not answered.
+	 *
+	 * @return void
+	 */
 	public function testAFreshStepIsNotAnswered(): void {
 		$this->assertFalse($this->templates(null)->isAnswered());
 	}
 
+	/**
+	 * Skipping is recorded as an answer.
+	 *
+	 * @return void
+	 */
 	public function testSkippingIsRecordedAsAnAnswer(): void {
 		$templates = $this->templates(null);
 
@@ -151,6 +200,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertSame([], $templates->installed());
 	}
 
+	/**
+	 * Picking none is a skip.
+	 *
+	 * @return void
+	 */
 	public function testPickingNoneIsASkip(): void {
 		$templates = $this->templates(null);
 
@@ -161,6 +215,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertSame([], $this->installs);
 	}
 
+	/**
+	 * Installed sets are recorded in order once.
+	 *
+	 * @return void
+	 */
 	public function testInstalledSetsAreRecordedInOrderOnce(): void {
 		$templates = $this->templates($this->store([]));
 
@@ -173,6 +232,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertTrue($templates->isAnswered());
 	}
 
+	/**
+	 * An install replaces an earlier skip.
+	 *
+	 * @return void
+	 */
 	public function testAnInstallReplacesAnEarlierSkip(): void {
 		$templates = $this->templates($this->store([]));
 		$templates->skip();
@@ -182,6 +246,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertSame('["leave-policy"]', $this->config[SetupTemplates::CONFIG_KEY]);
 	}
 
+	/**
+	 * A skip after an install keeps the installed sets.
+	 *
+	 * @return void
+	 */
 	public function testASkipAfterAnInstallKeepsTheInstalledSets(): void {
 		$templates = $this->templates($this->store([]));
 		$templates->install('leave-policy');
@@ -191,6 +260,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertSame(['leave-policy'], $templates->installed());
 	}
 
+	/**
+	 * A refused install records nothing.
+	 *
+	 * @return void
+	 */
 	public function testARefusedInstallRecordsNothing(): void {
 		$refusal = new JSONResponse(['success' => false, 'message' => 'Installing a store item requires an administrator.'], 403);
 		$templates = $this->templates($this->store([], $refusal));
@@ -203,6 +277,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertFalse($templates->isAnswered());
 	}
 
+	/**
+	 * An install reporting failure records nothing.
+	 *
+	 * @return void
+	 */
 	public function testAnInstallReportingFailureRecordsNothing(): void {
 		$templates = $this->templates($this->store([], new JSONResponse(['success' => false])));
 
@@ -213,6 +292,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertFalse($templates->isAnswered());
 	}
 
+	/**
+	 * A bad slug never reaches the store.
+	 *
+	 * @return void
+	 */
 	public function testABadSlugNeverReachesTheStore(): void {
 		$templates = $this->templates($this->store([]));
 
@@ -222,6 +306,11 @@ class SetupTemplatesTest extends TestCase {
 		$this->assertSame([], $this->installs);
 	}
 
+	/**
+	 * Without a store an install is unavailable.
+	 *
+	 * @return void
+	 */
 	public function testWithoutAStoreAnInstallIsUnavailable(): void {
 		$templates = $this->templates(null);
 
