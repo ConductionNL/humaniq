@@ -174,6 +174,13 @@ class Application extends App implements IBootstrap {
 			\OCA\Humaniq\Listener\PwaHeadListener::class
 		);
 
+		// configuration-store D1: bind OpenRegister's store controller as this app's
+		// StoreController, so the Marketplace page and the Sjablonen step install
+		// through OpenRegister's store. Skipped when OpenRegister is absent.
+		if (class_exists('OCA\\OpenRegister\\AppHost\\Bootstrap') === true) {
+			\OCA\OpenRegister\AppHost\Bootstrap::aliasStoreController(context: $context, appId: self::APP_ID, controllerNs: 'OCA\\Humaniq\\Controller');
+		}
+
 		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
 		// The event is named by string, so humaniq installs without Hermiq.
 		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);

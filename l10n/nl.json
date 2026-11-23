@@ -4253,7 +4253,11 @@
         "Today": "Vandaag",
         "Clocked in": "Ingeklokt",
         "Rostered start": "Geroosterde start",
-        "No one you may read is placed in a unit today": "Niemand die je mag inzien is vandaag in een eenheid geplaatst"
+        "No one you may read is placed in a unit today": "Niemand die je mag inzien is vandaag in een eenheid geplaatst",
+        "Templates": "Sjablonen",
+        "Install configuration sets other organisations have published, such as a leave policy or a review cycle. Each card has its own Load button. Pick \"No templates\" to start without one; the Marketplace offers the same sets later.": "Installeer configuratiesets die andere organisaties hebben gepubliceerd, zoals een verlofbeleid of een beoordelingscyclus. Elke kaart heeft een eigen Laden-knop. Kies \"Geen sjablonen\" om zonder te beginnen; de Marketplace biedt dezelfde sets later aan.",
+        "No templates": "Geen sjablonen",
+        "Start without a published set. You can install one later from the Marketplace.": "Begin zonder gepubliceerde set. Je kunt er later een installeren vanuit de Marketplace."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

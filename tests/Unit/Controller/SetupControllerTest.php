@@ -43,7 +43,8 @@ class SetupControllerTest extends TestCase {
 			$this->demoData,
 			$this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class),
 			$this->createMock(\OCP\IUserSession::class),
-			$this->createMock(SetupHealthCheck::class)
+			$this->createMock(SetupHealthCheck::class),
+			$this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class)
 		);
 	}
 
@@ -76,7 +77,8 @@ class SetupControllerTest extends TestCase {
 			$this->demoData,
 			$this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class),
 			$this->createMock(\OCP\IUserSession::class),
-			$health
+			$health,
+			$this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class)
 		);
 
 		$data = $controller->status()->getData();
@@ -219,7 +221,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParam')->willReturn('no-such-set');
 		$this->demoData->method('listChoices')->willReturn([['id' => 'none'], ['id' => 'humaniq-demo']]);
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class));
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class));
 		$this->appConfig->expects($this->never())->method('setValueString');
 
 		$res = $controller->saveConfig();
@@ -246,7 +248,7 @@ class SetupControllerTest extends TestCase {
                 return true;
             });
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class));
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class));
 		$res = $controller->saveConfig();
 
 		$this->assertTrue($res->getData()['success']);
@@ -263,7 +265,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParams')->willReturn(['some_other_key' => 'value']);
 		$this->demoData->expects($this->never())->method('listChoices');
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class));
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class));
 
 		$this->assertTrue($controller->saveConfig()->getData()['success']);
 	}
@@ -348,7 +350,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParam')
 			->willReturnCallback(static fn (string $key) => ($params[$key] ?? null));
 
-		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class));
+		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class));
 	}
 
 	/**
@@ -427,7 +429,7 @@ class SetupControllerTest extends TestCase {
 			$session->method('getUser')->willReturn($user);
 		}
 
-		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $setup, $session, $this->createMock(SetupHealthCheck::class));
+		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $setup, $session, $this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class));
 	}
 
 	public function testCreateAdministrationsCreatesForTheSignedInAdministrator(): void {
@@ -642,5 +644,101 @@ class SetupControllerTest extends TestCase {
 			$this->assertGreaterThan(array_search('demo-data', $ids, true), array_search('administrations', $ids, true), $file);
 			$this->assertLessThan(array_search('working-mode', $ids, true), array_search('administrations', $ids, true), $file);
 		}
+	}
+
+	/**
+	 * A controller whose request posts the given params, over the given Sjablonen step.
+	 *
+	 * @param array<string, mixed> $params    The posted body.
+	 * @param \OCA\Humaniq\Service\Setup\SetupTemplates $templates The step.
+	 *
+	 * @return SetupController
+	 */
+	private function controllerWithTemplates(array $params, \OCA\Humaniq\Service\Setup\SetupTemplates $templates): SetupController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')
+			->willReturnCallback(static fn (string $key) => ($params[$key] ?? null));
+
+		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), $this->createMock(SetupHealthCheck::class), $templates);
+	}
+
+	/**
+	 * The status carries the Sjablonen cards and reads the step open until answered.
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 */
+	public function testStatusReportsTheTemplatesStepNotAnswered(): void {
+		$this->appConfig->method('getValueString')->willReturn('');
+		$templates = $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class);
+		$templates->method('choices')->willReturn([['id' => 'none', 'name' => 'No templates', 'description' => '']]);
+		$templates->method('isAnswered')->willReturn(false);
+
+		$data = $this->controllerWithTemplates([], $templates)->status()->getData();
+
+		$this->assertSame('none', $data['templates'][0]['id']);
+		$this->assertFalse($data['steps']['templates']['done']);
+	}
+
+	/**
+	 * A skipped or installed step reads done, so the wizard does not reopen.
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 */
+	public function testStatusReportsTheTemplatesStepDoneOnceAnswered(): void {
+		$this->appConfig->method('getValueString')->willReturn('');
+		$templates = $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class);
+		$templates->method('choices')->willReturn([]);
+		$templates->method('isAnswered')->willReturn(true);
+
+		$data = $this->controllerWithTemplates([], $templates)->status()->getData();
+
+		$this->assertTrue($data['steps']['templates']['done']);
+		$this->assertTrue($data['completed']);
+	}
+
+	/**
+	 * A card's Load button installs the posted set through the step.
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
+	 */
+	public function testInstallTemplatePassesThePostedSet(): void {
+		$templates = $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class);
+		$templates->expects($this->once())->method('install')->with('leave-policy')
+			->willReturn(['success' => true, 'message' => 'Template installed.', 'status' => 200]);
+
+		$res = $this->controllerWithTemplates(['dataset' => 'leave-policy'], $templates)->runAction('install-template');
+
+		$this->assertSame(200, $res->getStatus());
+		$this->assertTrue($res->getData()['success']);
+	}
+
+	/**
+	 * A refused install reaches the wizard as a failure with its status.
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 */
+	public function testInstallTemplateReportsARefusal(): void {
+		$templates = $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class);
+		$templates->method('install')->willReturn(['success' => false, 'message' => 'Pick a template first.', 'status' => 400]);
+
+		$res = $this->controllerWithTemplates([], $templates)->runAction('install-template');
+
+		$this->assertSame(400, $res->getStatus());
+		$this->assertFalse($res->getData()['success']);
+		$this->assertSame('Pick a template first.', $res->getData()['message']);
+	}
+
+	/**
+	 * Skipping the step is recorded as an answer.
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 */
+	public function testSkipTemplatesRecordsTheSkip(): void {
+		$templates = $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class);
+		$templates->expects($this->once())->method('skip');
+
+		$res = $this->controllerWithTemplates([], $templates)->runAction('skip-templates');
+
+		$this->assertTrue($res->getData()['success']);
 	}
 }

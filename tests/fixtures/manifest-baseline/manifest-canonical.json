@@ -22057,6 +22057,18 @@
 				"type": "choice"
 			},
 			{
+				"body": "Install configuration sets other organisations have published, such as a leave policy or a review cycle. Each card has its own Load button. Pick \"No templates\" to start without one; the Marketplace offers the same sets later.",
+				"configKey": "setup_templates",
+				"display": "cards",
+				"id": "templates",
+				"loadAction": "install-template",
+				"multiple": true,
+				"optionsSource": "templates",
+				"required": false,
+				"title": "Templates",
+				"type": "choice"
+			},
+			{
 				"body": "That's it. Open Employees to see your people, or reopen this setup anytime from the app's … menu.",
 				"healthCheck": true,
 				"id": "done",

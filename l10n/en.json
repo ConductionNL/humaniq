@@ -4253,7 +4253,11 @@
         "Today": "Today",
         "Clocked in": "Clocked in",
         "Rostered start": "Rostered start",
-        "No one you may read is placed in a unit today": "No one you may read is placed in a unit today"
+        "No one you may read is placed in a unit today": "No one you may read is placed in a unit today",
+        "Templates": "Templates",
+        "Install configuration sets other organisations have published, such as a leave policy or a review cycle. Each card has its own Load button. Pick \"No templates\" to start without one; the Marketplace offers the same sets later.": "Install configuration sets other organisations have published, such as a leave policy or a review cycle. Each card has its own Load button. Pick \"No templates\" to start without one; the Marketplace offers the same sets later.",
+        "No templates": "No templates",
+        "Start without a published set. You can install one later from the Marketplace.": "Start without a published set. You can install one later from the Marketplace."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

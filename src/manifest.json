@@ -109,6 +109,18 @@
 				]
 			},
 			{
+				"id": "templates",
+				"type": "choice",
+				"display": "cards",
+				"multiple": true,
+				"optionsSource": "templates",
+				"configKey": "setup_templates",
+				"loadAction": "install-template",
+				"required": false,
+				"title": "Templates",
+				"body": "Install configuration sets other organisations have published, such as a leave policy or a review cycle. Each card has its own Load button. Pick \"No templates\" to start without one; the Marketplace offers the same sets later."
+			},
+			{
 				"id": "done",
 				"type": "summary",
 				"healthCheck": true,
