@@ -41,14 +41,24 @@
       compares the option values with `SetupAdministrations::MODES`.
 - [x] 2.4 `language`: choice, `configKey: default_language`, values `nl` and `en`.
       Done: a dropdown choice after `working-mode`, same test.
-- [ ] 2.5 `done`: `summaryEditable: true`, a `summaryHint` per step from the board, health check
+- [x] 2.5 `done`: `summaryEditable: true`, a `summaryHint` per step from the board, health check
       on. Keep `templates` exactly as `configuration-store` declares it.
+      Done: `done` carries `summaryEditable: true` and `healthCheck: true`; every answered step
+      (`demo-data`, `administrations`, `working-mode`, `language`, `templates`) carries a one-line
+      `summaryHint`, `welcome` (info) none. The board's own hint lines are not in the repository,
+      so each hint restates its step's body in one sentence; 5.2's live pass compares them with
+      the board. `templates` is unchanged apart from its hint. Verified by
+      `SetupControllerTest::testTheDoneStepRecapsEveryAnswerWithAHintAndAChangeButton` on both
+      manifests.
 - [ ] 2.6 Add `nl` and `en` catalogue entries for every new string.
       Progress: the `working-mode` and `language` strings and the updated `welcome` body are in
       `l10n/` (`npm run check:l10n` passes); the `administrations`, `templates` and `done`
       strings follow with 2.1, 2.2 and 2.5.
       The `administrations` strings (body, "Add administration") and the `welcome` body naming
       the step are in `l10n/`; the `templates` and `done` strings follow with 2.1 and 2.5.
+      The `templates` and `done` strings and the five recap hints of 2.5 are in `l10n/`
+      (`npm run check:l10n` passes). Left open on 2.1: moving the orientation sentence into the
+      `administrations` body adds a string once the step order is settled.
 
 ## 3. Server (lib/Controller/SetupController.php)
 

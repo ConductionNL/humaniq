@@ -645,6 +645,37 @@ class SetupControllerTest extends TestCase {
 	}
 
 	/**
+	 * The Klaar step recaps every answered step with a Change button, and
+	 * every step a reader answers carries one line of explanation for its
+	 * recap row. The info step is not an answer, so it has neither.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-klaar-step-shall-recap-every-answer-with-a-way-back-to-change-it-req-fts-011
+	 *
+	 * @return void
+	 */
+	public function testTheDoneStepRecapsEveryAnswerWithAHintAndAChangeButton(): void {
+		foreach (['manifest.json', 'manifest.effective.json'] as $file) {
+			$manifest = json_decode((string)file_get_contents(__DIR__ . '/../../../src/' . $file), true);
+			$steps    = array_column($manifest['setup']['steps'], null, 'id');
+
+			$done = $steps['done'] ?? [];
+			$this->assertSame('summary', $done['type'] ?? null, $file);
+			$this->assertTrue($done['summaryEditable'] ?? false, $file);
+			$this->assertTrue($done['healthCheck'] ?? false, $file);
+
+			foreach ($steps as $id => $step) {
+				if (in_array($step['type'], ['info', 'summary'], true) === true) {
+					$this->assertArrayNotHasKey('summaryHint', $step, $file . ' ' . $id);
+					continue;
+				}
+
+				$this->assertIsString($step['summaryHint'] ?? null, $file . ' ' . $id);
+				$this->assertNotSame('', trim($step['summaryHint']), $file . ' ' . $id);
+			}
+		}
+	}
+
+	/**
 	 * A controller whose request posts the given params, over the given Sjablonen step.
 	 *
 	 * @param array<string, mixed> $params    The posted body.
