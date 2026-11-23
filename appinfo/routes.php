@@ -252,6 +252,12 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // SPA catch-all — Vue history mode; specific routes MUST precede this.
         // self-service-mobile (design.md D1): the web manifest and service worker of the
         // installable Mijn HR. Public static assets, declared before the catch-all.
+        // configuration-store D1: the Marketplace page and the setup wizard's Sjablonen
+        // step read and install configuration sets through OpenRegister's store plane.
+        // The controller is OpenRegister's, bound under this app's namespace in
+        // Application::register(); humaniq holds no store code of its own.
+        ['name' => 'store#search',  'url' => '/api/store/items', 'verb' => 'GET'],
+        ['name' => 'store#install', 'url' => '/api/store/items/{slug}/install', 'verb' => 'POST', 'requirements' => ['slug' => '[a-z0-9][a-z0-9-]*[a-z0-9]']],
         ['name' => 'pwa#manifest',      'url' => '/manifest.webmanifest', 'verb' => 'GET'],
         ['name' => 'pwa#serviceWorker', 'url' => '/service-worker.js',    'verb' => 'GET'],
         ['name' => 'page#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],

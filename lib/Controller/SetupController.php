@@ -41,7 +41,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCA\Humaniq\Service\Setup\SetupAdministrations;
-use OCA\Humaniq\Service\Setup\SetupHealthCheck;
+use OCA\Humaniq\Service\Setup\SetupStepServices;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -108,7 +108,7 @@ class SetupController extends Controller {
 	 * @param DemoDataServiceInterface $demoDataService Imports the shipped demo dataset.
 	 * @param SetupAdministrations $setupAdministrations Creates the Administraties step's administrations and writes the working mode.
 	 * @param IUserSession    $userSession     The administrator running the wizard.
-	 * @param SetupHealthCheck $healthCheck    The Klaar step's health check.
+	 * @param SetupStepServices $steps        The Klaar step's health check and the Sjablonen step, which lists and installs configuration sets through OpenRegister's store.
 	 *
 	 * @return void
 	 */
@@ -119,7 +119,7 @@ class SetupController extends Controller {
 		private readonly DemoDataServiceInterface $demoDataService,
 		private readonly SetupAdministrations $setupAdministrations,
 		private readonly IUserSession $userSession,
-		private readonly SetupHealthCheck $healthCheck,
+		private readonly SetupStepServices $steps,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -149,6 +149,7 @@ class SetupController extends Controller {
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-the-status-names-every-step
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-answered-step-stays-closed
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function status(): JSONResponse {
@@ -163,6 +164,9 @@ class SetupController extends Controller {
 				// The choice step declares `optionsSource: datasets` and no
 				// options of its own, so this list IS the card set.
 				'datasets'  => $this->demoDataService->listChoices(),
+				// The Sjablonen step declares `optionsSource: templates`: the
+				// sets OpenRegister's store lists for humaniq, "none" first.
+				'templates' => $this->steps->templates->choices(),
 				'steps'     => [
 					'welcome'        => ['done' => true],
 					// Administraties reads done once administrations were
@@ -176,12 +180,15 @@ class SetupController extends Controller {
 					// Exactly the ids of `manifest.setup.steps`: a step the
 					// server never reports stays open and reopens the wizard.
 					'demo-data'      => ['done' => ($demoDecided === true || $picked !== '')],
+					// Sjablonen reads done once a set was installed or "none"
+					// was picked: skipping is an answer, so the step stays closed.
+					'templates'      => ['done' => $this->steps->templates->isAnswered()],
 					'done'           => ['done' => true],
 				],
 				// The Klaar step's health check: what the import left, whether
 				// background jobs run, which payroll tables are loaded. A
 				// failure reads as failed, never as passed.
-				'health'    => $this->healthCheck->check(),
+				'health'    => $this->steps->healthCheck->check(),
 			]
 		);
 
@@ -208,11 +215,17 @@ class SetupController extends Controller {
 	 *       additionally admit delegated settings admins.
 	 *
 	 * @spec exclude Setup action dispatch; ADR-042 contract, no per-app behavioural spec.
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function runAction(string $actionId): JSONResponse {
 		if ($actionId === 'load-demo-data' || $actionId === 'install-demo-data') {
 			return $this->loadDataset(actionId: $actionId);
+		}
+
+		$templates = $this->templatesAction(actionId: $actionId);
+		if ($templates !== null) {
+			return $templates;
 		}
 
 		$administrations = $this->administrationsAction(actionId: $actionId);
@@ -368,6 +381,37 @@ class SetupController extends Controller {
 
 		return null;
 	}//end administrationsAction()
+
+	/**
+	 * Run the Sjablonen step's install or skip action, or null for any other action.
+	 *
+	 * A card's Load button posts `{ dataset: <slug> }`; the install itself is
+	 * OpenRegister's store install, the same one the Marketplace page calls.
+	 *
+	 * @param string $actionId The action.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 */
+	private function templatesAction(string $actionId): ?JSONResponse {
+		if ($actionId === 'install-template') {
+			$outcome = $this->steps->templates->install(slug: $this->request->getParam('dataset'));
+
+			return new JSONResponse(
+				data: ['success' => $outcome['success'], 'message' => $outcome['message']],
+				statusCode: $outcome['status'],
+			);
+		}
+
+		if ($actionId === 'skip-templates') {
+			$this->steps->templates->skip();
+
+			return new JSONResponse(data: ['success' => true, 'message' => 'Templates skipped.']);
+		}
+
+		return null;
+	}//end templatesAction()
 
 	/**
 	 * A 400 for a posted value of a choice the app reads back that is not one of its options, or null.

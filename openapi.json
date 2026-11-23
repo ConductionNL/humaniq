@@ -250,6 +250,10 @@
         {
             "name": "expense-vat",
             "description": "The VAT to reclaim on reimbursed claims."
+        },
+        {
+            "name": "store",
+            "description": "Configuration sets offered and installed through OpenRegister's store plane."
         }
     ],
     "paths": {
@@ -5550,6 +5554,84 @@
                                 "schema": {}
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/store/items": {
+            "get": {
+                "operationId": "store-search",
+                "summary": "List the configuration sets the store offers",
+                "description": "List the configuration sets humaniq's store offers: the app's own items and, with a registry configured, what trusted publishers published. With no registry configured no outside call is made. Served by OpenRegister's store plane for this app. Needs a signed-in user.",
+                "tags": [
+                    "store"
+                ],
+                "x-provided-by": "openregister",
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/store/items/{slug}/install": {
+            "post": {
+                "operationId": "store-install",
+                "summary": "Install one configuration set",
+                "description": "Install one configuration set through OpenRegister's store, the install the Marketplace page and the setup wizard's templates step both use. Served by OpenRegister's store plane for this app. Needs an administrator.",
+                "tags": [
+                    "store"
+                ],
+                "x-provided-by": "openregister",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "description": "The set's slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
