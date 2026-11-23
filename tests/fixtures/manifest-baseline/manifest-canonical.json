@@ -21971,6 +21971,7 @@
 				"loadAction": "load-demo-data",
 				"optionsSource": "datasets",
 				"required": false,
+				"summaryHint": "Leave this on None for a production install.",
 				"title": "Load example data?",
 				"type": "choice"
 			},
@@ -22012,6 +22013,7 @@
 					"type": "object"
 				},
 				"skippable": true,
+				"summaryHint": "An administration with a known payroll tax number is reused, never added twice.",
 				"title": "Administrations",
 				"type": "config-fields"
 			},
@@ -22035,6 +22037,7 @@
 					}
 				],
 				"required": false,
+				"summaryHint": "You can change it later per administration under Configuration, Administrations.",
 				"title": "Way of working",
 				"type": "choice"
 			},
@@ -22053,6 +22056,7 @@
 					}
 				],
 				"required": false,
+				"summaryHint": "Employees who picked their own language keep it.",
 				"title": "Language",
 				"type": "choice"
 			},
@@ -22065,6 +22069,7 @@
 				"multiple": true,
 				"optionsSource": "templates",
 				"required": false,
+				"summaryHint": "The Marketplace offers the same sets later.",
 				"title": "Templates",
 				"type": "choice"
 			},
@@ -22072,6 +22077,7 @@
 				"body": "That's it. Open Employees to see your people, or reopen this setup anytime from the app's … menu.",
 				"healthCheck": true,
 				"id": "done",
+				"summaryEditable": true,
 				"title": "You're ready",
 				"type": "summary"
 			}

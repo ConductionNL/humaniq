@@ -4255,7 +4255,12 @@ OC.L10N.register(
         "Templates": "Templates",
         "Install configuration sets other organisations have published, such as a leave policy or a review cycle. Each card has its own Load button. Pick \"No templates\" to start without one; the Marketplace offers the same sets later.": "Install configuration sets other organisations have published, such as a leave policy or a review cycle. Each card has its own Load button. Pick \"No templates\" to start without one; the Marketplace offers the same sets later.",
         "No templates": "No templates",
-        "Start without a published set. You can install one later from the Marketplace.": "Start without a published set. You can install one later from the Marketplace."
+        "Start without a published set. You can install one later from the Marketplace.": "Start without a published set. You can install one later from the Marketplace.",
+        "Leave this on None for a production install.": "Leave this on None for a production install.",
+        "An administration with a known payroll tax number is reused, never added twice.": "An administration with a known payroll tax number is reused, never added twice.",
+        "You can change it later per administration under Configuration, Administrations.": "You can change it later per administration under Configuration, Administrations.",
+        "Employees who picked their own language keep it.": "Employees who picked their own language keep it.",
+        "The Marketplace offers the same sets later.": "The Marketplace offers the same sets later."
     },
     "nplurals=2; plural=(n != 1);"
 )

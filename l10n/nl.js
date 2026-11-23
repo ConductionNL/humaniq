@@ -4255,7 +4255,12 @@ OC.L10N.register(
         "Templates": "Sjablonen",
         "Install configuration sets other organisations have published, such as a leave policy or a review cycle. Each card has its own Load button. Pick \"No templates\" to start without one; the Marketplace offers the same sets later.": "Installeer configuratiesets die andere organisaties hebben gepubliceerd, zoals een verlofbeleid of een beoordelingscyclus. Elke kaart heeft een eigen Laden-knop. Kies \"Geen sjablonen\" om zonder te beginnen; de Marketplace biedt dezelfde sets later aan.",
         "No templates": "Geen sjablonen",
-        "Start without a published set. You can install one later from the Marketplace.": "Begin zonder gepubliceerde set. Je kunt er later een installeren vanuit de Marketplace."
+        "Start without a published set. You can install one later from the Marketplace.": "Begin zonder gepubliceerde set. Je kunt er later een installeren vanuit de Marketplace.",
+        "Leave this on None for a production install.": "Laat dit op Geen staan bij een productie-installatie.",
+        "An administration with a known payroll tax number is reused, never added twice.": "Een administratie met een bekend loonheffingennummer wordt hergebruikt, nooit dubbel toegevoegd.",
+        "You can change it later per administration under Configuration, Administrations.": "Je kunt het later per administratie wijzigen onder Configuratie, Administraties.",
+        "Employees who picked their own language keep it.": "Medewerkers die zelf een taal kozen, houden die.",
+        "The Marketplace offers the same sets later.": "De Marketplace biedt dezelfde sets later aan."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -17,6 +17,7 @@
 			},
 			{
 				"id": "demo-data",
+				"summaryHint": "Leave this on None for a production install.",
 				"type": "choice",
 				"display": "cards",
 				"optionsSource": "datasets",
@@ -28,6 +29,7 @@
 			},
 			{
 				"id": "administrations",
+				"summaryHint": "An administration with a known payroll tax number is reused, never added twice.",
 				"type": "config-fields",
 				"action": "create-administrations",
 				"skippable": true,
@@ -69,6 +71,7 @@
 			},
 			{
 				"id": "working-mode",
+				"summaryHint": "You can change it later per administration under Configuration, Administrations.",
 				"type": "choice",
 				"display": "cards",
 				"configKey": "working_mode",
@@ -92,6 +95,7 @@
 			},
 			{
 				"id": "language",
+				"summaryHint": "Employees who picked their own language keep it.",
 				"type": "choice",
 				"configKey": "default_language",
 				"required": false,
@@ -110,6 +114,7 @@
 			},
 			{
 				"id": "templates",
+				"summaryHint": "The Marketplace offers the same sets later.",
 				"type": "choice",
 				"display": "cards",
 				"multiple": true,
@@ -122,6 +127,7 @@
 			},
 			{
 				"id": "done",
+				"summaryEditable": true,
 				"type": "summary",
 				"healthCheck": true,
 				"title": "You're ready",
