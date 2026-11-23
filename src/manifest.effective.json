@@ -21958,7 +21958,7 @@
 		"enabled": true,
 		"steps": [
 			{
-				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: pick whether to load example data, say how you work and pick a language, and you're ready.",
+				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: pick whether to load example data, add your administrations, say how you work and pick a language, and you're ready.",
 				"id": "welcome",
 				"title": "Welcome to Humaniq",
 				"type": "info"
@@ -21973,6 +21973,47 @@
 				"required": false,
 				"title": "Load example data?",
 				"type": "choice"
+			},
+			{
+				"action": "create-administrations",
+				"body": "Add each employer you run payroll for, with its payroll tax number. Running this step again adds nothing twice: an administration with a known payroll tax number is reused.",
+				"id": "administrations",
+				"optionalLabels": true,
+				"schema": {
+					"properties": {
+						"administrations": {
+							"addLabel": "Add administration",
+							"items": {
+								"properties": {
+									"kvkNumber": {
+										"title": "Chamber of Commerce number",
+										"type": "string"
+									},
+									"loonheffingennummer": {
+										"title": "Payroll tax number",
+										"type": "string"
+									},
+									"name": {
+										"title": "Name",
+										"type": "string"
+									}
+								},
+								"required": [
+									"name",
+									"loonheffingennummer"
+								],
+								"type": "object"
+							},
+							"repeatable": true,
+							"title": "Administrations",
+							"type": "array"
+						}
+					},
+					"type": "object"
+				},
+				"skippable": true,
+				"title": "Administrations",
+				"type": "config-fields"
 			},
 			{
 				"body": "This decides which parts of Humaniq you see: a sole proprietorship runs no payroll, and a director-major shareholder on their own sees no team screens. You can change it later per administration under Configuration, Administrations.",

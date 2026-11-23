@@ -581,4 +581,66 @@ class SetupControllerTest extends TestCase {
 			$this->assertLessThan(array_search('done', $ids, true), array_search('language', $ids, true), $file);
 		}
 	}
+
+	/**
+	 * Administraties reads not done until administrations were created or
+	 * the step was skipped; either answer closes it.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-the-status-names-every-step
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-answered-step-stays-closed
+	 *
+	 * @return void
+	 */
+	public function testTheAdministrationsStepReadsDoneOnceCreatedOrSkipped(): void {
+		$stored = [];
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use (&$stored): string {
+				return $stored[$key] ?? $default;
+			}
+		);
+
+		$this->assertSame(['done' => false], $this->controller->status()->getData()['steps']['administrations']);
+
+		$stored = ['administrations_decided' => 'created'];
+		$this->assertSame(['done' => true], $this->controller->status()->getData()['steps']['administrations']);
+
+		$stored = ['administrations_decided' => 'skipped'];
+		$this->assertSame(['done' => true], $this->controller->status()->getData()['steps']['administrations']);
+	}
+
+	/**
+	 * The manifest's Administraties step posts a repeatable group named
+	 * `administrations` to the action the controller creates them with, with
+	 * the fields SetupAdministrations reads, and sits between the example
+	 * data offer and Werkwijze, which writes the mode on what it created.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-the-administraties-step-shall-create-the-administrations-humaniq-starts-with-req-fts-008
+	 *
+	 * @return void
+	 */
+	public function testTheManifestDeclaresTheAdministrationsStep(): void {
+		foreach (['manifest.json', 'manifest.effective.json'] as $file) {
+			$manifest = json_decode((string)file_get_contents(__DIR__ . '/../../../src/' . $file), true);
+			$steps    = array_column($manifest['setup']['steps'], null, 'id');
+			$ids      = array_keys($steps);
+
+			$step = $steps['administrations'] ?? [];
+			$this->assertSame('config-fields', $step['type'] ?? null, $file);
+			$this->assertSame('create-administrations', $step['action'] ?? null, $file);
+			$this->assertTrue($step['skippable'] ?? false, $file);
+
+			$group = $step['schema']['properties']['administrations'] ?? [];
+			$this->assertSame('array', $group['type'] ?? null, $file);
+			$this->assertTrue($group['repeatable'] ?? false, $file);
+			$fields = array_keys($group['items']['properties'] ?? []);
+			sort($fields);
+			$this->assertSame(['kvkNumber', 'loonheffingennummer', 'name'], $fields, $file);
+			$required = ($group['items']['required'] ?? []);
+			sort($required);
+			$this->assertSame(['loonheffingennummer', 'name'], $required, $file);
+
+			$this->assertGreaterThan(array_search('demo-data', $ids, true), array_search('administrations', $ids, true), $file);
+			$this->assertLessThan(array_search('working-mode', $ids, true), array_search('administrations', $ids, true), $file);
+		}
+	}
 }

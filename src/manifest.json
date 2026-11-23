@@ -13,7 +13,7 @@
 				"id": "welcome",
 				"type": "info",
 				"title": "Welcome to Humaniq",
-				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: pick whether to load example data, say how you work and pick a language, and you're ready."
+				"body": "Manage your people, contracts, leave and payroll in one place. This takes a minute: pick whether to load example data, add your administrations, say how you work and pick a language, and you're ready."
 			},
 			{
 				"id": "demo-data",
@@ -25,6 +25,47 @@
 				"required": false,
 				"title": "Load example data?",
 				"body": "Example data fills the employee lists, contracts and dashboards so you can see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install."
+			},
+			{
+				"id": "administrations",
+				"type": "config-fields",
+				"action": "create-administrations",
+				"skippable": true,
+				"optionalLabels": true,
+				"title": "Administrations",
+				"body": "Add each employer you run payroll for, with its payroll tax number. Running this step again adds nothing twice: an administration with a known payroll tax number is reused.",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"administrations": {
+							"type": "array",
+							"title": "Administrations",
+							"repeatable": true,
+							"addLabel": "Add administration",
+							"items": {
+								"type": "object",
+								"required": [
+									"name",
+									"loonheffingennummer"
+								],
+								"properties": {
+									"name": {
+										"type": "string",
+										"title": "Name"
+									},
+									"loonheffingennummer": {
+										"type": "string",
+										"title": "Payroll tax number"
+									},
+									"kvkNumber": {
+										"type": "string",
+										"title": "Chamber of Commerce number"
+									}
+								}
+							}
+						}
+					}
+				}
 			},
 			{
 				"id": "working-mode",

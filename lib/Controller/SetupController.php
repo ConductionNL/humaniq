@@ -147,6 +147,7 @@ class SetupController extends Controller {
 	 *
 	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-the-status-names-every-step
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-answered-step-stays-closed
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
@@ -164,6 +165,10 @@ class SetupController extends Controller {
 				'datasets'  => $this->demoDataService->listChoices(),
 				'steps'     => [
 					'welcome'        => ['done' => true],
+					// Administraties reads done once administrations were
+					// created through the step or the step was skipped: both
+					// write the decided key, so an answered step stays closed.
+					'administrations' => ['done' => $this->isAnswered(key: SetupAdministrations::DECIDED_KEY)],
 					// Werkwijze and Taal read done once answered: the choice
 					// the app reads back is stored.
 					'working-mode'   => ['done' => $this->isAnswered(key: self::WORKING_MODE_KEY)],
