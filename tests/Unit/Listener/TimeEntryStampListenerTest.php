@@ -826,7 +826,7 @@ class TimeEntryStampListenerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
 	 */
 	public function testAClientCannotApproveItsOwnEntry(): void {
 		$event = new ObjectCreatingEvent($this->entryEntity([
@@ -851,7 +851,7 @@ class TimeEntryStampListenerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
 	 */
 	public function testAnEntryOnARejectedTimesheetCarriesRejected(): void {
 		$this->store->seed('Timesheet', 'ts-rejected', [

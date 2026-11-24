@@ -30,7 +30,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+ * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Stamps a timesheet's approval state on its time entries.
  *
- * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+ * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
  */
 class TimeEntryApprovalStamper {
 
@@ -78,7 +78,7 @@ class TimeEntryApprovalStamper {
 	 *
 	 * @return array{approvalState: string, approvedAt: string|null}
 	 *
-	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
 	 */
 	public function stampFor(array $timesheet): array {
 		$status = strtolower(trim((string)($timesheet['status'] ?? '')));
@@ -105,7 +105,7 @@ class TimeEntryApprovalStamper {
 	 *
 	 * @return array{inspected: int, changed: int, failed: int}
 	 *
-	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
 	 */
 	public function carryDown(string $timesheetId, array $timesheet): array {
 		$report = ['inspected' => 0, 'changed' => 0, 'failed' => 0];
@@ -130,7 +130,7 @@ class TimeEntryApprovalStamper {
 	 *
 	 * @return array{inspected: int, changed: int, failed: int}
 	 *
-	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
 	 */
 	public function restampAll(): array {
 		$stamps = [];
