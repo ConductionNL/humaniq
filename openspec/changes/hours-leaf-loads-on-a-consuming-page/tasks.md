@@ -85,9 +85,15 @@
 
 ## 7. Counterparts, raised elsewhere
 
-- [ ] 7.1 Raise the dossiq change: mount `humaniq-hours` on the case detail
+- [x] 7.1 Raise the dossiq change: mount `humaniq-hours` on the case detail
       page and retire the `case-kpis-hours` stats block and the `log-hours`
       header action, which hard-code humaniq's register slug and schema name.
+      Done in dossiq already: change `hours-onto-humaniq-leaf` (archived
+      2026-09-18, spec `case-hours-via-humaniq-leaf` REQ-HRS-001). On dossiq
+      development fc6d4f97 `case-kpis-hours` in `src/manifest.json` is
+      `{"type": "integration", "integrationId": "humaniq-hours"}`, the
+      `log-hours` action is gone, and no part of the manifest names the
+      humaniq register. 7.2 waits on the live check of 6.5.
 - [ ] 7.2 Tell the owners of `time-entry-domain-object-ref` and shillinq's
       `hours-to-humaniq` that the leaf now renders, because both were written
       against a leaf nobody could see.
