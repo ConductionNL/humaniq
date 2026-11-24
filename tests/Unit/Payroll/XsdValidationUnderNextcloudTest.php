@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
  */
 

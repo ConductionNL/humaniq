@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Which corrections a return carries.
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
  */
 class CarriedCorrections {
 
@@ -52,7 +52,7 @@ class CarriedCorrections {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function forReturn(array $filing): array {
 		$carried = [];
@@ -94,7 +94,7 @@ class CarriedCorrections {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function stamp(array $correction, string $filingId): void {
 		if ($filingId === '' || (string)($correction['carriedBy'] ?? '') === $filingId) {

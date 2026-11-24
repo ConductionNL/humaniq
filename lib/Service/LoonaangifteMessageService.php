@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use OCP\IAppConfig;
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The pure message classes are static by design, the UbdMessage precedent.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 class LoonaangifteMessageService {
 
@@ -91,9 +91,9 @@ class LoonaangifteMessageService {
 	 *
 	 * @return array{status: string, filingId: string, blockingFindings?: int, warningFindings?: int, messageFileName?: string, message?: string}
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function render(array $filing, string $userId): array {
 		$filingId = (string)($filing['id'] ?? '');
@@ -222,7 +222,7 @@ class LoonaangifteMessageService {
 	 *
 	 * @return array{run: array<string, mixed>|null, administration: array<string, mixed>, lines: list<array{employeeId: string, tree: array<string, mixed>, cents: array<string, int>, findings: list<array{kind: string, severity: string, employeeId: string, element: string, problem: string}>}>}
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function periodLines(string $administrationId, string $period, array $dates): array {
 		$run = $this->approvedRun($administrationId, $period);
@@ -240,7 +240,7 @@ class LoonaangifteMessageService {
 	 *
 	 * @return array{idBer: string, createdAt: string, relNr: string, software: string}
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function header(string $prefix): array {
 		return [
@@ -261,7 +261,7 @@ class LoonaangifteMessageService {
 	 *
 	 * @return array{0: array{xml: string, fileName: string}|null, 1: list<array<string, string>>}
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function validated(array $tree, array $year, string $fileName, array $findings): array {
 		$xml = LoonaangifteMessage::render($year['namespace'], $year['version'], $tree);

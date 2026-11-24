@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Payroll\Loonaangifte;
 /**
  * The income period of an income relationship.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 final class PeriodPart {
 
@@ -57,7 +57,7 @@ final class PeriodPart {
 	 *
 	 * @return array<string, string|null>
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function make(LineFacts $facts, string $code, string $start): array {
 		$kind = self::relationshipKind($facts, $code);
@@ -86,7 +86,7 @@ final class PeriodPart {
 	 *
 	 * @return string
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function incomeCode(LineFacts $facts): string {
 		if (($facts->employee['isDga'] ?? false) === true && $facts->insured() === false) {
@@ -103,7 +103,7 @@ final class PeriodPart {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function fourWeekly(LineFacts $facts): bool {
 		return preg_match('/-P\d{2}$/', (string)($facts->payslip['period'] ?? '')) === 1;

@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Edge paths of CorrectionDiff.
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
  */
 class CorrectionDiffTest extends TestCase {
 

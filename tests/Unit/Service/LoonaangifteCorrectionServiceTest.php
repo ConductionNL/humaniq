@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-001
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-001
  */
 
 declare(strict_types=1);
@@ -276,7 +276,7 @@ class LoonaangifteCorrectionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function testTheEdgesOfMakingACorrection(): void {
 		$service = $this->service('2026-05-15');

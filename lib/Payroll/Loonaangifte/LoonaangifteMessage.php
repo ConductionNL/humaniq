@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use OCA\Humaniq\Payroll\XsdFile;
 /**
  * The wage tax return message: serialise and validate.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 final class LoonaangifteMessage {
 
@@ -52,7 +52,7 @@ final class LoonaangifteMessage {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	public static function render(string $namespace, string $version, array $tree): string {
 		$doc = new DOMDocument('1.0', 'UTF-8');
@@ -73,7 +73,7 @@ final class LoonaangifteMessage {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	public static function errors(string $xml, string $xsd): array {
 		return (new XsdFile())->errors(xml: $xml, xsd: $xsd);

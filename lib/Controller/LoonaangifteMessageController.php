@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use OCP\IRequest;
 /**
  * Make the wage tax return message of a filing.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 class LoonaangifteMessageController extends Controller {
 
@@ -68,7 +68,7 @@ class LoonaangifteMessageController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	#[NoAdminRequired]
 	public function render(?string $filingId=null): JSONResponse {
@@ -104,7 +104,7 @@ class LoonaangifteMessageController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-001
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-001
 	 */
 	#[NoAdminRequired]
 	public function correction(?string $filingId=null): JSONResponse {

@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use DOMElement;
 /**
  * The difference between the last received stand and the current one.
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
  */
 final class CorrectionDiff {
 
@@ -55,7 +55,7 @@ final class CorrectionDiff {
 	 *
 	 * @return array<string, array{numIv: string, bsn: string, persNr: string, values: array<string, string>}>
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public static function fromXml(string $xml): array {
 		$doc = new DOMDocument();
@@ -84,7 +84,7 @@ final class CorrectionDiff {
 	 *
 	 * @return array<string, array{numIv: string, bsn: string, persNr: string, values: array<string, string>}>
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public static function apply(array $relationships, array $tree): array {
 		foreach ((array)($tree['InkomstenverhoudingInitieel'] ?? []) as $initial) {
@@ -108,7 +108,7 @@ final class CorrectionDiff {
 	 *
 	 * @return array{lines: list<array<string, mixed>>, initial: list<array<string, mixed>>, withdrawn: list<array<string, string>>}
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public static function compare(array $received, array $current): array {
 		$run = new CorrectionComparison();

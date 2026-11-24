@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 
 declare(strict_types=1);
@@ -181,7 +181,7 @@ class LoonaangifteMessageControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-001
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-001
 	 */
 	public function testCorrectAndMakeACorrection(): void {
 		$sent = ['id' => 'f-1', 'status' => 'verzonden'];
