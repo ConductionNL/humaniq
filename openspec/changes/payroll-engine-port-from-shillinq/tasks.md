@@ -28,14 +28,23 @@
 
 ## 2. Premium in the pack and the run
 
-- [ ] 2.1 Add the steps `pensioengrondslag`, `pensionEmployee` (reduces net and the taxable
+- [x] 2.1 Add the steps `pensioengrondslag`, `pensionEmployee` (reduces net and the taxable
       wage) and `pensionEmployer` (employer charge) to `nl-2026.pack.json` (D1), plus golden
       vectors for the three REQ-PPP-001 scenarios. Verify: `PackValidator` passes and the nine
       existing fixtures are unchanged.
-- [ ] 2.2 In `PayrollRunService`, read the participation in force and pass the scheme
+      Built: inputs `pensionBase` and the two percentages, bindings `pensionBase`,
+      `pensionEmployeePremium` (deducted in `belastbaarLoon`) and `loonNaVrijstelling` (the
+      reserves' unchanged base), the three steps, three inline vectors; pack 1.3.0. The base is
+      an input computed by the run with `PensionBase` (O1). `NlPackTest` (every fixture
+      unchanged), `PensionPremiumCalculationTest`.
+- [x] 2.2 In `PayrollRunService`, read the participation in force and pass the scheme
       parameters; replace the constant `pensionContribution: 0.0` with the step results and add
       `pensionEmployer` to `Payslip` in `hr-objects.json`. Verify: unit tests for the three
       REQ-PPP-001 scenarios through the real run.
+      Built: `PensionPremiumService` (participation in force and the fund's scheme on the last
+      day of the period), `PensionPremium` on `CalculationInput`, `pensionEmployer` and
+      `pensionBase` on `Payslip` (stamped for participants only). `PensionPremiumServiceTest`,
+      `PayrollRunServiceTest::testAParticipantsPayslipWithholdsThePensionPremium`.
 - [ ] 2.3 Add pension lines to `PayrollGLPostService::buildLines()` and the setting
       `gl_account_pension_payable` (D4, REQ-PPP-003). Verify: unit tests that the entry
       balances and that a missing account writes nothing and logs why.
