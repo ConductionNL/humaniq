@@ -11010,8 +11010,8 @@
     "owner": "ConductionNL/humaniq",
     "change": "time-entry-approval-state",
     "requirement": [
-     "openspec/changes/time-entry-approval-state/specs/time-entry-approval-state :: A time entry SHALL carry the approval state of its timesheet (REQ-TAS-001)",
-     "openspec/changes/time-entry-approval-state/specs/time-entry-approval-state :: Approved billable hours SHALL be readable per project and period in one query (REQ-TAS-002)"
+     "openspec/specs/time-entry-approval-state :: A time entry SHALL carry the approval state of its timesheet (REQ-TAS-001)",
+     "openspec/specs/time-entry-approval-state :: Approved billable hours SHALL be readable per project and period in one query (REQ-TAS-002)"
     ]
    },
    "provider": "humaniq",
