@@ -9,7 +9,8 @@
 
 - [x] 2.1 Add the HR-vraagbaak agent definition in the form hermiq loads. Verify: on a dev
       instance with hermiq the agent appears in the companion's picker.
-- [ ] 2.2 Preselect it on Mijn HR routes. Verify: `npm run lint` exits 0.
+- [x] 2.2 Preselect it on Mijn HR routes. Verify: `npm run lint` exits 0.
+      Done: `src/App.vue` passes `aiDefaultAgent` (`src/services/hrAssistantAgent.js`): HR-vraagbaak on routes under `/mijn` and on `Mijn*` pages, else '' for the library default; the prop came with @conduction/nextcloud-vue 2.204.0 (nextcloud-vue#2303). Tests: `tests/js/hrAssistantAgent.test.mjs` (5). `npm run lint` exits 0.
 
 ## 3. Verification
 

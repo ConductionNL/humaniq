@@ -10080,9 +10080,9 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'openai|chatgpt|\\bllm\\b|chatbot|\\bassistant\\b' src/plugins src/client/src: no match; no AI assistant in the code"
    },
    "built": {
-    "requirement": ["openspec/changes/self-service-policy-assistant/specs/hr-policy-assistant :: The assistant SHALL answer from the employer's published policies and cite them (REQ-HPA-001)", "openspec/changes/self-service-policy-assistant/specs/hr-policy-assistant :: The assistant SHALL NOT read personal leave, pay or sickness data (REQ-HPA-002)"],
+    "requirement": ["openspec/specs/hr-policy-assistant :: The assistant SHALL answer from the employer's published policies and cite them (REQ-HPA-001)", "openspec/specs/hr-policy-assistant :: The assistant SHALL NOT read personal leave, pay or sickness data (REQ-HPA-002)"],
     "state": "specified",
-    "evidence": "Specified in openspec/changes/self-service-policy-assistant on 2026-09-27. Before: grep -rniE 'hermiq|assistant|chatbot' lib src: no hits (see pending row rep-ai-assistant: only a read-only MCP surface on six schemas, no employee-facing assistant)",
+    "evidence": "Specified in openspec/changes/archive/2026-11-24-self-service-policy-assistant on 2026-09-27. Before: grep -rniE 'hermiq|assistant|chatbot' lib src: no hits (see pending row rep-ai-assistant: only a read-only MCP surface on six schemas, no employee-facing assistant)",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq",
     "change": "self-service-policy-assistant"

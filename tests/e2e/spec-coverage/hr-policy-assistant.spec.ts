@@ -4,7 +4,7 @@
 /**
  * The HR question assistant (self-service-policy-assistant 3.1).
  *
- * openspec/changes/self-service-policy-assistant/specs/hr-policy-assistant/spec.md
+ * openspec/specs/hr-policy-assistant/spec.md
  *   Scenario: An employee asks about the train ticket rule
  *   Scenario: An unanswerable question goes to HR
  *   Scenario: How many holiday hours do I have left

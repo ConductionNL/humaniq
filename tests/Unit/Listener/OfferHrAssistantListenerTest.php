@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/self-service-policy-assistant/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
+ * @spec openspec/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
  */
 
 declare(strict_types=1);

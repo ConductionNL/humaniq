@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Conduction B.V.
 //
 // The AI companion starts on the HR question assistant on Mijn HR routes
-// (self-service-policy-assistant design D3, task 2.2).
+// (hr-policy-assistant REQ-HPA-001, self-service-policy-assistant design D3).
 
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'

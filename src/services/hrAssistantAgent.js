@@ -12,7 +12,7 @@ export const HR_ASSISTANT_AGENT = 'HR-vraagbaak'
  * path is `/mijn` or below it, or its page id starts with `Mijn` (the
  * self-service pages that kept an English path, such as `/my-approvals`).
  *
- * @spec openspec/changes/self-service-policy-assistant/tasks.md#task-2.2
+ * @spec openspec/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
  * @param {{path?: string, name?: string|symbol}|null|undefined} route The current route.
  * @return {boolean} True on a Mijn HR route.
  */
@@ -32,7 +32,7 @@ export function isMijnHrRoute(route) {
  * on Mijn HR routes (design D3), otherwise none, so the library keeps its
  * page-relevance default.
  *
- * @spec openspec/changes/self-service-policy-assistant/tasks.md#task-2.2
+ * @spec openspec/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
  * @param {{path?: string, name?: string|symbol}|null|undefined} route The current route.
  * @return {string} The agent name, or '' for the library default.
  */

@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/self-service-policy-assistant/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
+ * @spec openspec/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use OCP\EventDispatcher\IEventListener;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/self-service-policy-assistant/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
+ * @spec openspec/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
  */
 class OfferHrAssistantListener implements IEventListener {
 
@@ -63,7 +63,7 @@ class OfferHrAssistantListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/self-service-policy-assistant/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
+	 * @spec openspec/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
 	 */
 	public function handle(Event $event): void {
 		if (method_exists($event, 'offer') === false) {
@@ -78,7 +78,7 @@ class OfferHrAssistantListener implements IEventListener {
 	 *
 	 * @return array{name: string, description: string, category: string, systemPrompt: string, tools: array<int, string>, version: string}
 	 *
-	 * @spec openspec/changes/self-service-policy-assistant/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
+	 * @spec openspec/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
 	 */
 	public static function package(): array {
 		return [

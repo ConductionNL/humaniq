@@ -91,7 +91,7 @@ export default {
 		 * so the library keeps its page-relevance default. An agent the user
 		 * picked stays picked.
 		 *
-		 * @spec openspec/changes/self-service-policy-assistant/tasks.md#task-2.2
+		 * @spec openspec/specs/hr-policy-assistant/spec.md#requirement-the-assistant-shall-answer-from-the-employers-published-policies-and-cite-them-req-hpa-001
 		 * @return {string} The agent name, or ''.
 		 */
 		aiDefaultAgent() {
