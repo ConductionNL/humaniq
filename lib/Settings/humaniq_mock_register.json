@@ -4546,10 +4546,12 @@
           },
           "receiptFile": {
             "title": "Receipt file",
-            "type": "string",
+            "type": "file",
             "nullable": true,
+            "accept": "image/*,application/pdf",
+            "capture": "environment",
             "description": "The attached receipt.",
-            "x-notes": "Reference (Nextcloud Files path or OpenRegister file id) to the attached receipt / bon."
+            "x-notes": "The attached receipt / bon: an OpenRegister file of this Expense (stored as its file id, rendered as the file object). A Files path string from before self-service-mobile is kept as sent. `capture: environment` opens the rear camera on a phone (self-service-mobile D4); `accept` offers photos and PDFs."
           },
           "vendor": {
             "title": "Vendor",

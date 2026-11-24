@@ -557,6 +557,22 @@ class ReceiptExtractionServiceTest extends TestCase {
 
 	}//end testTheReceiptIsSentAsAFileIdOrADocumentUri()
 
+	/**
+	 * A photo stored on the file property renders as OpenRegister's file
+	 * object; its id goes to docudesk as the file id.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+	 */
+	public function testARenderedFileObjectIsSentAsItsFileId(): void {
+		$file = ['id' => 812, 'path' => '/humaniq/Expense/receipt.jpg', 'mimeType' => 'image/jpeg'];
+		[$service, , $fin] = $this->service(['Expense' => [$this->emptyExpense(['receiptFile' => $file])]]);
+		$service->extractForExpense('expense-1', 'admin');
+		$this->assertSame(['fileId' => 812, 'docType' => 'receipt'], $fin->calls[0]['data']);
+
+	}//end testARenderedFileObjectIsSentAsItsFileId()
+
 	// -- REQ-RCPT-003: duck-typed degradation --------------------------------
 
 	/**

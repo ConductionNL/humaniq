@@ -13,8 +13,15 @@
 ## 2. Phone use
 
 - [x] 2.1 Add the three quick actions to `MijnHr`. Verify: `npm run check:manifest` exits 0.
-- [ ] 2.2 Add the capture hint to the expense receipt field. Verify: `npm run
+- [x] 2.2 Add the capture hint to the expense receipt field. Verify: `npm run
       check:manifest` exits 0.
+      Done: `Expense.receiptFile` is now a file property (`type: file`, `accept:
+      image/*,application/pdf`, `capture: environment`) in `register.d/hr-expense.json` and the
+      mock register, so nextcloud-vue's form renders it as `CnFileField` with the rear camera on
+      a phone. Receipt OCR reads the stored file id, the rendered file object, or a Files path
+      from before through `ReceiptExtractionRepository::receiptReference()` (12 cases, and a
+      rendered-object case in `ReceiptExtractionServiceTest`). The app version moved so instances
+      import the changed register. `check:manifest` and `check:schema-l10n` exit 0.
 - [x] 2.3 Add the opt-in notification setting on `Mijn HR` calling openregister's web-push
       registration. Verify: no permission prompt fires on page load in the e2e run.
       Done: a `device-push` widget ("Notifications on this device") at the bottom of `MijnHr`
