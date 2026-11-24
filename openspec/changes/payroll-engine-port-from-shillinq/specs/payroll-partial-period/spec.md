@@ -19,6 +19,8 @@ Rows: `pay-partial-period` (humaniq matrix). Source: `for-ruben/payroll-engine-m
 - **WHEN** the June payroll run is calculated
 - **THEN** the payslip's period factor is 0.5 and its gross salary is 1,500.00
 
+@e2e exclude The factor is the run's server-side calculation, read back through the API; the page step is in `HR reads a starter's payslip`. `PeriodFactorTest::testAStarterOnTheSixteenthOfJuneGetsHalf` and `PayrollRunServiceTest::testAStarterIsPaidTheCalendarDayShare` assert 0.5 and 1,500.00.
+
 #### Scenario: A leaver keeps per-trip travel allowances whole
 - **GIVEN** an employee whose contract ends on 10 March and who made eight commuting trips
   before that day
@@ -26,10 +28,14 @@ Rows: `pay-partial-period` (humaniq matrix). Source: `for-ruben/payroll-engine-m
 - **THEN** the salary is scaled by the period factor and the travel allowance for eight trips
   is paid in full
 
+@e2e exclude Server-side calculation only: the run scales the salary and no fold, so a per-trip allowance stays whole by construction. `PeriodFactorTest::testALeaverOnTheTenthOfMarch` and `PayrollRunServiceTest::testALeaverIsPaidUpToTheLastDay` assert the leaver's share; `PayrollRunServiceTest::testClaimsAndAllowancesArePaidThroughThePayslip` asserts the allowance fold.
+
 #### Scenario: A full month is unchanged
 - **GIVEN** an employee employed for the whole of May
 - **WHEN** the May payroll run is calculated
 - **THEN** the period factor is 1 and every amount equals the amount without this change
+
+@e2e exclude A payslip that is unchanged has nothing new for a browser to see. `PeriodFactorTest::testAWholeMonthIsUnchanged`, `PayrollRunServiceTest::testAFullMonthCarriesNoPeriodFactor` and the unchanged `PayrollRunGenerateGoldenTest` goldens assert it.
 
 ### Requirement: The payslip SHALL show why a partial period pays less (REQ-PPR-002)
 
