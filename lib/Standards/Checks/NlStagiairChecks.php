@@ -63,6 +63,8 @@ use DateTimeImmutable;
  */
 final class NlStagiairChecks implements CheckProvider, ProvidesTables {
 
+	use BuildsSatisfiedTables;
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -116,31 +118,6 @@ final class NlStagiairChecks implements CheckProvider, ProvidesTables {
 		];
 
 	}//end tables()
-
-	/**
-	 * A FIRST-hit table with a boolean `satisfied` output: the given rows,
-	 * then a catch-all satisfied row so every derivable input row decides.
-	 *
-	 * @param array<int, array<string, string>> $inputs The declared inputs.
-	 * @param array<int, array<string, mixed>>  $rules  The deciding rows, before the catch-all.
-	 *
-	 * @return array<string, mixed> The decision table.
-	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
-	 */
-	private static function satisfiedTable(array $inputs, array $rules): array {
-		$rules[] = ['id' => 'satisfied', 'inputEntries' => array_fill(0, count($inputs), '-'), 'outputEntries' => [true]];
-
-		return [
-			'hitPolicy' => 'FIRST',
-			'inputs' => $inputs,
-			'outputs' => [
-				['name' => 'satisfied', 'type' => 'boolean'],
-			],
-			'rules' => $rules,
-		];
-
-	}//end satisfiedTable()
 
 	/**
 	 * Inputs of the Stagiair table: whether the BPV-overeenkomst is strictly
