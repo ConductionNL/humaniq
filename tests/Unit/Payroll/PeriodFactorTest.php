@@ -47,7 +47,7 @@ class PeriodFactorTest extends TestCase {
 	private function factor(string $start, string $end, string $period): PeriodFactor {
 		$pay = PayPeriod::parse($period);
 
-		return PeriodFactor::of(startDate: $start, endDate: $end, periodStart: $pay->firstDay, periodEnd: $pay->lastDay);
+		return PeriodFactor::forEmployment(startDate: $start, endDate: $end, periodStart: $pay->firstDay, periodEnd: $pay->lastDay);
 	}//end factor()
 
 	/**
@@ -98,7 +98,7 @@ class PeriodFactorTest extends TestCase {
 	 * @return void
 	 */
 	public function testAStartAndEndInOneWeek(): void {
-		$factor = PeriodFactor::of(startDate: '2026-03-03', endDate: '2026-03-05T00:00:00Z', periodStart: new DateTimeImmutable('2026-03-02'), periodEnd: new DateTimeImmutable('2026-03-08'));
+		$factor = PeriodFactor::forEmployment(startDate: '2026-03-03', endDate: '2026-03-05T00:00:00Z', periodStart: new DateTimeImmutable('2026-03-02'), periodEnd: new DateTimeImmutable('2026-03-08'));
 
 		$this->assertSame(3, $factor->daysEmployed);
 		$this->assertSame(7, $factor->daysInPeriod);

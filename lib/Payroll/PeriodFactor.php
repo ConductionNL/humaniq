@@ -37,19 +37,25 @@ use DateTimeImmutable;
 final class PeriodFactor {
 
 	/**
-	 * @param float  $factor        Days employed over days in the period, 0 to 1, four decimals.
+	 * Days employed over days in the period, 0 to 1, four decimals.
+	 *
+	 * @var float
+	 */
+	public readonly float $factor;
+
+	/**
 	 * @param int    $daysEmployed  Calendar days employed in the period.
 	 * @param int    $daysInPeriod  Calendar days in the period.
 	 * @param string $employedFrom  First day employed in the period (Y-m-d).
 	 * @param string $employedUntil Last day employed in the period (Y-m-d).
 	 */
 	private function __construct(
-		public readonly float $factor,
 		public readonly int $daysEmployed,
 		public readonly int $daysInPeriod,
 		public readonly string $employedFrom,
 		public readonly string $employedUntil,
 	) {
+		$this->factor = round(($daysEmployed / $daysInPeriod), 4);
 	}//end __construct()
 
 	/**
@@ -66,7 +72,7 @@ final class PeriodFactor {
 	 *
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
-	public static function of(string $startDate, string $endDate, DateTimeImmutable $periodStart, DateTimeImmutable $periodEnd): self {
+	public static function forEmployment(string $startDate, string $endDate, DateTimeImmutable $periodStart, DateTimeImmutable $periodEnd): self {
 		$periodStart = $periodStart->setTime(0, 0);
 		$periodEnd = $periodEnd->setTime(0, 0);
 		$from = max($periodStart, (self::day(date: $startDate, like: $periodStart) ?? $periodStart));
@@ -79,13 +85,12 @@ final class PeriodFactor {
 		}
 
 		return new self(
-			factor: round(($daysEmployed / $daysInPeriod), 4),
 			daysEmployed: $daysEmployed,
 			daysInPeriod: $daysInPeriod,
 			employedFrom: $from->format('Y-m-d'),
 			employedUntil: $until->format('Y-m-d')
 		);
-	}//end of()
+	}//end forEmployment()
 
 	/**
 	 * Whether the employee is employed for only part of the period.
@@ -130,9 +135,16 @@ final class PeriodFactor {
 			return null;
 		}
 
-		$day = DateTimeImmutable::createFromFormat('!Y-m-d', substr($date, 0, 10), $like->getTimezone());
+		$date = substr($date, 0, 10);
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+			return null;
+		}
 
-		return ($day === false ? null : $day);
+		try {
+			return new DateTimeImmutable($date, $like->getTimezone());
+		} catch (\Exception $e) {
+			return null;
+		}
 	}//end day()
 
 	/**

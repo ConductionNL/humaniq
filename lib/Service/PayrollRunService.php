@@ -1655,6 +1655,26 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	}//end periodCents()
 
 	/**
+	 * Why a starter's or leaver's salary is lower (payroll-engine-port-from-shillinq
+	 * D3): the factor and the days it counts. None for a whole period or an
+	 * hourly employee, so that payslip stays as it was.
+	 *
+	 * @param array<string, mixed> $slip The slip, with `periodFactor`.
+	 *
+	 * @return array<string, float|string>
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 */
+	private function periodFactorFields(array $slip): array {
+		$factor = ($slip['periodFactor'] ?? null);
+		if ($factor instanceof PeriodFactor === false || $factor->isPartial() === false) {
+			return [];
+		}
+
+		return ['periodFactor' => $factor->factor, 'periodFactorFrom' => $factor->employedFrom, 'periodFactorUntil' => $factor->employedUntil];
+	}//end periodFactorFields()
+
+	/**
 	 * The share of the period the employee is employed, in calendar days
 	 * (payroll-engine-port-from-shillinq D3, O2), from the employment dates
 	 * `coversPeriod()` already gated on.
@@ -1666,7 +1686,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) PeriodFactor::of is the pure value-object factory.
+	 * @SuppressWarnings(PHPMD.StaticAccess) PeriodFactor::forEmployment is the pure value-object factory.
 	 */
 	private function periodFactorFor(array $employee, string $period): PeriodFactor {
 		$lastDay = $this->lastDayOf(period: $period);
@@ -1676,7 +1696,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			$firstDay = $lastDay->modify('first day of this month');
 		}
 
-		return PeriodFactor::of(startDate: (string)($employee['startDate'] ?? ''), endDate: (string)($employee['endDate'] ?? ''), periodStart: $firstDay, periodEnd: $lastDay);
+		return PeriodFactor::forEmployment(startDate: (string)($employee['startDate'] ?? ''), endDate: (string)($employee['endDate'] ?? ''), periodStart: $firstDay, periodEnd: $lastDay);
 	}//end periodFactorFor()
 
 	/**
@@ -1894,13 +1914,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			$payload['tijdvakFactor'] = $periodsPerYear;
 		}
 
-		if (($slip['periodFactor'] ?? null) instanceof PeriodFactor && $slip['periodFactor']->isPartial() === true) {
-			// payroll-engine-port-from-shillinq D3: why a starter's or leaver's
-			// salary is lower; absent for a whole period, so that payslip stays as it was.
-			$payload['periodFactor'] = $slip['periodFactor']->factor;
-			$payload['periodFactorFrom'] = $slip['periodFactor']->employedFrom;
-			$payload['periodFactorUntil'] = $slip['periodFactor']->employedUntil;
-		}
+		$payload = array_merge($payload, $this->periodFactorFields(slip: $slip));
 
 		if (isset($slip['input']) === true && $slip['input']->pension->isEmpty() === false) {
 			// payroll-engine-port-from-shillinq D1: a participant's base and
