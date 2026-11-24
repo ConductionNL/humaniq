@@ -141,6 +141,58 @@
 							},
 							"emptyText": "No right-to-work check yet. Mark ready is refused until one passes."
 						}
+					},
+					{
+						"id": "documents-read",
+						"type": "object-list",
+						"title": "Documents read",
+						"icon": "FileAccountOutline",
+						"content": {
+							"register": "humaniq",
+							"schema": "EmployeeDocumentExtraction",
+							"filter": {
+								"onboardingId": "@objectId"
+							},
+							"sort": {
+								"field": "readAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "docType",
+									"label": "Document type"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "appliedFields",
+									"label": "Fields filled"
+								},
+								{
+									"key": "notAppliedFields",
+									"label": "Read but not applied"
+								},
+								{
+									"key": "message",
+									"label": "Message"
+								}
+							],
+							"formExcludeFields": [
+								"employeeId",
+								"status",
+								"extractedFields",
+								"appliedFields",
+								"notAppliedFields",
+								"contractId",
+								"message",
+								"readAt",
+								"readBy"
+							],
+							"limit": 10,
+							"emptyText": "No document to read yet. Add the signed contract or the identity document, then press Read document."
+						}
 					}
 				],
 				"layout": [
@@ -172,6 +224,14 @@
 						"id": 4,
 						"widgetId": "files",
 						"gridX": 0,
+						"gridY": 28,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
+						"id": 8,
+						"widgetId": "documents-read",
+						"gridX": 0,
 						"gridY": 24,
 						"gridWidth": 12,
 						"gridHeight": 4
@@ -199,6 +259,30 @@
 						"gridY": 16,
 						"gridWidth": 8,
 						"gridHeight": 4
+					}
+				],
+				"headerActions": [
+					{
+						"id": "read-document",
+						"label": "Read document",
+						"type": "api-call",
+						"icon": "FileAccountOutline",
+						"url": "/api/onboarding/@objectId/read-document",
+						"method": "POST",
+						"params": {},
+						"confirm": false,
+						"successMessage": "The documents were read. Check every value before the checklist moves on."
+					},
+					{
+						"id": "contract-from-document",
+						"label": "Create contract from document",
+						"type": "api-call",
+						"icon": "FileDocumentPlusOutline",
+						"url": "/api/onboarding/@objectId/contract-from-document",
+						"method": "POST",
+						"params": {},
+						"confirm": true,
+						"successMessage": "The contract was made from the document. Check it before it is signed."
 					}
 				],
 				"lifecycleActions": {

@@ -76,6 +76,7 @@
     "OCA\\Humaniq\\Service\\CostAllocationService::$gateway",
     "OCA\\Humaniq\\Service\\CostRateAccess::$gateway",
     "OCA\\Humaniq\\Service\\CvProfileReader::$store",
+    "OCA\\Humaniq\\Service\\EmployeeDocumentExtractionService::$store",
     "OCA\\Humaniq\\Service\\ExitInterviewService::$gateway",
     "OCA\\Humaniq\\Service\\FrequentAbsenceService::$gateway",
     "OCA\\Humaniq\\Service\\HandoffEmployeeView::$gateway",

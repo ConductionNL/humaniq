@@ -4084,6 +4084,145 @@
         "type": "object",
         "x-schema-org": "schema:EmployeeRole"
       },
+      "EmployeeDocumentExtraction": {
+        "slug": "EmployeeDocumentExtraction",
+        "icon": "FileAccountOutline",
+        "version": "0.1.0",
+        "title": "Document read",
+        "description": "A document HR attached to an onboarding case to have filinq read: an employment contract or an identity document. It records what was read, how sure filinq was of each value, which empty employee fields it filled and which it left because HR had filled them, and the contract made from it (hiring-document-to-employee REQ-HTE-003).",
+        "type": "object",
+        "required": [
+          "onboardingId",
+          "docType"
+        ],
+        "authorization": {
+          "read": [
+            "humaniq-hr"
+          ],
+          "create": [
+            "humaniq-hr"
+          ],
+          "update": [
+            "humaniq-hr"
+          ],
+          "delete": [
+            "humaniq-hr"
+          ]
+        },
+        "configuration": {
+          "exportable": true
+        },
+        "properties": {
+          "onboardingId": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "Onboarding",
+            "title": "Onboarding case",
+            "description": "The onboarding case the document belongs to."
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "$ref": "Employee",
+            "title": "Employee",
+            "description": "The new employee whose empty fields the document fills. Taken from the onboarding case when the document is read."
+          },
+          "docType": {
+            "type": "string",
+            "enum": [
+              "employment-contract",
+              "identity-document"
+            ],
+            "x-enum-labels": {
+              "employment-contract": "Employment contract",
+              "identity-document": "Identity document"
+            },
+            "title": "Document type",
+            "description": "What the document is, so filinq reads the right values."
+          },
+          "documentFile": {
+            "type": "file",
+            "nullable": true,
+            "title": "Document",
+            "description": "The signed contract or the scan of the identity document.",
+            "x-notes": "The Expense.receiptFile pattern: an OpenRegister file property, read by its file id."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "extracted",
+              "unreadable",
+              "skipped-no-docudesk",
+              "failed"
+            ],
+            "x-enum-labels": {
+              "pending": "Not read yet",
+              "extracted": "Read",
+              "unreadable": "Could not be read",
+              "skipped-no-docudesk": "Skipped: filinq is not installed",
+              "failed": "Failed"
+            },
+            "default": "pending",
+            "title": "Status",
+            "description": "Whether the document was read. Only a read document fills fields or makes a contract."
+          },
+          "extractedFields": {
+            "type": "object",
+            "additionalProperties": true,
+            "default": {},
+            "title": "Values read",
+            "description": "Each value filinq read, with how sure it was (0 to 1).",
+            "x-notes": "{field: {value, confidence}} as filinq's EmployeeDocumentExtractionService answers it (filinq#2323)."
+          },
+          "appliedFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "title": "Fields filled",
+            "description": "The employee fields that were empty and are now filled from the document."
+          },
+          "notAppliedFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "title": "Read but not applied",
+            "description": "Employee fields the document named that HR had already filled; they were left as they were."
+          },
+          "contractId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "$ref": "EmploymentContract",
+            "title": "Contract made",
+            "description": "The employment contract made from this document. One document makes at most one contract."
+          },
+          "message": {
+            "type": "string",
+            "nullable": true,
+            "title": "Message",
+            "description": "What happened when the document was read."
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "title": "Read at",
+            "description": "When the document was read."
+          },
+          "readBy": {
+            "type": "string",
+            "nullable": true,
+            "title": "Read by",
+            "description": "Who had the document read."
+          }
+        }
+      },
       "ExitInterview": {
         "slug": "ExitInterview",
         "icon": "CommentAccountOutline",
@@ -21644,6 +21783,82 @@
         "bpvOvereenkomstOndertekend": true,
         "bpvSchoolNaam": "Voorbeeld Bpvschoolnaam 3",
         "uitzendFase": "C"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeDocumentExtraction",
+          "slug": "employeedocumentextraction-1"
+        },
+        "onboardingId": "00000000-0000-4000-8000-000000000000",
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "docType": "employment-contract",
+        "status": "extracted",
+        "extractedFields": {
+          "startDate": {
+            "value": "2026-07-01",
+            "confidence": 0.8
+          },
+          "hoursPerWeek": {
+            "value": 32,
+            "confidence": 0.6
+          }
+        },
+        "appliedFields": [],
+        "notAppliedFields": [],
+        "contractId": null,
+        "message": "The document was read. Check every value before you use it.",
+        "readAt": "2026-06-20T09:00:00+00:00",
+        "readBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeDocumentExtraction",
+          "slug": "employeedocumentextraction-2"
+        },
+        "onboardingId": "00000000-0000-4000-8000-000000000000",
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "docType": "identity-document",
+        "status": "extracted",
+        "extractedFields": {
+          "lastName": {
+            "value": "VISSER",
+            "confidence": 0.95
+          },
+          "dateOfBirth": {
+            "value": "1994-03-12",
+            "confidence": 0.95
+          }
+        },
+        "appliedFields": [
+          "dateOfBirth"
+        ],
+        "notAppliedFields": [
+          "lastName"
+        ],
+        "contractId": null,
+        "message": "The document was read. Check every value before you use it.",
+        "readAt": "2026-06-20T09:00:00+00:00",
+        "readBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "EmployeeDocumentExtraction",
+          "slug": "employeedocumentextraction-3"
+        },
+        "onboardingId": "00000000-0000-4000-8000-000000000000",
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "docType": "employment-contract",
+        "status": "pending",
+        "extractedFields": {},
+        "appliedFields": [],
+        "notAppliedFields": [],
+        "contractId": null,
+        "message": null,
+        "readAt": null,
+        "readBy": null
       },
       {
         "@self": {
