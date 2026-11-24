@@ -1655,6 +1655,34 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	}//end periodCents()
 
 	/**
+	 * The contracted hours of the period (52 weeks / 12 months, 13 four-week
+	 * periods or 52 weeks), which feed the effective-hourly-rate minimum-wage
+	 * checks, and the factor monthly figures were scaled by, absent on a
+	 * monthly payslip (payroll-period-edge-cases D4).
+	 *
+	 * @param array<string, mixed>|null $contract The covering contract.
+	 * @param string                    $period   The period id.
+	 *
+	 * @return array<string, float|int>
+	 *
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private function tijdvakFields(?array $contract, string $period): array {
+		$fields = [];
+		$periodsPerYear = $this->periodsPerYearOf(period: $period);
+		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
+		if (is_numeric($hoursPerWeek) === true && ((float)$hoursPerWeek) > 0.0) {
+			$fields['hoursWorked'] = round((((float)$hoursPerWeek) * 52 / $periodsPerYear), 2);
+		}
+
+		if ($periodsPerYear !== 12) {
+			$fields['tijdvakFactor'] = $periodsPerYear;
+		}
+
+		return $fields;
+	}//end tijdvakFields()
+
+	/**
 	 * A participant's pension base and employer premium (payroll-engine-port-from-shillinq
 	 * D1); none without a participation, so that payslip stays as it was.
 	 *
@@ -1918,21 +1946,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			'showsEmployerEmployeeIds' => true,
 		];
 
-		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
-		if (is_numeric($hoursPerWeek) === true && ((float)$hoursPerWeek) > 0.0) {
-			// Contracted hours of the period (52 weeks / 12 months, 13 four-week
-			// periods or 52 weeks) — feeds the effective-hourly-rate
-			// minimum-wage checks (payroll-period-edge-cases D4).
-			$payload['hoursWorked'] = round((((float)$hoursPerWeek) * 52 / $this->periodsPerYearOf(period: $state['period'])), 2);
-		}
-
-		$periodsPerYear = $this->periodsPerYearOf(period: $state['period']);
-		if ($periodsPerYear !== 12) {
-			// The factor monthly figures were scaled by; absent on a monthly payslip.
-			$payload['tijdvakFactor'] = $periodsPerYear;
-		}
-
-		$payload = array_merge($payload, $this->periodFactorFields(slip: $slip), $this->pensionFields(slip: $slip));
+		$payload = array_merge($payload, $this->tijdvakFields($contract, $state['period']), $this->periodFactorFields($slip), $this->pensionFields($slip));
 
 		if (isset($slip['week53']) === true) {
 			// Extended period 13 (D3): the amounts above are the sum of these two.
