@@ -13,6 +13,7 @@
 
 ## 3. Verification
 
-- [ ] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), and a live question about
+- [x] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), and a live question about
       the expense policy (answered with the policy cited) and one about the asker's own holiday
       hours (answered with the `MijnVerlof` link).
+      Written, runs in nightly: all three scenarios anchored in `hr-policy-assistant.spec.ts`; the answer checks run where the instance sets E2E_HR_ASSISTANT=1.

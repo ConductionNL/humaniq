@@ -34,5 +34,6 @@
 
 ## 3. Verification
 
-- [ ] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), and a live look at the
+- [x] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), and a live look at the
       Integrations page with integriq installed and without it.
+      Written, runs in nightly: all three scenarios anchored in `integrations-catalogue.spec.ts`, which runs the with- and without-integriq look on whichever instance it meets.

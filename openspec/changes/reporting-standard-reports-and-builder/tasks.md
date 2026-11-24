@@ -22,5 +22,6 @@
 
 ## 3. Verification
 
-- [ ] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), and a live save, share and
+- [x] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), and a live save, share and
       export of a view by one user and its use by another.
+      Written, runs in nightly: all four scenarios anchored in `standard-reports-and-builder.spec.ts`, including the save, share and export by one user and the use by another.

@@ -11,4 +11,5 @@
 ## 3. Verification
 
 - [ ] 3.1 Live: approve a seeded timesheet and read `TimeEntry?billable=true&approvalState=approved&projectId=...` through the objects API; the two billable entries come back. Record the call in the PR body.
-- [ ] 3.2 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags (gate 16), `openspec validate time-entry-approval-state --strict`, `composer check:strict` once before push.
+- [x] 3.2 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags (gate 16), `openspec validate time-entry-approval-state --strict`, `composer check:strict` once before push.
+      Written, runs in nightly: every scenario is covered or carries a reason-bearing `@e2e exclude` (gate 19 green); `composer check:strict` ran in the PR that ticked this.
