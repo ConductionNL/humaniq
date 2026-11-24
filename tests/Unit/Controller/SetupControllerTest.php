@@ -546,6 +546,27 @@ class SetupControllerTest extends TestCase {
 	}
 
 	/**
+	 * Both manifests declare the seven steps in their order: welcome and
+	 * the example data first (hydra ADR-111 rule 4), then the board's steps
+	 * in the board's order; none is required, so the wizard never gates.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#requirement-humaniq-shall-declare-a-seven-step-setup-wizard-that-never-gates-the-app-req-fts-001
+	 *
+	 * @return void
+	 */
+	public function testTheWizardDeclaresItsSevenStepsInOrder(): void {
+		foreach (['manifest.json', 'manifest.effective.json'] as $file) {
+			$manifest = json_decode((string)file_get_contents(__DIR__ . '/../../../src/' . $file), true);
+			$steps    = $manifest['setup']['steps'];
+
+			$this->assertSame(['welcome', 'demo-data', 'administrations', 'working-mode', 'language', 'templates', 'done'], array_column($steps, 'id'), $file);
+			foreach ($steps as $step) {
+				$this->assertNotTrue($step['required'] ?? false, $file . ' ' . $step['id']);
+			}
+		}
+	}
+
+	/**
 	 * The manifest's Werkwijze step offers exactly the modes the server
 	 * accepts, and Taal exactly nl and en; neither is required.
 	 *

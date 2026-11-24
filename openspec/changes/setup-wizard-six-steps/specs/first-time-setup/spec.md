@@ -3,17 +3,19 @@
 ## RENAMED Requirements
 
 - FROM: `### Requirement: humaniq SHALL declare a three-step setup wizard that never gates the app (REQ-FTS-001)`
-- TO: `### Requirement: humaniq SHALL declare a six-step setup wizard that never gates the app (REQ-FTS-001)`
+- TO: `### Requirement: humaniq SHALL declare a seven-step setup wizard that never gates the app (REQ-FTS-001)`
 
 ## MODIFIED Requirements
 
-### Requirement: humaniq SHALL declare a six-step setup wizard that never gates the app (REQ-FTS-001)
+### Requirement: humaniq SHALL declare a seven-step setup wizard that never gates the app (REQ-FTS-001)
 
 `src/manifest.json` SHALL declare a `setup` block, version 1, with exactly these steps in this
-order, as drawn on board `humaniq/HuInrichten`: `administrations` (Administraties),
-`working-mode` (Werkwijze), `language` (Taal), `demo-data` (Voorbeelddata, a cards choice,
-options from the server's `datasets`), `templates` (Sjablonen, REQ-FTS-007) and `done` (Klaar,
-summary with a health check). The setup block SHALL NOT declare a separate `welcome` step. No
+order: `welcome` (orientation), `demo-data` (Voorbeelddata, a cards choice, options from the
+server's `datasets`), `administrations` (Administraties), `working-mode` (Werkwijze),
+`language` (Taal), `templates` (Sjablonen, REQ-FTS-007) and `done` (Klaar, summary with a health
+check). The steps of board `humaniq/HuInrichten` follow the first two in the board's order;
+`welcome` and `demo-data` lead because hydra ADR-111 rule 4 (gate 100) requires every fleet
+setup wizard to open with `welcome` and then the example-data offer. No
 step SHALL be required, so `GET /api/setup/status` (`appinfo/routes.php:17`) SHALL report
 `completed: true` and the wizard SHALL never block access to the app. Each step SHALL read done
 once the administrator has answered or skipped it, and the status SHALL report exactly the ids of
@@ -21,18 +23,18 @@ the manifest's steps.
 
 Rows: `plt-setup-wizard` (humaniq matrix). Board: `humaniq/HuInrichten`.
 
-#### Scenario: The wizard declares the six drawn steps
-@e2e exclude manifest shape, covered by a unit test that reads src/manifest.json and compares the step ids and their order
+#### Scenario: The wizard declares its seven steps
+@e2e exclude manifest shape, covered by SetupControllerTest::testTheWizardDeclaresItsSevenStepsInOrder, which reads both manifests and compares the step ids and their order
 - **GIVEN** `src/manifest.json`
 - **WHEN** its `setup.steps` are read
-- **THEN** the ids are `administrations`, `working-mode`, `language`, `demo-data`, `templates`
-  and `done`, in that order, and no step carries `required: true`
+- **THEN** the ids are `welcome`, `demo-data`, `administrations`, `working-mode`, `language`,
+  `templates` and `done`, in that order, and no step carries `required: true`
 
 #### Scenario: The status names every step
 @e2e exclude endpoint shape, covered by SetupControllerTest
 - **GIVEN** a fresh install on which no step was answered
 - **WHEN** an administrator reads `/api/setup/status`
-- **THEN** the response carries `completed: true`, all six step ids, each step except `done`
+- **THEN** the response carries `completed: true`, all seven step ids, each step except `done`
   reads not done, and `datasets` lists the cards to offer
 
 #### Scenario: The wizard offers the example data step
