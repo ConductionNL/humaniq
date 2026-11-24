@@ -30,6 +30,7 @@ namespace OCA\Humaniq\Controller;
 
 use OCA\Humaniq\AppInfo\Application;
 use OCA\Humaniq\Kernel\Contracts\VacancyMatchServiceInterface;
+use OCA\Humaniq\Service\CvProfileReader;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
@@ -54,6 +55,7 @@ class RecruitingController extends Controller {
 	 * @param VacancyMatchServiceInterface $matcher     The match score.
 	 * @param RecordStoreInterface         $gateway     Reads the evaluations.
 	 * @param IUserSession                 $userSession The caller.
+	 * @param CvProfileReader|null         $cvReader    Reads a CV into the profile.
 	 *
 	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-002
 	 */
@@ -64,6 +66,7 @@ class RecruitingController extends Controller {
 		private readonly VacancyMatchServiceInterface $matcher,
 		private readonly RecordStoreInterface $gateway,
 		private readonly IUserSession $userSession,
+		private readonly ?CvProfileReader $cvReader = null,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -112,6 +115,39 @@ class RecruitingController extends Controller {
 		$evaluations = $this->gateway->findFiltered('CandidateEvaluation', ['applicationId' => $id]);
 		return new JSONResponse(['applicationId' => $id, 'evaluations' => count($evaluations), 'criteria' => self::averages(evaluations: $evaluations)]);
 	}//end evaluationSummary()
+
+	/**
+	 * Read CV: fill an empty profile from the application's CV through filinq.
+	 * The application is resolved as the caller (404), then HR or an
+	 * administrator is required (403).
+	 *
+	 * @param string $id The application id.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+	 */
+	#[NoAdminRequired]
+	public function readCv(string $id): JSONResponse {
+		$application = $this->rbac->findOrNull(id: $id, schema: 'job-application');
+		if ($application === null || $this->cvReader === null) {
+			return new JSONResponse(['message' => 'Application not found.'], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($this->mayRead() === false) {
+			return new JSONResponse(['message' => 'Only HR or an administrator can read a CV into the profile.'], Http::STATUS_FORBIDDEN);
+		}
+
+		$answer = $this->cvReader->read(application: ($application + ['id' => $id]), userId: (string)($this->userSession->getUser()?->getUID() ?? ''));
+		// Only a filled profile reads as done; every other answer carries the
+		// reason the page shows, and leaves the application unchanged.
+		$code = Http::STATUS_UNPROCESSABLE_ENTITY;
+		if ($answer['status'] === 'filled') {
+			$code = Http::STATUS_OK;
+		}
+
+		return new JSONResponse(['applicationId' => $id] + $answer, $code);
+	}//end readCv()
 
 	/**
 	 * Average score per criterion, in the order the criteria first appear.

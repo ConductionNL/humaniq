@@ -45,6 +45,13 @@ if (class_exists('OCA\\Integriq\\Event\\ConnectionStatusReportedEvent', false) =
 	$autoloader->addPsr4('OCA\\Integriq\\', __DIR__ . '/stubs/Integriq/');
 }
 
+// filinq's CV profile contract, for Read CV (hiring-cv-profile-extraction 1.2):
+// filinq's own ProfileExtractionService and CvProfileParser, vendored verbatim,
+// over a DocumentTextSource stub. Loaded only when filinq itself is absent.
+if (class_exists('OCA\\Filinq\\Service\\ProfileExtractionService', false) === false) {
+	$autoloader->addPsr4('OCA\\Filinq\\', __DIR__ . '/stubs/Filinq/');
+}
+
 // Doctrine placeholders, loaded BEFORE anything can mock an OCP DB interface.
 // IQueryBuilder evaluates constants referencing Doctrine\DBAL\ParameterType at
 // parse time, and IDBConnection::getQueryBuilder() returns IQueryBuilder — so

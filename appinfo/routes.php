@@ -121,6 +121,8 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'offboarding#transitionPayment', 'url' => '/api/offboarding/{id}/transition-payment', 'verb' => 'POST'],
         // hiring-candidate-assessment REQ-CAS-001/002: the average score per criterion and the ranked vacancy matches.
         ['name' => 'recruiting#evaluationSummary', 'url' => '/api/applications/{id}/evaluation-summary', 'verb' => 'GET'],
+        // hiring-cv-profile-extraction REQ-CAS-004: fill an empty profile from the CV through filinq.
+        ['name' => 'recruiting#readCv', 'url' => '/api/applications/{id}/read-cv', 'verb' => 'POST'],
         ['name' => 'recruiting#matches', 'url' => '/api/vacancies/{id}/matches', 'verb' => 'GET'],
         ['name' => 'hire#matches', 'url' => '/api/applications/{id}/hire-matches', 'verb' => 'GET'],
         ['name' => 'hire#hire', 'url' => '/api/applications/{id}/hire', 'verb' => 'POST'],
