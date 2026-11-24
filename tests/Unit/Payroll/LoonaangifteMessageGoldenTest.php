@@ -8,7 +8,7 @@
  * administration with two income relationships and two corrections, and an
  * incomplete administration with neither.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 
 declare(strict_types=1);

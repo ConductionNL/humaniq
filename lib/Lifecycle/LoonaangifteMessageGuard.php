@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
 /**
  * A Dutch wage tax filing is made ready only with a validated message and no blocking finding.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 
@@ -49,7 +49,7 @@ class LoonaangifteMessageGuard implements LifecycleGuardInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the static allow()/deny() factories.
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The signature is LifecycleGuardInterface's.
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function check(array $object, string $action, string $userId): GuardResult {
 		if ((string)($object['jurisdiction'] ?? '') !== 'NL' || in_array((string)($object['filingType'] ?? ''), ['loonaangifte', 'correctie'], true) === false) {

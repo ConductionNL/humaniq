@@ -244,7 +244,7 @@ class NlWageTaxFilingChecksTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	public function testTheMessageDriftRule(): void {
 		$rule = $this->checks['nl-loonaangifte-message-drift'];

@@ -224,7 +224,7 @@ final class CalculationResult {
 	 * @param PackRunResult|array<string, mixed> $out The pack run's output, or the fields of two results summed by combined().
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
 	 */
 	public function __construct(PackRunResult|array $out) {
@@ -332,7 +332,7 @@ final class CalculationResult {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	private static function optionalCents(PackRunResult $out, string $id): int {
 

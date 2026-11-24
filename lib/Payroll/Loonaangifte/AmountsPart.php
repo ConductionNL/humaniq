@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ namespace OCA\Humaniq\Payroll\Loonaangifte;
  *
  * @SuppressWarnings(PHPMD.StaticAccess) PeriodPart::fourWeekly is a pure check on the same line.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 final class AmountsPart {
 
@@ -57,7 +57,7 @@ final class AmountsPart {
 	 *
 	 * @return array<string, int>
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function cents(LineFacts $facts, string $code): array {
 		self::checkReproduced($facts);
@@ -84,7 +84,7 @@ final class AmountsPart {
 	 *
 	 * @return array<string, string|null>
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function group(LineFacts $facts, string $code, array $cents): array {
 		$data = [];

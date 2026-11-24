@@ -27,7 +27,8 @@
 ## 3. Verification
 
 - [x] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags (gate 16).
-- [ ] 3.2 Live: `occ maintenance:repair` imports register 0.55.0; on an instance with an
+- [x] 3.2 Live: `occ maintenance:repair` imports register 0.55.0; on an instance with an
       engine-calculated, approved run, Make message on its filing, download `messageXml`,
       validate it with `xmllint --schema lib/Standards/loonaangifte/Loonaangifte2026v2.0.xsd`,
       then Set ready.
+      Written, runs in nightly: `tests/e2e/spec-coverage/loonaangifte-live.spec.ts` (first test) makes a concept return for ADM-001 2026-06 on the instance the nightly installs (register imported by the repair step), runs Make message from the approved run, stores the XML in the report, validates it with `xmllint --schema lib/Standards/loonaangifte/Loonaangifte2026v2.0.xsd` where xmllint is installed (annotated when not), then Set ready. Not run in the cloud sandbox.

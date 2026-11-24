@@ -26,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-001
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-001
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The pure message classes are static by design, the LoonaangifteMessageService precedent.
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-001
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-001
  */
 class LoonaangifteCorrectionService {
 
@@ -94,7 +94,7 @@ class LoonaangifteCorrectionService {
 	 *
 	 * @return array{status: string, filingId: string, message?: string}
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-001
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-001
 	 */
 	public function open(array $sent, string $userId): array {
 		$sentId = (string)($sent['id'] ?? '');
@@ -167,7 +167,7 @@ class LoonaangifteCorrectionService {
 	 *
 	 * @return array{status: string, filingId: string, blockingFindings?: int, warningFindings?: int, message?: string}
 	 *
-	 * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+	 * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
 	 */
 	public function render(array $correction, string $userId): array {
 		$filingId = (string)($correction['id'] ?? '');

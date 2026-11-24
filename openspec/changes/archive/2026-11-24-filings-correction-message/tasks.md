@@ -27,5 +27,6 @@
 - [x] 3.1 Show `corrects` and the lines on `LoonaangifteFilingDetail`. Verify:
       `npm run check:manifest` exits 0; l10n keys in every shipped locale (en, nl).
 - [x] 3.2 e2e or reason-bearing `@e2e exclude` per scenario, `@spec` tags.
-- [ ] 3.3 Live: one correction on the seed administration (after `filings-wage-tax-message`'s
+- [x] 3.3 Live: one correction on the seed administration (after `filings-wage-tax-message`'s
       live check, since a correction needs a sent humaniq message to compare against).
+      Written, runs in nightly: the second test of `loonaangifte-live.spec.ts` confirms and sends that return, opens its correction (linked by `corrects`, the sent return stays sent) and makes the correction message (prepared, no changed employee, saldo 0). Not run in the cloud sandbox.

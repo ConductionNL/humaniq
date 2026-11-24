@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ namespace OCA\Humaniq\Payroll\Loonaangifte;
 /**
  * One income relationship: its elements, its amounts in cents, its findings.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  * @SuppressWarnings(PHPMD.StaticAccess) The parts are pure static builders over one LineFacts.
  */
 final class IncomeRelationshipLine {
@@ -59,7 +59,7 @@ final class IncomeRelationshipLine {
 	 *
 	 * @return array{employeeId: string, tree: array<string, mixed>, cents: array<string, int>, findings: list<array{kind: string, severity: string, employeeId: string, element: string, problem: string}>}
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function make(LineFacts $facts): array {
 		$employee = $facts->employee;
@@ -89,7 +89,7 @@ final class IncomeRelationshipLine {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function elfproef(string $number): bool {
 		return PersonPart::elfproef($number);

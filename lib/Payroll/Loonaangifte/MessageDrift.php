@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Payroll\Loonaangifte;
 /**
  * The message-versus-run comparison.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 final class MessageDrift {
 
@@ -44,7 +44,7 @@ final class MessageDrift {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	public static function matchesRun(array $filing, array $context): bool {
 		$runId = (string)($filing['messageRunId'] ?? '');

@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Payroll\Loonaangifte;
 /**
  * The person of an income relationship.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 final class PersonPart {
 
@@ -41,7 +41,7 @@ final class PersonPart {
 	 *
 	 * @return array<string, mixed>
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function make(LineFacts $facts): array {
 		$bsn = $facts->filled('bsn');
@@ -64,7 +64,7 @@ final class PersonPart {
 	 *
 	 * @return bool
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public static function elfproef(string $number): bool {
 		if (preg_match('/^\d{9}$/', $number) !== 1 || substr($number, 0, 3) === '000') {

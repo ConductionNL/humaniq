@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ final class XsdFile {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
 	 */
 	public function validates(DOMDocument $doc, string $xsd): bool {
@@ -73,7 +73,7 @@ final class XsdFile {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-001
 	 */
 	public function errors(string $xml, string $xsd): array {

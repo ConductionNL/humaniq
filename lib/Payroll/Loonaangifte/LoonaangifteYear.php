@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ namespace OCA\Humaniq\Payroll\Loonaangifte;
 /**
  * Per-year message version, XSD and declaration periods.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
  */
 final class LoonaangifteYear {
 
@@ -73,7 +73,7 @@ final class LoonaangifteYear {
 	 *
 	 * @return array{version: string, namespace: string, xsd: string}|null
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	public static function forYear(int $year): ?array {
 		$entry = (self::YEARS[$year] ?? null);
@@ -96,7 +96,7 @@ final class LoonaangifteYear {
 	 *
 	 * @return array{0: string, 1: string}|null Null for an unknown year, period or frequency.
 	 *
-	 * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-001
+	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 */
 	public static function periodDates(string $period, string $tijdvak): ?array {
 		if (preg_match('/^(\d{4})(?:-(\d{2})|-P(\d{2}))?$/', $period, $match) !== 1 || isset(self::YEARS[(int)$match[1]]) === false) {

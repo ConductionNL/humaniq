@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Humaniq\Payroll\Loonaangifte;
 /**
  * One comparison of the received stand with the current relationships.
  *
- * @spec openspec/changes/filings-correction-message/specs/loonaangifte-correction/spec.md#REQ-LHC-002
+ * @spec openspec/specs/loonaangifte-correction/spec.md#REQ-LHC-002
  */
 final class CorrectionComparison {
 

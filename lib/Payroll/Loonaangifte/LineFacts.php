@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use OCA\Humaniq\Payroll\CalculationResult;
 /**
  * The facts and findings of one income relationship.
  *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
  */
 final class LineFacts {
 
@@ -68,7 +68,7 @@ final class LineFacts {
 	 *
 	 * @return string|null
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function filled(string $field): ?string {
 		$value = trim((string)($this->employee[$field] ?? ''));
@@ -82,7 +82,7 @@ final class LineFacts {
 	 *
 	 * @return int
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function money(string $field): int {
 		return is_numeric($this->payslip[$field] ?? null) === true ? (int)round((float)$this->payslip[$field] * 100) : 0;
@@ -93,7 +93,7 @@ final class LineFacts {
 	 *
 	 * @return array<string, mixed>
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function snapshot(): array {
 		return is_array($this->payslip['engineInputSnapshot'] ?? null) === true ? $this->payslip['engineInputSnapshot'] : [];
@@ -104,7 +104,7 @@ final class LineFacts {
 	 *
 	 * @return bool
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function insured(): bool {
 		return (($this->snapshot()['verzekeringsplichtig'] ?? true) !== false);
@@ -115,7 +115,7 @@ final class LineFacts {
 	 *
 	 * @return bool
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function anonymous(): bool {
 		return (($this->payslip['anoniementariefApplied'] ?? false) === true);
@@ -126,7 +126,7 @@ final class LineFacts {
 	 *
 	 * @return bool
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function withheldZvw(): bool {
 		return (($this->payslip['zvwMode'] ?? '') === 'inhouding');
@@ -137,7 +137,7 @@ final class LineFacts {
 	 *
 	 * @return float
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function contractHours(): float {
 		return is_numeric($this->contract['hoursPerWeek'] ?? null) === true ? (float)$this->contract['hoursPerWeek'] : 0.0;
@@ -148,7 +148,7 @@ final class LineFacts {
 	 *
 	 * @return string
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function name(): string {
 		$name = trim(((string)($this->employee['firstName'] ?? '')) . ' ' . ((string)($this->employee['lastName'] ?? '')));
@@ -165,7 +165,7 @@ final class LineFacts {
 	 *
 	 * @return void
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function find(string $kind, string $element, string $problem, string $severity='blocking'): void {
 		$this->findings[] = ['kind' => $kind, 'severity' => $severity, 'employeeId' => (string)($this->employee['id'] ?? ''), 'element' => $element, 'problem' => $problem];
@@ -176,7 +176,7 @@ final class LineFacts {
 	 *
 	 * @return list<array{kind: string, severity: string, employeeId: string, element: string, problem: string}>
 	 *
- * @spec openspec/changes/filings-wage-tax-message/specs/loonaangifte-message/spec.md#REQ-LAM-002
+ * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-002
 	 */
 	public function findings(): array {
 		return $this->findings;
