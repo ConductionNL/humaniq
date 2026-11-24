@@ -37,7 +37,6 @@ use OCA\Humaniq\Service\RecordStoreInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Read CV through the real filinq profile rules.
@@ -94,7 +93,7 @@ class CvProfileReaderTest extends TestCase {
 		$roles = $this->createMock(HumaniqRoles::class);
 		$roles->method('isHr')->willReturn($hr);
 
-		return new CvProfileReader(container: $container, store: $store, roles: $roles, logger: $this->createMock(LoggerInterface::class));
+		return new CvProfileReader(container: $container, store: $store, roles: $roles);
 	}//end reader()
 
 	/**

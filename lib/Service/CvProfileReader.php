@@ -28,7 +28,6 @@ namespace OCA\Humaniq\Service;
 
 use OCA\Humaniq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -47,13 +46,11 @@ class CvProfileReader {
 	 * @param ContainerInterface   $container The server container, to find filinq.
 	 * @param RecordStoreInterface $store     Reads the vacancy and saves the application.
 	 * @param HumaniqRoles         $roles     Who is HR.
-	 * @param LoggerInterface      $logger    Logs a failed read.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly RecordStoreInterface $store,
 		private readonly HumaniqRoles $roles,
-		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
 
@@ -96,8 +93,7 @@ class CvProfileReader {
 		try {
 			$read = (array)$filinq->extractProfile($request, $userId);
 		} catch (Throwable $e) {
-			$this->logger->warning('CvProfileReader: filinq could not read the CV: ' . $e->getMessage());
-			return self::answer(status: 'failed', message: 'The CV could not be read. Type the profile instead.');
+			return self::answer(status: 'failed', message: 'The CV could not be read (' . $e->getMessage() . '). Type the profile instead.');
 		}
 
 		if (($read['status'] ?? '') !== 'extracted') {
