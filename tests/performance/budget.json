@@ -1,0 +1,29 @@
+{
+	"app": "humaniq",
+	"pages": [
+		{
+			"name": "Dashboard",
+			"path": "/index.php/apps/humaniq/dashboard"
+		},
+		{
+			"name": "My HR",
+			"path": "/index.php/apps/humaniq/mijn"
+		},
+		{
+			"name": "Employees",
+			"path": "/index.php/apps/humaniq/employees"
+		},
+		{
+			"name": "Leave requests",
+			"path": "/index.php/apps/humaniq/leave-requests"
+		},
+		{
+			"name": "Timesheets",
+			"path": "/index.php/apps/humaniq/timesheets"
+		},
+		{
+			"name": "Expenses",
+			"path": "/index.php/apps/humaniq/expenses"
+		}
+	]
+}
