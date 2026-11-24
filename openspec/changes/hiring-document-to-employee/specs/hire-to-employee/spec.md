@@ -20,8 +20,12 @@ Rows: `dm-document-to-employee` (humaniq matrix), roadmap https://loket.nl/roadm
 - **THEN** the extraction record shows the start date, hours and wage it read, the empty
   fields it filled, and `Create contract from document` becomes available
 
+@e2e exclude The page steps are generic (an object-list create with a file property, two api-call actions); the scenario turns on filinq reading a PDF on the instance. `EmployeeDocumentExtractionServiceTest::testASignedContractMakesOneContract` asserts the values recorded and the one contract against filinq's own classes; `OnboardingDocumentControllerTest::testOneExtractionMakesAtMostOneContract` the answers.
+
 #### Scenario: A value HR typed is never replaced
 - **GIVEN** an employee whose last name HR already entered as "de Boer"
 - **WHEN** an identity document reading returns "DE BOER-JANSEN"
 - **THEN** the last name stays "de Boer" and the record lists last name as read but not
   applied
+
+@e2e exclude A server-side rule on which fields are written. `EmployeeDocumentExtractionServiceTest::testAValueHrTypedIsNeverReplaced` asserts it with the MRZ reading DE BOER JANSEN.
