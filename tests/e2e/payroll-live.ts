@@ -129,7 +129,8 @@ export async function payslipsOf(api: APIRequestContext, runId: string, employee
  */
 export async function screenshotOf(page: Page, testInfo: TestInfo, path: string, name: string): Promise<void> {
 	await page.goto(`${APP_URL}${path}`, { waitUntil: 'domcontentloaded' })
-	await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => undefined)
+	// Never networkidle: Nextcloud keeps polling, so it never settles (ADR-074 rule 4).
+	await page.locator('main.app-content').first().waitFor({ timeout: 30000 })
 	await testInfo.attach(name, { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' })
 }
 
