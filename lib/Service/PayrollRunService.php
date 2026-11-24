@@ -166,6 +166,7 @@ use DateTimeImmutable;
 use OCA\Humaniq\Kernel\Contracts\PayrollRunServiceInterface;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\PayPeriod;
+use OCA\Humaniq\Payroll\PeriodFactor;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\BenefitEntitlementPay;
 use OCA\Humaniq\Payroll\CalculationInput;
@@ -763,10 +764,20 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param array<string, mixed> $slip  The eligible slip.
 	 *
 	 * @return array<string, mixed> The slip with `grossCents` and its folds.
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	private function foldGross(array $state, array $slip): array {
 		$employee = $slip['employee'];
-		$slip['grossCents'] = ($slip['salaried'] === true ? $this->periodCents(monthlyAmount: (float)$slip['grossMonthly'], period: $state['period']) : (int)($slip['hoursPay']['hourlyCents'] ?? 0));
+		$slip['grossCents'] = (int)($slip['hoursPay']['hourlyCents'] ?? 0);
+		$slip['periodFactor'] = null;
+		if ($slip['salaried'] === true) {
+			// payroll-engine-port-from-shillinq D3: a starter or leaver is paid
+			// the calendar-day share of the salary (O2); hours stay whole.
+			$slip['periodFactor'] = $this->periodFactorFor(employee: $employee, period: $state['period']);
+			$slip['grossCents'] = $slip['periodFactor']->scale($this->periodCents(monthlyAmount: (float)$slip['grossMonthly'], period: $state['period']));
+		}
+
 		$slip['regularWageCents'] = $slip['grossCents'];
 
 		// filings-premium-differentiation D1: the Awf tariff follows the
@@ -1644,6 +1655,97 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	}//end periodCents()
 
 	/**
+	 * The contracted hours of the period (52 weeks / 12 months, 13 four-week
+	 * periods or 52 weeks), which feed the effective-hourly-rate minimum-wage
+	 * checks, and the factor monthly figures were scaled by, absent on a
+	 * monthly payslip (payroll-period-edge-cases D4).
+	 *
+	 * @param array<string, mixed>|null $contract The covering contract.
+	 * @param string                    $period   The period id.
+	 *
+	 * @return array<string, float|int>
+	 *
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 */
+	private function tijdvakFields(?array $contract, string $period): array {
+		$fields = [];
+		$periodsPerYear = $this->periodsPerYearOf(period: $period);
+		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
+		if (is_numeric($hoursPerWeek) === true && ((float)$hoursPerWeek) > 0.0) {
+			$fields['hoursWorked'] = round((((float)$hoursPerWeek) * 52 / $periodsPerYear), 2);
+		}
+
+		if ($periodsPerYear !== 12) {
+			$fields['tijdvakFactor'] = $periodsPerYear;
+		}
+
+		return $fields;
+	}//end tijdvakFields()
+
+	/**
+	 * A participant's pension base and employer premium (payroll-engine-port-from-shillinq
+	 * D1); none without a participation, so that payslip stays as it was.
+	 *
+	 * @param array<string, mixed> $slip The calculated slip, with `input` and `result`.
+	 *
+	 * @return array<string, float>
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 */
+	private function pensionFields(array $slip): array {
+		if (isset($slip['input']) === false || $slip['input']->pension->isEmpty() === true) {
+			return [];
+		}
+
+		return ['pensionBase' => $this->euros($slip['result']->pensionBaseCents), 'pensionEmployer' => $this->euros($slip['result']->pensionEmployerCents)];
+	}//end pensionFields()
+
+	/**
+	 * Why a starter's or leaver's salary is lower (payroll-engine-port-from-shillinq
+	 * D3): the factor and the days it counts. None for a whole period or an
+	 * hourly employee, so that payslip stays as it was.
+	 *
+	 * @param array<string, mixed> $slip The slip, with `periodFactor`.
+	 *
+	 * @return array<string, float|string>
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 */
+	private function periodFactorFields(array $slip): array {
+		$factor = ($slip['periodFactor'] ?? null);
+		if ($factor instanceof PeriodFactor === false || $factor->isPartial() === false) {
+			return [];
+		}
+
+		return ['periodFactor' => $factor->factor, 'periodFactorFrom' => $factor->employedFrom, 'periodFactorUntil' => $factor->employedUntil];
+	}//end periodFactorFields()
+
+	/**
+	 * The share of the period the employee is employed, in calendar days
+	 * (payroll-engine-port-from-shillinq D3, O2), from the employment dates
+	 * `coversPeriod()` already gated on.
+	 *
+	 * @param array<string, mixed> $employee The Employee.
+	 * @param string               $period   The period id.
+	 *
+	 * @return PeriodFactor
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) PeriodFactor::forEmployment is the pure value-object factory.
+	 */
+	private function periodFactorFor(array $employee, string $period): PeriodFactor {
+		$lastDay = $this->lastDayOf(period: $period);
+		try {
+			$firstDay = PayPeriod::parse($period)->firstDay;
+		} catch (\InvalidArgumentException $e) {
+			$firstDay = $lastDay->modify('first day of this month');
+		}
+
+		return PeriodFactor::forEmployment(startDate: (string)($employee['startDate'] ?? ''), endDate: (string)($employee['endDate'] ?? ''), periodStart: $firstDay, periodEnd: $lastDay);
+	}//end periodFactorFor()
+
+	/**
 	 * The period's last day: the month's, the fourth week's or the week's
 	 * Sunday (D4).
 	 *
@@ -1806,6 +1908,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-005
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	private function payslipPayload(array $state, array $slip): array {
 		['employee' => $employee, 'contract' => $contract, 'result' => $result] = $slip;
@@ -1843,26 +1946,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			'showsEmployerEmployeeIds' => true,
 		];
 
-		$hoursPerWeek = ($contract['hoursPerWeek'] ?? null);
-		if (is_numeric($hoursPerWeek) === true && ((float)$hoursPerWeek) > 0.0) {
-			// Contracted hours of the period (52 weeks / 12 months, 13 four-week
-			// periods or 52 weeks) — feeds the effective-hourly-rate
-			// minimum-wage checks (payroll-period-edge-cases D4).
-			$payload['hoursWorked'] = round((((float)$hoursPerWeek) * 52 / $this->periodsPerYearOf(period: $state['period'])), 2);
-		}
-
-		$periodsPerYear = $this->periodsPerYearOf(period: $state['period']);
-		if ($periodsPerYear !== 12) {
-			// The factor monthly figures were scaled by; absent on a monthly payslip.
-			$payload['tijdvakFactor'] = $periodsPerYear;
-		}
-
-		if (isset($slip['input']) === true && $slip['input']->pension->isEmpty() === false) {
-			// payroll-engine-port-from-shillinq D1: a participant's base and
-			// employer premium; absent otherwise, so that payslip stays as it was.
-			$payload['pensionBase'] = $this->euros($result->pensionBaseCents);
-			$payload['pensionEmployer'] = $this->euros($result->pensionEmployerCents);
-		}
+		$payload = array_merge($payload, $this->tijdvakFields($contract, $state['period']), $this->periodFactorFields($slip), $this->pensionFields($slip));
 
 		if (isset($slip['week53']) === true) {
 			// Extended period 13 (D3): the amounts above are the sum of these two.
