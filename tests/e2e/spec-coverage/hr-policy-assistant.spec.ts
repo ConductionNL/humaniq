@@ -119,6 +119,7 @@ test.describe('the HR question assistant', () => {
 		}
 	})
 
+	// @e2e hr-policy-assistant::an-employee-asks-about-the-train-ticket-rule
 	test('An employee asks about the train ticket rule', async ({ page }) => {
 		test.skip(!ASSISTANT_READY, 'needs Hermiq, the reviewed HR-vraagbaak template and a model (E2E_HR_ASSISTANT=1)')
 
@@ -127,6 +128,7 @@ test.describe('the HR question assistant', () => {
 		await expect(answer, 'the answer cites the expense policy').toContainText(/onkosten|declaratie|expense/i)
 	})
 
+	// @e2e hr-policy-assistant::an-unanswerable-question-goes-to-hr
 	test('An unanswerable question goes to HR', async ({ page }) => {
 		test.skip(!ASSISTANT_READY, 'needs Hermiq, the reviewed HR-vraagbaak template and a model (E2E_HR_ASSISTANT=1)')
 
@@ -135,6 +137,7 @@ test.describe('the HR question assistant', () => {
 		await expect(answer, 'the assistant says no source covers it').toContainText(/niet|geen|not|no source/i)
 	})
 
+	// @e2e hr-policy-assistant::how-many-holiday-hours-do-i-have-left
 	test('How many holiday hours do I have left', async ({ page }) => {
 		test.skip(!ASSISTANT_READY, 'needs Hermiq, the reviewed HR-vraagbaak template and a model (E2E_HR_ASSISTANT=1)')
 

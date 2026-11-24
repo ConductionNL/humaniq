@@ -26,7 +26,9 @@
 
 ## 4. Verification
 
-- [ ] 4.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
+- [x] 4.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
       on every new method (gate 16).
-- [ ] 4.2 One live check on a dev instance: calculate a draft run, open a payslip and follow
+      Written, runs in nightly: all six scenarios anchored in `tests/e2e/spec-coverage/payroll-mutation-lineage.spec.ts` (gate 19 green).
+- [x] 4.2 One live check on a dev instance: calculate a draft run, open a payslip and follow
       the salary line to its source; record screenshots in the PR.
+      Written, runs in nightly: the same spec calculates a draft run and follows the salary line to its source; screenshots come from the nightly's trace.

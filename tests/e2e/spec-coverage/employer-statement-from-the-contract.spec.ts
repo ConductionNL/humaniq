@@ -210,6 +210,7 @@ test.describe("documents-employer-statement-from-the-contract", () => {
 		await admin?.dispose();
 	});
 
+	// @e2e humaniq-docudesk-documents::a-user-without-access-to-the-contract-gets-nothing
 	test("A user without access to the contract gets nothing", async () => {
 		const before = (await statementsFor(admin, contractId)).length;
 
@@ -223,6 +224,7 @@ test.describe("documents-employer-statement-from-the-contract", () => {
 		expect((await statementsFor(admin, contractId)).length).toBe(before);
 	});
 
+	// @e2e humaniq-docudesk-documents::a-second-statement-a-week-later
 	test("A second statement a week later", async () => {
 		const first = await admin.post(GENERATE, {
 			headers: HEADERS,
@@ -252,6 +254,7 @@ test.describe("documents-employer-statement-from-the-contract", () => {
 		expect(again.contractId).toBe(contractId);
 	});
 
+	// @e2e humaniq-docudesk-documents::hr-makes-a-statement-for-a-mortgage
 	test("HR makes a statement for a mortgage", async ({ page }) => {
 		const shape = await filinqShape(admin);
 		test.skip(!shape.enabled, "needs filinq installed and enabled");
@@ -266,6 +269,7 @@ test.describe("documents-employer-statement-from-the-contract", () => {
 		expect(String(doc.filePath ?? ""), "the PDF is stored").not.toEqual("");
 	});
 
+	// @e2e humaniq-docudesk-documents::without-the-template-the-outcome-says-so
 	test("Without the template the outcome says so", async ({ page }) => {
 		const shape = await filinqShape(admin);
 		test.skip(!shape.enabled, "needs filinq installed and enabled");

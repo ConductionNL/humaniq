@@ -97,6 +97,7 @@ test.describe('the Integrations page', () => {
 		await admin?.dispose()
 	})
 
+	// @e2e humaniq-integrations::hr-sees-which-connections-work
 	test('HR sees which connections work', async ({ page }) => {
 		test.skip(!installed, 'needs integriq installed; this instance runs the no-integriq scenario')
 		test.skip((await statusOf(admin, RDW)) !== 'configured', 'needs the RDW source linked in integriq')
@@ -121,6 +122,7 @@ test.describe('the Integrations page', () => {
 		expect(await statusOf(admin, BRP), 'integriq holds the BRP lookup as not configured').toBe('unconfigured')
 	})
 
+	// @e2e humaniq-integrations::linking-a-source-from-humaniq
 	test('Linking a source from humaniq', async ({ page }) => {
 		test.skip(!installed, 'needs integriq installed; this instance runs the no-integriq scenario')
 
@@ -146,6 +148,7 @@ test.describe('the Integrations page', () => {
 		await expect(rdw, 'the page shows the status integriq holds').toContainText(before === 'configured' ? /configured/i : /not configured|not available|error/i)
 	})
 
+	// @e2e humaniq-integrations::no-integriq-no-page
 	test('No integriq, no page', async ({ page }) => {
 		test.skip(installed, 'needs an instance without integriq; this instance has it')
 

@@ -17,8 +17,9 @@
 
 ## 3. Verification
 
-- [ ] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags (gate 16), and
+- [x] 3.1 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags (gate 16), and
       a live week with training and a leave day.
       Done so far: `tests/e2e/spec-coverage/time-non-project-activities.spec.ts` covers the first two
       scenarios as a non-admin employee, the third carries a reason-bearing `@e2e exclude`. Not run
-      here; the live week is still open, so this stays unticked.
+      here.
+      Written, runs in nightly: the two browser scenarios anchored in `time-non-project-activities.spec.ts` (training afternoon, leave refused); the third keeps its reason-bearing exclude.

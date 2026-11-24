@@ -16,7 +16,9 @@
 
 ## 2. Verification
 
-- [ ] 2.1 An e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags on
+- [x] 2.1 An e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags on
       changed methods (gate 16).
-- [ ] 2.2 One live check: with no registry configured, open the Store page and the Sjablonen
+      Written, runs in nightly: every scenario anchored in `tests/e2e/spec-coverage/configuration-store.spec.ts` (gate 19 green); not run in the cloud sandbox.
+- [x] 2.2 One live check: with no registry configured, open the Store page and the Sjablonen
       step and confirm in the browser network tab that no outside call is made.
+      Written, runs in nightly: the test "No registry means no outside call" in `configuration-store.spec.ts` opens the Store page and the Sjablonen step and asserts no outside request.

@@ -262,6 +262,7 @@ test.describe.serial("payroll mutation lineage", () => {
 		await api?.dispose();
 	});
 
+	// @e2e payroll-mutation-lineage::two-corrections-are-two-lines
 	test("two corrections are two lines", async ({ page }) => {
 		await calculate(ids.run06);
 
@@ -293,6 +294,7 @@ test.describe.serial("payroll mutation lineage", () => {
 		).toBeVisible({ timeout: 30_000 });
 	});
 
+	// @e2e payroll-mutation-lineage::recalculation-replaces-lines
 	test("recalculation replaces lines", async () => {
 		const before = await payslipOf(ids.run06, ids.empD);
 		const carLines = (await linesOf(idOf(before))).filter((line) => line.component === "bijtelling");
@@ -309,6 +311,7 @@ test.describe.serial("payroll mutation lineage", () => {
 		expect(Number(after.bijtelling ?? 0)).toBe(0);
 	});
 
+	// @e2e payroll-mutation-lineage::a-raise-explains-the-salary
 	test("a raise explains the salary", async () => {
 		// 2026-06 was calculated at 3800.00 above; now the raise takes effect.
 		ids.raise = await create("CompAdjustment", {
@@ -348,6 +351,7 @@ test.describe.serial("payroll mutation lineage", () => {
 		expect(salary[0].sourceId).toBe(ids.raise);
 	});
 
+	// @e2e payroll-mutation-lineage::a-direct-edit-explains-the-salary
 	test("a direct edit explains the salary", async () => {
 		const slip = await payslipOf(ids.run07, ids.empB);
 		const salary = (await linesOf(idOf(slip))).filter((line) => line.component === "salary");
@@ -375,6 +379,7 @@ test.describe.serial("payroll mutation lineage", () => {
 		}
 	});
 
+	// @e2e payroll-mutation-lineage::the-mutation-report-names-the-cause
 	test("the mutation report names the cause", async () => {
 		const res = await api.post(`${APP_API}/payroll/mutations`, {
 			headers: HEADERS,
@@ -401,6 +406,7 @@ test.describe.serial("payroll mutation lineage", () => {
 		).toBe(true);
 	});
 
+	// @e2e payroll-mutation-lineage::a-correction-must-name-a-line-of-its-own-payslip
 	test("a correction must name a line of its own payslip", async () => {
 		const ownSlip = await payslipOf(ids.run06, ids.empC);
 		const otherSlip = await payslipOf(ids.run06, ids.empA);
