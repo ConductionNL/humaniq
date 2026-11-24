@@ -248,6 +248,7 @@ class ReceiptExtractionService implements ReceiptExtractionServiceInterface {
 	 * @return array<string, mixed>|null
 	 *
 	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-002
+	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
 	 */
 	private function refusal(ReceiptExtractionAttempt $attempt): ?array {
 		if ($attempt->expenseId === '') {
@@ -259,7 +260,7 @@ class ReceiptExtractionService implements ReceiptExtractionServiceInterface {
 			return $this->outcome($attempt->expenseId, 'failed', 'Expense niet gevonden: ' . $attempt->expenseId);
 		}
 
-		$attempt->receiptFile = trim((string)($attempt->expense['receiptFile'] ?? ''));
+		$attempt->receiptFile = ReceiptFileReference::of($attempt->expense['receiptFile'] ?? null);
 		if ($attempt->receiptFile === '') {
 			return $this->outcome($attempt->expenseId, 'failed', 'Expense heeft geen receiptFile; extractie is geweigerd.');
 		}

@@ -141,11 +141,13 @@ class ReceiptExtractionRepository {
 	 * source of truth for "already extracted".
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
 	 */
 	public function eligibleBacklogExpenses(): array {
 		$out = [];
 		foreach ($this->loadAll(self::EXPENSE_SCHEMA) as $expense) {
-			$receiptFile = trim((string)($expense['receiptFile'] ?? ''));
+			$receiptFile = ReceiptFileReference::of($expense['receiptFile'] ?? null);
 			if ($receiptFile === '') {
 				continue;
 			}
