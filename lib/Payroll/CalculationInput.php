@@ -49,6 +49,8 @@ use InvalidArgumentException;
 
 /**
  * Immutable input to one gross-to-net calculation.
+ *
+ * @SuppressWarnings(PHPMD.TooManyFields) The fields stay flat by design: the pack mapper, toArray() and the stamped engineInputSnapshot read them by name, and each optional part (the special payment, the pension) is one value object.
  */
 final class CalculationInput {
 

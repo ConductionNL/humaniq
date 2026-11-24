@@ -250,6 +250,7 @@ final class CalculationResult {
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function __construct(PackRunResult|array $out) {
+		[$this->pensionBaseCents, $this->pensionEmployeeCents, $this->pensionEmployerCents] = self::pensionOf(out: $out);
 		if (is_array($out) === true) {
 			$this->grossPayCents = (int)$out['grossPayCents'];
 			$this->loonheffingCents = (int)$out['loonheffingCents'];
@@ -276,9 +277,6 @@ final class CalculationResult {
 			$this->specialLoonheffingCents = (int)($out['specialLoonheffingCents'] ?? 0);
 			$this->eindejaarsuitkeringReservedCents = (int)($out['eindejaarsuitkeringReservedCents'] ?? 0);
 			$this->rvuFinalLevyCents = (int)($out['rvuFinalLevyCents'] ?? 0);
-			$this->pensionBaseCents = (int)($out['pensionBaseCents'] ?? 0);
-			$this->pensionEmployeeCents = (int)($out['pensionEmployeeCents'] ?? 0);
-			$this->pensionEmployerCents = (int)($out['pensionEmployerCents'] ?? 0);
 
 			return;
 		}
@@ -310,11 +308,31 @@ final class CalculationResult {
 		$this->taxableWageCents = (self::optionalCents(out: $out, id: 'belastbaarLoon') + $this->specialPaymentCents);
 		$this->premiumWageCents = min((self::optionalCents(out: $out, id: 'belastbaarLoon') + $this->specialPaymentCents), self::optionalCents(out: $out, id: 'premieloonCap'));
 		$this->rvuFinalLevyCents = self::optionalStepCents(out: $out, id: 'rvuEindheffing');
-		$this->pensionBaseCents = self::optionalStepCents(out: $out, id: 'pensioengrondslag');
-		$this->pensionEmployeeCents = self::optionalStepCents(out: $out, id: 'pensionEmployee');
-		$this->pensionEmployerCents = self::optionalStepCents(out: $out, id: 'pensionEmployer');
 
 	}//end __construct()
+
+	/**
+	 * The pension base and premiums (payroll-engine-port-from-shillinq D1):
+	 * off the pack's steps, or off the fields of two summed results; zero
+	 * for a pack without them.
+	 *
+	 * @param PackRunResult|array<string, mixed> $out The pack run's output, or summed fields.
+	 *
+	 * @return array{0: int, 1: int, 2: int} The base, the employee and the employer premium.
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 */
+	private static function pensionOf(PackRunResult|array $out): array {
+		if (is_array($out) === true) {
+			return [(int)($out['pensionBaseCents'] ?? 0), (int)($out['pensionEmployeeCents'] ?? 0), (int)($out['pensionEmployerCents'] ?? 0)];
+		}
+
+		return [
+			self::optionalStepCents(out: $out, id: 'pensioengrondslag'),
+			self::optionalStepCents(out: $out, id: 'pensionEmployee'),
+			self::optionalStepCents(out: $out, id: 'pensionEmployer'),
+		];
+	}//end pensionOf()
 
 	/**
 	 * Two calculations of one payslip as one: the four weeks of an extended

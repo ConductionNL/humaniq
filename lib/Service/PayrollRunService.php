@@ -182,6 +182,7 @@ use OCA\Humaniq\Payroll\SickPayInput;
 use OCA\Humaniq\Payroll\SickPayResult;
 use OCA\Humaniq\Payroll\SickPayTiming;
 use OCA\Humaniq\Payroll\SickPayWage;
+use OCA\Humaniq\Payroll\Pension\PensionPremiumLookup;
 use OCA\Humaniq\Payroll\PensionPremium;
 use OCA\Humaniq\Payroll\SpecialPayment;
 use OCA\Humaniq\Payroll\TaxTables;
@@ -303,7 +304,6 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param ReservationPayoutRunService|null $reservations Pays out the holiday allowance, end-of-year and IKB reserves (payroll-reservation-payouts); null runs without it.
 	 * @param PayslipLineageService|null $lineage Writes each payslip's source-carrying lines (payroll-mutation-lineage D1); null runs without it.
 	 * @param FinalLeavePayoutService|null $leavePayout Pays a leaver's open leave balance on the final payslip (REQ-OFC-005); null runs without it.
-	 * @param PensionPremiumService|null $pension The participation and scheme behind each payslip's pension premium (payroll-engine-port-from-shillinq D1); null runs without it.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
@@ -326,7 +326,6 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		private readonly ?ReservationPayoutRunService $reservations = null,
 		private readonly ?PayslipLineageService $lineage = null,
 		private readonly ?FinalLeavePayoutService $leavePayout = null,
-		private readonly ?PensionPremiumService $pension = null,
 	) {
 
 	}//end __construct()
@@ -595,7 +594,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$state['vehicleAssets'] = $this->vehicleAssetsById();
 		$state['hours'] = $this->hoursInputs(period: $period);
 		$state['expenseInputs'] = $this->expenses?->inputs(norm: $this->expenses->normFrom($state['tables']));
-		$state['pensionInputs'] = $this->pension?->inputs(administrationId: $state['administrationId']);
+		$state['pensionInputs'] = $this->pensionLookup()->inputs(rows: ['participations' => $this->loadAll('PensionParticipation'), 'schemes' => $this->loadAll('PensionScheme')], administrationId: $state['administrationId']);
 		$state['reservationInputs'] = $this->reservations?->inputs(run: ['period' => $period, 'administrationId' => $state['administrationId'], 'runId' => $state['runId'], 'tables' => $state['tables']]);
 
 		return array_merge($state, self::EMPTY_TALLY);
@@ -965,8 +964,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	/**
 	 * The pension base and percentages of one calculation: the participation
 	 * in force on the last day of the period and its fund's scheme
-	 * (payroll-engine-port-from-shillinq D1/D2). None without the service or
-	 * a participation, so such a payslip stays as it was.
+	 * (payroll-engine-port-from-shillinq D1/D2). None without a
+	 * participation, so such a payslip stays as it was.
 	 *
 	 * @param array<string, mixed> $state The run state.
 	 * @param array<string, mixed> $slip  The folded slip.
@@ -977,11 +976,11 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	private function pensionPremiumOf(array $state, array $slip): ?PensionPremium {
-		if ($this->pension === null || ($state['pensionInputs'] ?? null) === null) {
+		if (isset($state['pensionInputs']) === false) {
 			return null;
 		}
 
-		return $this->pension->premiumFor(
+		return $this->pensionLookup()->premiumFor(
 			inputs: $state['pensionInputs'],
 			slip: [
 				'employeeId' => (string)$slip['employeeId'],
@@ -992,6 +991,18 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			]
 		);
 	}//end pensionPremiumOf()
+
+	/**
+	 * The pension lookup, with the full-time week the pension filing uses,
+	 * so the payslip's base is the filing's base.
+	 *
+	 * @return PensionPremiumLookup
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 */
+	private function pensionLookup(): PensionPremiumLookup {
+		return new PensionPremiumLookup(fullTimeHoursWeek: AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK);
+	}//end pensionLookup()
 
 	/**
 	 * The special part of the input from the reservation fold, or none.

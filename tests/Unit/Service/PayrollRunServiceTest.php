@@ -59,8 +59,6 @@ use OCA\Humaniq\Service\PayrollGLPostService;
 use OCA\Humaniq\Service\PayrollRetentionGuardService;
 use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
-use OCA\Humaniq\Service\PensionPremiumService;
-use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\Humaniq\Service\FinalLeavePayoutService;
 use OCA\Humaniq\Service\PayslipLineageService;
 use OCA\Humaniq\Service\ReservationPayoutRunService;
@@ -273,11 +271,10 @@ class PayrollRunServiceTest extends TestCase {
 	 * @param ReservationPayoutRunService|null $reservations The reserve payouts, or null for a run without them.
 	 * @param bool $withLineage Whether the run writes payslip lines (payroll-mutation-lineage).
 	 * @param bool $withLeavePayout Whether the run pays a leaver's open leave balance (REQ-OFC-005).
-	 * @param PensionPremiumService|null $pension The pension participations and schemes, or null for a run without them.
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, ?ReservationPayoutRunService $reservations = null, bool $withLineage = false, bool $withLeavePayout = false, ?PensionPremiumService $pension = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, ?ReservationPayoutRunService $reservations = null, bool $withLineage = false, bool $withLeavePayout = false): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -323,7 +320,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, reservations: $reservations, lineage: $lineage, leavePayout: $leavePayout, pension: $pension),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, reservations: $reservations, lineage: $lineage, leavePayout: $leavePayout),
 			$fake,
 			$retentionGuard,
 		];
@@ -505,17 +502,19 @@ class PayrollRunServiceTest extends TestCase {
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public function testAParticipantsPayslipWithholdsThePensionPremium(): void {
-		$records = $this->createMock(RecordStoreInterface::class);
-		$records->method('loadAll')->willReturn([['id' => 'pp-1', 'employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-01-01', 'participationFactor' => 1]]);
-		$records->method('findFiltered')->willReturn([['id' => 'ps-1', 'administrationId' => 'ADM-001', 'fund' => 'pfab', 'franchise' => 18000, 'maxPensionableSalary' => 137800, 'employeePercentage' => 7.5, 'employerPercentage' => 15, 'validFrom' => '2026-01-01']]);
 		[$service, $fake] = $this->service(
 			[
 				'Employee' => [$this->employee(['grossMonthlySalary' => 4000.00]), $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-NL-0002', 'grossMonthlySalary' => 4000.00])],
-				'EmploymentContract' => [$this->contract(), $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2'])],
+				// Full time: the pension filing's 40-hour week, so the franchise is whole.
+				'EmploymentContract' => [$this->contract(['hoursPerWeek' => 40.0]), $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2', 'hoursPerWeek' => 40.0])],
 				'PayrollRun' => [],
 				'Payslip' => [],
-			],
-			pension: new PensionPremiumService(gateway: $records, fullTimeHoursWeek: 36.0)
+				'PensionParticipation' => [['id' => 'pp-1', 'employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-01-01', 'participationFactor' => 1]],
+				'PensionScheme' => [
+					['id' => 'ps-1', 'administrationId' => 'ADM-001', 'fund' => 'pfab', 'franchise' => 18000, 'maxPensionableSalary' => 137800, 'employeePercentage' => 7.5, 'employerPercentage' => 15, 'validFrom' => '2026-01-01'],
+					['id' => 'ps-9', 'administrationId' => 'ADM-009', 'fund' => 'pfab', 'franchise' => 0, 'maxPensionableSalary' => 137800, 'employeePercentage' => 50, 'employerPercentage' => 50, 'validFrom' => '2026-01-01'],
+				],
+			]
 		);
 
 		$service->runFor('2026-04');

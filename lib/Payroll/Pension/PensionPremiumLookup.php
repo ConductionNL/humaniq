@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PensionPremiumService
+ * PensionPremiumLookup
  *
  * The pension part of one payslip (payroll-engine-port-from-shillinq D1/D2):
  * the employee's PensionParticipation in force on the last day of the
@@ -9,8 +9,8 @@
  * day, and the period's pension base computed with the same PensionBase
  * arithmetic the pension filing uses. The pack applies the percentages.
  *
- * @category Service
- * @package  OCA\Humaniq\Service
+ * @category Payroll
+ * @package  OCA\Humaniq\Payroll\Pension
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -26,50 +26,49 @@
 
 declare(strict_types=1);
 
-namespace OCA\Humaniq\Service;
+namespace OCA\Humaniq\Payroll\Pension;
 
-use OCA\Humaniq\Payroll\Pension\PensionBase;
 use OCA\Humaniq\Payroll\PensionPremium;
 
 /**
- * Reads participations and schemes once per run and answers per payslip.
+ * Pure selection and arithmetic over the participations and schemes a run read once.
  *
  * @SuppressWarnings(PHPMD.StaticAccess) PensionBase is pure and static by design, the PensionMessageService precedent.
  *
  * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
-class PensionPremiumService {
+final class PensionPremiumLookup {
 
 	/**
-	 * The service.
+	 * The lookup.
 	 *
-	 * @param RecordStoreInterface $gateway           Register reads.
-	 * @param float                $fullTimeHoursWeek The hours per week of a full-time employee.
+	 * @param float $fullTimeHoursWeek The hours per week of a full-time employee, as the pension filing counts them.
 	 */
 	public function __construct(
-		private readonly RecordStoreInterface $gateway,
-		private readonly float $fullTimeHoursWeek=AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK,
+		private readonly float $fullTimeHoursWeek,
 	) {
 	}//end __construct()
 
 	/**
-	 * The participations per employee and the administration's schemes per
-	 * fund, read once for a run.
+	 * The participations per employee and the administration's schemes per fund.
 	 *
-	 * @param string $administrationId The run's administration.
+	 * @param array{participations: list<array<string, mixed>>, schemes: list<array<string, mixed>>} $rows             Every PensionParticipation and PensionScheme.
+	 * @param string                                                                                $administrationId The run's administration.
 	 *
 	 * @return array{participations: array<string, list<array<string, mixed>>>, schemes: array<string, list<array<string, mixed>>>}
 	 *
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
-	public function inputs(string $administrationId): array {
+	public function inputs(array $rows, string $administrationId): array {
 		$inputs = ['participations' => [], 'schemes' => []];
-		foreach ($this->gateway->loadAll('PensionParticipation') as $participation) {
+		foreach ($rows['participations'] as $participation) {
 			$inputs['participations'][(string)($participation['employeeId'] ?? '')][] = $participation;
 		}
 
-		foreach ($this->gateway->findFiltered('PensionScheme', ['administrationId' => $administrationId]) as $scheme) {
-			$inputs['schemes'][(string)($scheme['fund'] ?? '')][] = $scheme;
+		foreach ($rows['schemes'] as $scheme) {
+			if ((string)($scheme['administrationId'] ?? '') === $administrationId) {
+				$inputs['schemes'][(string)($scheme['fund'] ?? '')][] = $scheme;
+			}
 		}
 
 		return $inputs;
@@ -89,20 +88,20 @@ class PensionPremiumService {
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public function premiumFor(array $inputs, array $slip): ?PensionPremium {
-		$participation = self::inForce(rows: ($inputs['participations'][$slip['employeeId']] ?? []), span: ['startDate', 'endDate'], day: $slip['lastDay']);
+		$participation = self::inForce(rows: ($inputs['participations'][$slip['employeeId']] ?? []), span: ['startDate', 'endDate', $slip['lastDay']]);
 		if ($participation === null) {
 			return null;
 		}
 
-		$scheme = self::inForce(rows: ($inputs['schemes'][(string)($participation['fund'] ?? '')] ?? []), span: ['validFrom', 'validUntil'], day: $slip['lastDay']);
+		$scheme = self::inForce(rows: ($inputs['schemes'][(string)($participation['fund'] ?? '')] ?? []), span: ['validFrom', 'validUntil', $slip['lastDay']]);
 		if ($scheme === null) {
 			return null;
 		}
 
 		return new PensionPremium(
-			pensionBaseCents: $this->baseCents(slip: $slip, participationFactor: self::factorOf($participation), scheme: $scheme),
-			employeePercentage: self::percentage(scheme: $scheme, key: 'employeePercentage'),
-			employerPercentage: self::percentage(scheme: $scheme, key: 'employerPercentage')
+			pensionBaseCents: $this->baseCents(slip: array_merge($slip, ['participationFactor' => self::factorOf($participation)]), scheme: $scheme),
+			employeePercentage: PensionBase::amount(scheme: $scheme, key: 'employeePercentage'),
+			employerPercentage: PensionBase::amount(scheme: $scheme, key: 'employerPercentage')
 		);
 	}//end premiumFor()
 
@@ -112,13 +111,12 @@ class PensionPremiumService {
 	 * period; the arithmetic is linear, so that equals spreading the
 	 * scheme's yearly figures over the period's own count.
 	 *
-	 * @param array{employeeId: string, contract: array<string, mixed>|null, grossCents: int, lastDay: string, periodsPerYear: int} $slip                The payslip.
-	 * @param float                                                                                                                 $participationFactor The participation factor.
-	 * @param array<string, mixed>                                                                                                  $scheme              The PensionScheme.
+	 * @param array{employeeId: string, contract: array<string, mixed>|null, grossCents: int, lastDay: string, periodsPerYear: int, participationFactor: float} $slip   The payslip and its participation factor.
+	 * @param array<string, mixed>                                                                                                                         $scheme The PensionScheme.
 	 *
 	 * @return int
 	 */
-	private function baseCents(array $slip, float $participationFactor, array $scheme): int {
+	private function baseCents(array $slip, array $scheme): int {
 		$toMonth = ($slip['periodsPerYear'] / PensionBase::PERIODS_PER_YEAR);
 		$hours = ($slip['contract']['hoursPerWeek'] ?? null);
 		if (is_numeric($hours) === false || (float)$hours <= 0.0) {
@@ -127,7 +125,7 @@ class PensionPremiumService {
 		}
 
 		$figures = PensionBase::of(
-			earnings: ['wage' => (max(0, $slip['grossCents']) / 100 * $participationFactor * $toMonth), 'hoursPerWeek' => (float)$hours, 'fullTimeHoursWeek' => $this->fullTimeHoursWeek],
+			earnings: ['wage' => (max(0, $slip['grossCents']) / 100 * $slip['participationFactor'] * $toMonth), 'hoursPerWeek' => (float)$hours, 'fullTimeHoursWeek' => $this->fullTimeHoursWeek],
 			scheme: $scheme
 		);
 
@@ -138,14 +136,13 @@ class PensionPremiumService {
 	 * The row in force on a day: started on or before it and not ended
 	 * before it; the latest start wins.
 	 *
-	 * @param list<array<string, mixed>> $rows The rows.
-	 * @param array{0: string, 1: string} $span The start and end field.
-	 * @param string                     $day  The day, YYYY-MM-DD.
+	 * @param list<array<string, mixed>>            $rows The rows.
+	 * @param array{0: string, 1: string, 2: string} $span The start field, the end field and the day, YYYY-MM-DD.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private static function inForce(array $rows, array $span, string $day): ?array {
-		[$fromKey, $untilKey] = $span;
+	private static function inForce(array $rows, array $span): ?array {
+		[$fromKey, $untilKey, $day] = $span;
 		$found = null;
 		foreach ($rows as $row) {
 			$from = substr((string)($row[$fromKey] ?? ''), 0, 10);
@@ -177,21 +174,4 @@ class PensionPremiumService {
 
 		return min(1.0, max(0.0, (float)$factor));
 	}//end factorOf()
-
-	/**
-	 * A percentage of the scheme; absent or not a number counts as zero.
-	 *
-	 * @param array<string, mixed> $scheme The PensionScheme.
-	 * @param string               $key    The percentage.
-	 *
-	 * @return float
-	 */
-	private static function percentage(array $scheme, string $key): float {
-		$value = ($scheme[$key] ?? null);
-		if (is_numeric($value) === false) {
-			return 0.0;
-		}
-
-		return max(0.0, (float)$value);
-	}//end percentage()
 }//end class

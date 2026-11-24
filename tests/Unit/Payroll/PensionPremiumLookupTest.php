@@ -1,13 +1,13 @@
 <?php
 
 /**
- * PensionPremiumServiceTest
+ * PensionPremiumLookupTest
  *
  * The participation and scheme behind a payslip's pension premium
  * (payroll-engine-port-from-shillinq 2.2).
  *
  * @category Test
- * @package  OCA\Humaniq\Tests\Unit\Service
+ * @package  OCA\Humaniq\Tests\Unit\Payroll
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -23,10 +23,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Humaniq\Tests\Unit\Service;
+namespace OCA\Humaniq\Tests\Unit\Payroll;
 
-use OCA\Humaniq\Service\PensionPremiumService;
-use OCA\Humaniq\Service\RecordStoreInterface;
+use OCA\Humaniq\Payroll\Pension\PensionPremiumLookup;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -34,7 +33,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
  */
-class PensionPremiumServiceTest extends TestCase {
+class PensionPremiumLookupTest extends TestCase {
 
 	/**
 	 * REQ-PPP-001: a full-time participant earning 4,000.00 in a scheme with
@@ -163,19 +162,10 @@ class PensionPremiumServiceTest extends TestCase {
 	 * @return \OCA\Humaniq\Payroll\PensionPremium|null
 	 */
 	private function premium(array $objects, array $slip): ?\OCA\Humaniq\Payroll\PensionPremium {
-		$gateway = $this->createMock(RecordStoreInterface::class);
-		$gateway->method('loadAll')->willReturnCallback(static fn (string $schema): array => ($objects[$schema] ?? []));
-		$gateway->method('findFiltered')->willReturnCallback(
-			static fn (string $schema, array $filters): array => array_values(array_filter(
-				($objects[$schema] ?? []),
-				static fn (array $row): bool => ($row['administrationId'] ?? null) === ($filters['administrationId'] ?? null)
-			))
-		);
+		$lookup = new PensionPremiumLookup(fullTimeHoursWeek: 36.0);
 
-		$service = new PensionPremiumService(gateway: $gateway, fullTimeHoursWeek: 36.0);
-
-		return $service->premiumFor(
-			inputs: $service->inputs(administrationId: 'ADM-001'),
+		return $lookup->premiumFor(
+			inputs: $lookup->inputs(rows: ['participations' => ($objects['PensionParticipation'] ?? []), 'schemes' => ($objects['PensionScheme'] ?? [])], administrationId: 'ADM-001'),
 			slip: array_merge(['employeeId' => 'emp-1', 'contract' => ['hoursPerWeek' => 36.0], 'grossCents' => 400000, 'lastDay' => '2026-04-30', 'periodsPerYear' => 12], $slip)
 		);
 	}//end premium()

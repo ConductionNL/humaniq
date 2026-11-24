@@ -87,8 +87,10 @@ final class PensionBase {
 	 * @param string               $key    The figure.
 	 *
 	 * @return float
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
-	private static function amount(array $scheme, string $key): float {
+	public static function amount(array $scheme, string $key): float {
 		$value = ($scheme[$key] ?? null);
 		if (is_numeric($value) === false) {
 			return 0.0;
