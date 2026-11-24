@@ -593,7 +593,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$state['vehicleAssets'] = $this->vehicleAssetsById();
 		$state['hours'] = $this->hoursInputs(period: $period);
 		$state['expenseInputs'] = $this->expenses?->inputs(norm: $this->expenses->normFrom($state['tables']));
-		$state['pensionInputs'] = (new PensionPremiumService())->inputs(participations: $this->loadAll('PensionParticipation'), schemes: $this->loadAll('PensionScheme'), administrationId: $state['administrationId'], period: $period);
+		$state['pensionInputs'] = (new PensionPremiumService())->inputs(rows: ['participations' => $this->loadAll('PensionParticipation'), 'schemes' => $this->loadAll('PensionScheme')], run: ['administrationId' => $state['administrationId'], 'period' => $period]);
 		$state['reservationInputs'] = $this->reservations?->inputs(run: ['period' => $period, 'administrationId' => $state['administrationId'], 'runId' => $state['runId'], 'tables' => $state['tables']]);
 
 		return array_merge($state, self::EMPTY_TALLY);
@@ -975,7 +975,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			return null;
 		}
 
-		return (new PensionPremiumService())->premiumFor(inputs: $state['pensionInputs'], employeeId: $slip['employeeId'], grossCents: (int)$slip['regularWageCents'], contract: $slip['contract']);
+		return (new PensionPremiumService())->premiumFor(inputs: $state['pensionInputs'], slip: $slip);
 	}//end pensionOf()
 
 	/**

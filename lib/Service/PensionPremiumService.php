@@ -52,25 +52,24 @@ class PensionPremiumService {
 	 * employee and the administration's schemes. The run passes the rows it
 	 * read; this class reads nothing itself.
 	 *
-	 * @param array<int, array<string, mixed>> $participations Every PensionParticipation.
-	 * @param array<int, array<string, mixed>> $schemes        Every PensionScheme.
-	 * @param string                           $administrationId The run's administration; empty takes every scheme.
-	 * @param string                           $period         The run's period, `YYYY-MM`.
+	 * @param array{participations: array<int, array<string, mixed>>, schemes: array<int, array<string, mixed>>} $rows Every PensionParticipation and PensionScheme.
+	 * @param array{administrationId: string, period: string}                                                 $run  The run's administration (empty takes every scheme) and period, `YYYY-MM`.
 	 *
 	 * @return array{lastDay: string, participations: array<string, array<int, array<string, mixed>>>, schemes: array<int, array<string, mixed>>}
 	 *
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
-	public function inputs(array $participations, array $schemes, string $administrationId, string $period): array {
+	public function inputs(array $rows, array $run): array {
+		['administrationId' => $administrationId, 'period' => $period] = $run;
 		$byEmployee = [];
-		foreach ($participations as $participation) {
+		foreach ($rows['participations'] as $participation) {
 			$byEmployee[(string)($participation['employeeId'] ?? '')][] = $participation;
 		}
 
 		return [
 			'lastDay' => date('Y-m-t', (int)strtotime($period.'-01')),
 			'participations' => $byEmployee,
-			'schemes' => array_values(array_filter($schemes, static fn (array $scheme): bool => $administrationId === '' || (string)($scheme['administrationId'] ?? '') === $administrationId)),
+			'schemes' => array_values(array_filter($rows['schemes'], static fn (array $scheme): bool => $administrationId === '' || (string)($scheme['administrationId'] ?? '') === $administrationId)),
 		];
 	}//end inputs()
 
@@ -78,34 +77,32 @@ class PensionPremiumService {
 	 * The pension part of one employee's calculation, or null without a
 	 * participation in force or without a scheme for its fund.
 	 *
-	 * @param array<string, mixed>      $inputs     What inputs() read.
-	 * @param string                    $employeeId The employee.
-	 * @param int                       $grossCents The period's pensionable salary, in cents.
-	 * @param array<string, mixed>|null $contract   The covering contract, for the part-time factor.
+	 * @param array<string, mixed> $inputs What inputs() read.
+	 * @param array{employeeId: string, regularWageCents: int, contract: array<string, mixed>|null} $slip The employee, the period's pensionable salary in cents and the covering contract (for the part-time factor).
 	 *
 	 * @return PensionPremium|null
 	 *
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
-	public function premiumFor(array $inputs, string $employeeId, int $grossCents, ?array $contract): ?PensionPremium {
-		$participation = self::inForce(rows: ($inputs['participations'][$employeeId] ?? []), day: $inputs['lastDay'], from: 'startDate', until: 'endDate');
+	public function premiumFor(array $inputs, array $slip): ?PensionPremium {
+		$participation = self::inForce(rows: ($inputs['participations'][(string)$slip['employeeId']] ?? []), window: [$inputs['lastDay'], 'startDate', 'endDate']);
 		if ($participation === null) {
 			return null;
 		}
 
 		$fund    = (string)($participation['fund'] ?? '');
 		$schemes = array_filter($inputs['schemes'], static fn (array $scheme): bool => (string)($scheme['fund'] ?? '') === $fund);
-		$scheme  = self::inForce(rows: $schemes, day: $inputs['lastDay'], from: 'validFrom', until: 'validUntil');
+		$scheme  = self::inForce(rows: $schemes, window: [$inputs['lastDay'], 'validFrom', 'validUntil']);
 		if ($scheme === null) {
 			return null;
 		}
 
 		$factor  = (is_numeric($participation['participationFactor'] ?? null) === true ? max(0.0, min(1.0, (float)$participation['participationFactor'])) : 1.0);
-		$hours   = ($contract['hoursPerWeek'] ?? null);
+		$hours   = ($slip['contract']['hoursPerWeek'] ?? null);
 		$figures = PensionBase::of(
 			earnings: [
-				'wage' => (($grossCents / 100) * $factor),
+				'wage' => (((int)$slip['regularWageCents'] / 100) * $factor),
 				'hoursPerWeek' => (is_numeric($hours) === true && (float)$hours > 0.0 ? (float)$hours : $this->fullTimeHoursWeek),
 				'fullTimeHoursWeek' => $this->fullTimeHoursWeek,
 			],
@@ -124,14 +121,13 @@ class PensionPremiumService {
 	 * several do (an overlap the participation guard refuses, but a scheme
 	 * may be re-issued).
 	 *
-	 * @param array<int|string, array<string, mixed>> $rows  The rows.
-	 * @param string                                  $day   The day, `YYYY-MM-DD`.
-	 * @param string                                  $from  The start-date field.
-	 * @param string                                  $until The end-date field; empty runs on.
+	 * @param array<int|string, array<string, mixed>> $rows   The rows.
+	 * @param array{0: string, 1: string, 2: string}  $window The day (`YYYY-MM-DD`), the start-date field and the end-date field (empty runs on).
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private static function inForce(array $rows, string $day, string $from, string $until): ?array {
+	private static function inForce(array $rows, array $window): ?array {
+		[$day, $from, $until] = $window;
 		$found = null;
 		foreach ($rows as $row) {
 			$start = (string)($row[$from] ?? '');

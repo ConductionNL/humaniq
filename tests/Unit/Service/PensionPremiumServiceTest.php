@@ -70,9 +70,9 @@ class PensionPremiumServiceTest extends TestCase {
 	 */
 	private function premium(array $participations, string $period, int $grossCents): ?PensionPremium {
 		$service = new PensionPremiumService();
-		$inputs  = $service->inputs(participations: $participations, schemes: [self::SCHEME, array_merge(self::SCHEME, ['administrationId' => 'ADM-002', 'employeePercentage' => 99.0])], administrationId: 'ADM-001', period: $period);
+		$inputs  = $service->inputs(rows: ['participations' => $participations, 'schemes' => [self::SCHEME, array_merge(self::SCHEME, ['administrationId' => 'ADM-002', 'employeePercentage' => 99.0])]], run: ['administrationId' => 'ADM-001', 'period' => $period]);
 
-		return $service->premiumFor(inputs: $inputs, employeeId: 'emp-1', grossCents: $grossCents, contract: self::FULL_TIME);
+		return $service->premiumFor(inputs: $inputs, slip: ['employeeId' => 'emp-1', 'regularWageCents' => $grossCents, 'contract' => self::FULL_TIME]);
 	}//end premium()
 
 	/**
@@ -137,12 +137,12 @@ class PensionPremiumServiceTest extends TestCase {
 	 */
 	public function testTheFactorScalesTheWageAndPartTimeTheFranchise(): void {
 		$service = new PensionPremiumService();
-		$inputs  = $service->inputs(participations: [['employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-01-01', 'participationFactor' => 0.5]], schemes: [self::SCHEME], administrationId: 'ADM-001', period: '2026-04');
+		$inputs  = $service->inputs(rows: ['participations' => [['employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-01-01', 'participationFactor' => 0.5]], 'schemes' => [self::SCHEME]], run: ['administrationId' => 'ADM-001', 'period' => '2026-04']);
 
 		// 4,000 x 0.5 = 2,000 less 1,500 = 500.
-		$this->assertSame(50000, $service->premiumFor(inputs: $inputs, employeeId: 'emp-1', grossCents: 400000, contract: self::FULL_TIME)?->pensionBaseCents);
+		$this->assertSame(50000, $service->premiumFor(inputs: $inputs, slip: ['employeeId' => 'emp-1', 'regularWageCents' => 400000, 'contract' => self::FULL_TIME])?->pensionBaseCents);
 		// Half-time on 2,000: 2,000 x 0.5 = 1,000 less 1,500 x 0.5 = 250.
-		$this->assertSame(25000, $service->premiumFor(inputs: $inputs, employeeId: 'emp-1', grossCents: 200000, contract: ['hoursPerWeek' => 20.0])?->pensionBaseCents);
+		$this->assertSame(25000, $service->premiumFor(inputs: $inputs, slip: ['employeeId' => 'emp-1', 'regularWageCents' => 200000, 'contract' => ['hoursPerWeek' => 20.0]])?->pensionBaseCents);
 	}//end testTheFactorScalesTheWageAndPartTimeTheFranchise()
 
 	/**
