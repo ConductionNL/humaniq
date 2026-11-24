@@ -248,7 +248,7 @@ class ReceiptExtractionService implements ReceiptExtractionServiceInterface {
 	 * @return array<string, mixed>|null
 	 *
 	 * @spec openspec/specs/receipt-ocr/spec.md#REQ-RCPT-002
-	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-self-service-mobile/tasks.md#task-2.2
 	 */
 	private function refusal(ReceiptExtractionAttempt $attempt): ?array {
 		if ($attempt->expenseId === '') {

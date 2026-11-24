@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-24-self-service-mobile/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for ReceiptExtractionRepository::receiptReference().
  *
- * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-24-self-service-mobile/tasks.md#task-2.2
  */
 class ReceiptExtractionRepositoryReferenceTest extends TestCase {
 

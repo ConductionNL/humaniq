@@ -6,7 +6,7 @@
  * permission prompt comes from turning the switch on, and the subscription
  * goes to openregister's web-push endpoint and comes back from it on off.
  *
- * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
+ * @spec openspec/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
  */
 import assert from 'node:assert/strict'
 import { test } from 'node:test'

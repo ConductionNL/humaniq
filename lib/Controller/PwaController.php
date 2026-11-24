@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
  *
- * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
+ * @spec openspec/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -76,7 +76,7 @@ class PwaController extends Controller {
 	 *
 	 * @return DataDisplayResponse The manifest as application/manifest+json.
 	 *
-	 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
+	 * @spec openspec/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -127,7 +127,7 @@ class PwaController extends Controller {
 	 *
 	 * @return DataDisplayResponse The worker script, or a 404 when it is not built.
 	 *
-	 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-the-app-shall-keep-no-personal-data-on-the-phone-req-mob-002
+	 * @spec openspec/specs/self-service-mobile/spec.md#requirement-the-app-shall-keep-no-personal-data-on-the-phone-req-mob-002
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
