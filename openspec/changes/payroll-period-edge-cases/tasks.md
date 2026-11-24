@@ -52,5 +52,6 @@
 - [x] 5.1 e2e test or a reason-bearing `@e2e exclude` per scenario (gate 19), and `@spec` tags
       on every new method (gate 16).
   - Done: each of the eight scenarios carries an `@e2e exclude` naming the unit test that asserts it (every outcome is server-side: a run, a statement, an audit finding); every new class and method carries `@spec`.
-- [ ] 5.2 One live check on a dev instance: calculate `2026-P13` for `ADM-005` and generate the
+- [x] 5.2 One live check on a dev instance: calculate `2026-P13` for `ADM-005` and generate the
       2026 statement for the employee with an opening balance; record screenshots in the PR.
+      Written, runs in nightly: `tests/e2e/spec-coverage/payroll-period-edge-cases.spec.ts` calculates `2026-P13` for the seeded four-weekly ADM-007 (the seed's id for the task's ADM-005) and generates the 2026 statement of de Groot with her opening balance; the screenshots are attached to the test report. Not run in the cloud sandbox.
