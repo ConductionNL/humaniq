@@ -8346,10 +8346,18 @@
 						"widgetId": "data"
 					},
 					{
-						"gridHeight": 4,
+						"gridHeight": 2,
 						"gridWidth": 12,
 						"gridX": 0,
 						"gridY": 17,
+						"id": 7,
+						"widgetId": "period-factor"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 19,
 						"id": 5,
 						"widgetId": "wage-costs"
 					},
@@ -8357,7 +8365,7 @@
 						"gridHeight": 5,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 21,
+						"gridY": 23,
 						"id": 6,
 						"widgetId": "payslip-lines"
 					}
@@ -8441,6 +8449,27 @@
 						"id": "data",
 						"title": "Payslip breakdown",
 						"type": "data"
+					},
+					{
+						"_note": "payroll-engine-port-from-shillinq REQ-PPR-002: a starter's or leaver's payslip shows the period factor and the days it was computed from. The run writes periodFactor only when it is below 1, so the widget stays out of every other payslip.",
+						"content": {
+							"columns": 3,
+							"include": [
+								"periodFactor",
+								"periodFactorFrom",
+								"periodFactorUntil"
+							],
+							"title": "Partial period"
+						},
+						"icon": "CalendarRange",
+						"id": "period-factor",
+						"title": "Partial period",
+						"type": "data",
+						"visibleWhen": {
+							"field": "periodFactor",
+							"op": "lt",
+							"value": 1
+						}
 					},
 					{
 						"content": {

@@ -57,10 +57,18 @@
 
 ## 3. Partial period
 
-- [ ] 3.1 Add `periodFactor` to the run per O2 (D3) and store it on `Payslip`. Verify: unit
+- [x] 3.1 Add `periodFactor` to the run per O2 (D3) and store it on `Payslip`. Verify: unit
       tests for the three REQ-PPR-001 scenarios.
-- [ ] 3.2 Show the factor and its dates on `PayslipDetail` when below 1 (REQ-PPR-002), en and
+      Built: `PeriodFactor` (calendar days employed over days in the period, from the
+      Employee's start and end dates, the ones `coversPeriod()` gates on); the run scales only
+      the periodic salary, hours and every fold stay whole; `periodFactor`,
+      `periodFactorFrom` and `periodFactorUntil` on `Payslip` only below 1 (like
+      `tijdvakFactor`). `PeriodFactorTest`, `PayrollRunServiceTest` (starter, leaver, full
+      month). The per-trip travel allowance is not scaled by construction (only the salary is).
+- [x] 3.2 Show the factor and its dates on `PayslipDetail` when below 1 (REQ-PPR-002), en and
       nl. Verify: `npm run check:manifest` exits 0.
+      Built: a "Partial period" data widget with `visibleWhen` periodFactor < 1; en and nl
+      labels and descriptions. `check:manifest`, `check:manifest-parity`, `check:l10n` exit 0.
 
 ## 4. Sector code (only if O3 is yes)
 

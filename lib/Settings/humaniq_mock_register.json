@@ -10092,14 +10092,14 @@
             "title": "Total employee pension premium",
             "type": "number",
             "nullable": true,
-            "description": "Employee pension premiums withheld in this run. The payroll journal credits them, with the employer premiums, on the pension payable account.",
+            "description": "The employee pension premiums withheld in this run. The payroll journal books them, with the employer premiums, on the pension payable account.",
             "x-notes": "payroll-engine-port-from-shillinq D4, REQ-PPP-003."
           },
           "totalPensionEmployer": {
             "title": "Total employer pension premium",
             "type": "number",
             "nullable": true,
-            "description": "Employer pension premiums of this run, part of the total employer charges.",
+            "description": "The employer pension premiums of this run, part of the total employer charges.",
             "x-notes": "payroll-engine-port-from-shillinq D4, REQ-PPP-003."
           },
           "checkedAt": {
@@ -10991,7 +10991,7 @@
           "pensionBase": {
             "title": "Pension base",
             "type": "number",
-            "description": "The period's pension base: the pensionable wage times the participation factor, capped at the scheme's maximum, minus the franchise times the part-time factor (payroll-engine-port-from-shillinq D1). 0 without a participation.",
+            "description": "The wage the pension premium is calculated on: the pensionable wage up to the scheme's maximum, minus the franchise. 0 without a pension participation.",
             "authorization": {
               "read": [
                 "humaniq-hr",
@@ -11011,7 +11011,7 @@
           "pensionEmployer": {
             "title": "Employer pension premium",
             "type": "number",
-            "description": "Employer pension premium for the period, an employer charge (payroll-engine-port-from-shillinq D1). 0 without a participation.",
+            "description": "The employer's part of the pension premium for this period. 0 without a pension participation.",
             "authorization": {
               "read": [
                 "humaniq-hr",
@@ -11032,7 +11032,7 @@
             "title": "Period factor",
             "type": "number",
             "nullable": true,
-            "description": "The share of the period the employee was employed, in calendar days (payroll-engine-port-from-shillinq D3). Only on a starter's or leaver's payslip; the salary was multiplied by it.",
+            "description": "The share of the period the employee was employed, counted in calendar days. Only on the payslip of someone who started or left during the period; the salary is multiplied by it.",
             "authorization": {
               "read": [
                 "humaniq-hr",
@@ -11054,7 +11054,7 @@
             "type": "string",
             "format": "date",
             "nullable": true,
-            "description": "First day of the period the employee was employed. Only with a period factor.",
+            "description": "The first day of the period the employee was employed. Only with a period factor.",
             "authorization": {
               "read": [
                 "humaniq-hr",
@@ -11076,7 +11076,7 @@
             "type": "string",
             "format": "date",
             "nullable": true,
-            "description": "Last day of the period the employee was employed. Only with a period factor.",
+            "description": "The last day of the period the employee was employed. Only with a period factor.",
             "authorization": {
               "read": [
                 "humaniq-hr",
