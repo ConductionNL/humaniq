@@ -480,7 +480,6 @@
    "specs": [
     "portal-audiences",
     "candidate-assessment",
-    "hiring-cv-profile-extraction",
     "interview-scheduling",
     "offer-esign",
     "portal-contribution",
@@ -9776,12 +9775,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'vacancy.*match|match.*score|resume.?pars|cv.?pars' src/plugins src/client/src: no match; the recruitment plugin stores candidates per vacancy without any scoring"
    },
    "built": {
-    "requirement": ["openspec/specs/candidate-assessment :: A vacancy SHALL show an explained match score for applicants and employees (REQ-CAS-002)", "openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment :: HR SHALL be able to read a candidate's profile from their CV (REQ-CAS-004)"],
-    "state": "building",
-    "evidence": "lib/Service/VacancyMatchService.php scores applicants (hand-filled educationLevel, experienceYears, competenceCodes) and colleagues (current EmployeeCompetence) against the vacancy's requirements, 0 to 100 with the points per requirement; GET /api/vacancies/{id}/matches. Reading the profile from the CV is not built: filinq has no CV extraction (change hiring-cv-profile-extraction). Tests: tests/Unit/Service/VacancyMatchServiceTest.php.",
+    "requirement": ["openspec/specs/candidate-assessment :: A vacancy SHALL show an explained match score for applicants and employees (REQ-CAS-002)", "openspec/specs/candidate-assessment :: HR SHALL be able to read a candidate's profile from their CV (REQ-CAS-004)"],
+    "state": "built",
+    "evidence": "lib/Service/VacancyMatchService.php scores applicants (hand-filled educationLevel, experienceYears, competenceCodes) and colleagues (current EmployeeCompetence) against the vacancy's requirements, 0 to 100 with the points per requirement; GET /api/vacancies/{id}/matches. Read CV (lib/Service/CvProfileReader.php, POST /api/applications/{id}/read-cv in lib/Controller/ApplicationCvController.php) fills an empty profile from the CV through filinq's ProfileExtractionService (filinq#2320) and marks it profileSource cv. Tests: tests/Unit/Service/VacancyMatchServiceTest.php, tests/Unit/Service/CvProfileReaderTest.php, tests/Unit/Controller/ApplicationCvControllerTest.php.",
     "reachedOn": "Recruitment > Vacancies > a vacancy: Who fits",
     "owner": "ConductionNL/humaniq",
-    "change": "hiring-cv-profile-extraction",
+    "change": "2026-11-24-hiring-cv-profile-extraction",
     "readOn": "2026-09-30"
    },
    "provider": "humaniq",

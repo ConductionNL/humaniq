@@ -17,7 +17,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
  *
- * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-004
  */
 
 declare(strict_types=1);

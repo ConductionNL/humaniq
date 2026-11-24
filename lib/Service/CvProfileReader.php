@@ -19,7 +19,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
  *
- * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-004
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use Throwable;
 /**
  * Fills an empty candidate profile from the CV.
  *
- * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-004
  */
 class CvProfileReader {
 
@@ -67,7 +67,7 @@ class CvProfileReader {
 	 *
 	 * @return array{status: string, message: string, profile: array<string, mixed>}
 	 *
-	 * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-004
 	 */
 	public function read(array $application, string $userId): array {
 		if ($this->roles->isHr($userId) === false) {
@@ -110,7 +110,7 @@ class CvProfileReader {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-004
 	 */
 	public static function hasProfile(array $application): bool {
 		return (($application['educationLevel'] ?? null) !== null
