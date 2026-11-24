@@ -69,6 +69,8 @@ final class NlUitzendChecks implements CheckProvider, ProvidesTables {
 	 * Empty: every check this provider owns is table-declared (see tables()).
 	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -188,10 +190,9 @@ final class NlUitzendChecks implements CheckProvider, ProvidesTables {
 	 * the table form is proven on an OpenRegister-backed audit run
 	 * (REQ-RULE-009, tasks section 6).
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
-	 *
 	 * @return array<string, array<string, callable>>
 	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/uitzend-flexpool/spec.md
 	 */
 	public static function legacyChecks(): array {
