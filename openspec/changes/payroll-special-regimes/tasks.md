@@ -75,3 +75,4 @@
       each; every new method carries `@spec openspec/changes/payroll-special-regimes`.)
 - [ ] 5.2 One live check on a dev instance: calculate a run with the seeded RVU benefit and
       alderman and read both payslips; record screenshots in the PR.
+      Written: `tests/e2e/spec-coverage/payroll-special-regimes.spec.ts` calculates ADM-001's 2026-07 run and reads both payslips. It skips, naming the reason, while every `specialRegimes` leaf of nl-2026 is `verified: false` (the run then pays these regimes nothing); stays open until a maintainer verifies those figures and the check passes.

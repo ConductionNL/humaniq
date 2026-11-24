@@ -16,7 +16,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
  */
 
 declare(strict_types=1);

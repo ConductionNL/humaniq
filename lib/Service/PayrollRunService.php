@@ -1449,7 +1449,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function administrationRow(string $administrationId): array {
 		foreach ($this->loadAll('hrAdministration') as $administration) {
@@ -1472,7 +1472,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
 	 */
 	private function extendsWithWeek53(string $period, string $administrationId): bool {
 		try {
@@ -1500,7 +1500,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return array<string, mixed> The slip, with `week53` when week 53 was calculated.
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
 	 */
 	private function withWeek53(array $state, array $slip): array {
 		if (($state['week53Extended'] ?? false) !== true || ($slip['salaried'] ?? false) !== true) {
@@ -1530,7 +1530,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
 	 */
 	private function week53Part(CalculationResult $result, string $tijdvak, string $weeks): array {
 		return [
@@ -1554,7 +1554,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function periodsPerYearOf(string $period): int {
 		try {
@@ -1573,7 +1573,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function periodCents(float $monthlyAmount, string $period): int {
 		$periodsPerYear = $this->periodsPerYearOf(period: $period);
@@ -1592,7 +1592,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return DateTimeImmutable
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function lastDayOf(string $period): DateTimeImmutable {
 		try {
@@ -1612,7 +1612,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return string|null The refusal message.
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private function periodRefusal(string $period, string $administrationId): ?string {
 		$administration = $this->administrationRow(administrationId: $administrationId);

@@ -101,7 +101,7 @@ class FilteredObjectSubscriptionsTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public function testTheOpeningBalanceGuardIsSubscribedBeforeEverySave(): void {
 		self::assertSame(

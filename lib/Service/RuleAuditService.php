@@ -802,7 +802,7 @@ class RuleAuditService implements RuleAuditServiceInterface {
 	 *
 	 * @return array{byEmployeeYear: array<string, array<int, array<string, mixed>>>, firstPeriod: array<string, array<int, string>>}
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function buildOpeningBalanceContext(): array {
 		return (new OpeningBalanceIndex())->build(balances: $this->loadAll('PayrollOpeningBalance'), payslips: $this->loadAll('Payslip'));

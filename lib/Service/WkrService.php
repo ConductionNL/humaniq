@@ -253,7 +253,7 @@ class WkrService implements WkrServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function addOpeningBalances(WkrAggregate $aggregate): void {
 		foreach ($this->loadAll('PayrollOpeningBalance') as $balance) {

@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
  */
 
 declare(strict_types=1);
@@ -117,7 +117,7 @@ class PayPeriodTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function testForFrequencyAcceptsOnlyThatFrequencysPeriods(): void {
 		self::assertSame('maand', PayPeriod::forFrequency(id: '2026-05', frequency: 'monthly')->tijdvak);
@@ -141,7 +141,7 @@ class PayPeriodTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
 	 */
 	public function testPeriod14NeedsTheSeparateWeek53Setting(): void {
 		$p14 = PayPeriod::forFrequency(id: '2026-P14', frequency: 'four-weekly', week53Handling: 'separate-period-14');
@@ -158,7 +158,7 @@ class PayPeriodTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function testAnUnknownFrequencyIsRefused(): void {
 		$this->expectException(\InvalidArgumentException::class);
