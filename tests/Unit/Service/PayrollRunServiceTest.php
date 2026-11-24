@@ -61,6 +61,7 @@ use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\FinalLeavePayoutService;
 use OCA\Humaniq\Service\PayslipLineageService;
+use OCA\Humaniq\Service\PensionPremiumService;
 use OCA\Humaniq\Service\ReservationPayoutRunService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Services\IAppConfig;
@@ -274,7 +275,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, ?ReservationPayoutRunService $reservations = null, bool $withLineage = false, bool $withLeavePayout = false): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, ?ReservationPayoutRunService $reservations = null, bool $withLineage = false, bool $withLeavePayout = false, ?PensionPremiumService $pensions = null): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -320,7 +321,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, reservations: $reservations, lineage: $lineage, leavePayout: $leavePayout),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, reservations: $reservations, lineage: $lineage, leavePayout: $leavePayout, pensions: $pensions),
 			$fake,
 			$retentionGuard,
 		];
@@ -2484,6 +2485,72 @@ class PayrollRunServiceTest extends TestCase {
 		$separate = [array_merge($four[0], ['week53Handling' => 'separate-period-14'])];
 		self::assertArrayNotHasKey('week53', $this->periodPayslip(period: '2026-P13', administrations: $separate), 'with a separate period 14, period 13 is four weeks');
 	}//end testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation()
+
+	/**
+	 * The payslip of a 4,000 a month full-timer in April and May, with the
+	 * pension service over the given participations and the spec's scheme
+	 * (franchise 18,000, 7.5% and 15%), and the same payslip without it.
+	 *
+	 * @param array<int, array<string, mixed>> $participations The participations.
+	 * @param string                           $period         The period.
+	 *
+	 * @return array{0: array<string, mixed>, 1: array<string, mixed>} The payslip with and without the service.
+	 */
+	private function pensionPayslips(array $participations, string $period): array {
+		$rows = ['Employee' => [$this->employee(['grossMonthlySalary' => 4000.00])], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
+		$schemes = [['fund' => 'pfab', 'franchise' => 18000, 'maxPensionableSalary' => 137800, 'employeePercentage' => 7.5, 'employerPercentage' => 15.0, 'validFrom' => '2026-01-01', 'validUntil' => '2026-12-31']];
+		$store = $this->getMockBuilder(HoursRegisterGateway::class)->disableOriginalConstructor()->onlyMethods(['loadAll', 'findFiltered'])->getMock();
+		$store->method('loadAll')->willReturn($participations);
+		$store->method('findFiltered')->willReturn($schemes);
+
+		$payslips = [];
+		foreach ([new PensionPremiumService(store: $store, fullTimeHoursWeek: 36.0), null] as $pensions) {
+			[$service, $fake] = $this->service($rows, pensions: $pensions);
+			self::assertSame('calculated', $service->runFor($period)['status']);
+			$payslips[] = $this->savedFor($fake, 'Payslip')[0];
+		}
+
+		return $payslips;
+	}//end pensionPayslips()
+
+	/**
+	 * payroll-engine-port-from-shillinq REQ-PPP-001 through the real run: a
+	 * full-time participant on 4,000 pays 187.50, the employer 375.00, and net
+	 * pay drops by 187.50 less the wage tax it saves.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 */
+	public function testAParticipantPaysThePensionPremiumThroughTheRun(): void {
+		[$with, $without] = $this->pensionPayslips([['employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-01-01', 'participationFactor' => 1]], '2026-04');
+
+		self::assertSame(187.50, $with['pensionContribution']);
+		self::assertSame(375.00, $with['pensionEmployer']);
+		self::assertSame(0.0, $without['pensionContribution']);
+		self::assertArrayNotHasKey('pensionEmployer', $without);
+		self::assertLessThan($without['loonheffing'], $with['loonheffing'], 'the premium is deducted before wage tax');
+		self::assertSame(round(($without['nettoPay'] - 187.50 + ($without['loonheffing'] - $with['loonheffing'])), 2), $with['nettoPay']);
+		self::assertSame($without['grossPay'], $with['grossPay']);
+	}//end testAParticipantPaysThePensionPremiumThroughTheRun()
+
+	/**
+	 * REQ-PPP-002 through the run: enrolled from 1 May, the April run computes
+	 * no premium and the May run does; no participation keeps the payslip as before.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 */
+	public function testAParticipationFromMayCountsFromTheMayRun(): void {
+		$fromMay = [['employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-05-01']];
+
+		[$april, $aprilWithout] = $this->pensionPayslips($fromMay, '2026-04');
+		[$may] = $this->pensionPayslips($fromMay, '2026-05');
+
+		self::assertSame($aprilWithout, $april, 'without a participation in force the payslip is unchanged');
+		self::assertSame(187.50, $may['pensionContribution']);
+	}//end testAParticipationFromMayCountsFromTheMayRun()
 
 	/**
 	 * The payslip of a run for the period, for the anchor employee with a
