@@ -11028,6 +11028,71 @@
               ]
             }
           },
+          "periodFactor": {
+            "title": "Period factor",
+            "type": "number",
+            "nullable": true,
+            "description": "The share of the period the employee was employed, in calendar days (payroll-engine-port-from-shillinq D3). Only on a starter's or leaver's payslip; the salary was multiplied by it.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "periodFactorFrom": {
+            "title": "Employed from",
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "First day of the period the employee was employed. Only with a period factor.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "periodFactorUntil": {
+            "title": "Employed until",
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "Last day of the period the employee was employed. Only with a period factor.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
           "statementProvided": {
             "title": "Statement provided",
             "type": "boolean",

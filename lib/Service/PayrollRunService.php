@@ -166,6 +166,7 @@ use DateTimeImmutable;
 use OCA\Humaniq\Kernel\Contracts\PayrollRunServiceInterface;
 use OCA\Humaniq\Payroll\AwfHoursReview;
 use OCA\Humaniq\Payroll\PayPeriod;
+use OCA\Humaniq\Payroll\PeriodFactor;
 use OCA\Humaniq\Payroll\AwfTariffResolver;
 use OCA\Humaniq\Payroll\BenefitEntitlementPay;
 use OCA\Humaniq\Payroll\CalculationInput;
@@ -763,10 +764,20 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param array<string, mixed> $slip  The eligible slip.
 	 *
 	 * @return array<string, mixed> The slip with `grossCents` and its folds.
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	private function foldGross(array $state, array $slip): array {
 		$employee = $slip['employee'];
-		$slip['grossCents'] = ($slip['salaried'] === true ? $this->periodCents(monthlyAmount: (float)$slip['grossMonthly'], period: $state['period']) : (int)($slip['hoursPay']['hourlyCents'] ?? 0));
+		$slip['grossCents'] = (int)($slip['hoursPay']['hourlyCents'] ?? 0);
+		$slip['periodFactor'] = null;
+		if ($slip['salaried'] === true) {
+			// payroll-engine-port-from-shillinq D3: a starter or leaver is paid
+			// the calendar-day share of the salary (O2); hours stay whole.
+			$slip['periodFactor'] = $this->periodFactorFor(employee: $employee, period: $state['period']);
+			$slip['grossCents'] = $slip['periodFactor']->scale($this->periodCents(monthlyAmount: (float)$slip['grossMonthly'], period: $state['period']));
+		}
+
 		$slip['regularWageCents'] = $slip['grossCents'];
 
 		// filings-premium-differentiation D1: the Awf tariff follows the
@@ -1644,6 +1655,31 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	}//end periodCents()
 
 	/**
+	 * The share of the period the employee is employed, in calendar days
+	 * (payroll-engine-port-from-shillinq D3, O2), from the employment dates
+	 * `coversPeriod()` already gated on.
+	 *
+	 * @param array<string, mixed> $employee The Employee.
+	 * @param string               $period   The period id.
+	 *
+	 * @return PeriodFactor
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) PeriodFactor::of is the pure value-object factory.
+	 */
+	private function periodFactorFor(array $employee, string $period): PeriodFactor {
+		$lastDay = $this->lastDayOf(period: $period);
+		try {
+			$firstDay = PayPeriod::parse($period)->firstDay;
+		} catch (\InvalidArgumentException $e) {
+			$firstDay = $lastDay->modify('first day of this month');
+		}
+
+		return PeriodFactor::of(startDate: (string)($employee['startDate'] ?? ''), endDate: (string)($employee['endDate'] ?? ''), periodStart: $firstDay, periodEnd: $lastDay);
+	}//end periodFactorFor()
+
+	/**
 	 * The period's last day: the month's, the fourth week's or the week's
 	 * Sunday (D4).
 	 *
@@ -1806,6 +1842,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-005
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	private function payslipPayload(array $state, array $slip): array {
 		['employee' => $employee, 'contract' => $contract, 'result' => $result] = $slip;
@@ -1855,6 +1892,14 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		if ($periodsPerYear !== 12) {
 			// The factor monthly figures were scaled by; absent on a monthly payslip.
 			$payload['tijdvakFactor'] = $periodsPerYear;
+		}
+
+		if (($slip['periodFactor'] ?? null) instanceof PeriodFactor && $slip['periodFactor']->isPartial() === true) {
+			// payroll-engine-port-from-shillinq D3: why a starter's or leaver's
+			// salary is lower; absent for a whole period, so that payslip stays as it was.
+			$payload['periodFactor'] = $slip['periodFactor']->factor;
+			$payload['periodFactorFrom'] = $slip['periodFactor']->employedFrom;
+			$payload['periodFactorUntil'] = $slip['periodFactor']->employedUntil;
 		}
 
 		if (isset($slip['input']) === true && $slip['input']->pension->isEmpty() === false) {

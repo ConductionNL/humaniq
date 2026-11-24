@@ -534,6 +534,86 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testAParticipantsPayslipWithholdsThePensionPremium()
 
 	/**
+	 * REQ-PPR-001 "A starter on the 16th of a 30-day month": factor 0.5,
+	 * gross 1,500.00, and the dates on the payslip.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 */
+	public function testAStarterIsPaidTheCalendarDayShare(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['startDate' => '2026-06-16', 'grossMonthlySalary' => 3000.00])],
+				'EmploymentContract' => [$this->contract(['startDate' => '2026-06-16'])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$service->runFor('2026-06');
+
+		$payslips = $this->savedFor($fake, 'Payslip');
+		$this->assertCount(1, $payslips);
+		$this->assertSame(1500.00, $payslips[0]['grossPay']);
+		$this->assertSame(0.5, $payslips[0]['periodFactor']);
+		$this->assertSame('2026-06-16', $payslips[0]['periodFactorFrom']);
+		$this->assertSame('2026-06-30', $payslips[0]['periodFactorUntil']);
+	}//end testAStarterIsPaidTheCalendarDayShare()
+
+	/**
+	 * REQ-PPR-001: a leaver on 10 March is paid 10 of 31 days of the salary.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 */
+	public function testALeaverIsPaidUpToTheLastDay(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['endDate' => '2026-03-10', 'grossMonthlySalary' => 3100.00])],
+				'EmploymentContract' => [$this->contract(['endDate' => '2026-03-10'])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$service->runFor('2026-03');
+
+		$payslips = $this->savedFor($fake, 'Payslip');
+		$this->assertCount(1, $payslips);
+		$this->assertSame(1000.00, $payslips[0]['grossPay']);
+		$this->assertSame(0.3226, $payslips[0]['periodFactor']);
+		$this->assertSame('2026-03-01', $payslips[0]['periodFactorFrom']);
+		$this->assertSame('2026-03-10', $payslips[0]['periodFactorUntil']);
+	}//end testALeaverIsPaidUpToTheLastDay()
+
+	/**
+	 * REQ-PPR-001 "A full month is unchanged": no factor on the payslip and
+	 * the anchor gross.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 */
+	public function testAFullMonthCarriesNoPeriodFactor(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee()],
+				'EmploymentContract' => [$this->contract()],
+				'PayrollRun' => [],
+				'Payslip' => [],
+			]
+		);
+
+		$service->runFor('2026-05');
+
+		$payslips = $this->savedFor($fake, 'Payslip');
+		$this->assertSame(3800.00, $payslips[0]['grossPay']);
+		$this->assertArrayNotHasKey('periodFactor', $payslips[0]);
+	}//end testAFullMonthCarriesNoPeriodFactor()
+
+	/**
 	 * @return void
 	 */
 	public function testCreatesDraftRunAndAnchorPayslip(): void {
