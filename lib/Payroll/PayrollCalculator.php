@@ -141,6 +141,11 @@ final class PayrollCalculator {
 			throw new DslException('Pack ' . $pack->engineVersion() . ' declareert geen invoer "specialPayment"; een bijzondere beloning kan er niet mee worden berekend.');
 		}
 
+		// Likewise a pension premium a pack cannot withhold must not be dropped.
+		if ($in->pension->isEmpty() === false && array_key_exists('pensionBase', $pack->inputs()) === false) {
+			throw new DslException('Pack ' . $pack->engineVersion() . ' declareert geen invoer "pensionBase"; een pensioenpremie kan er niet mee worden berekend.');
+		}
+
 		$out = $this->interpreter->run($this->mapper->toPackInputs($in), $pack, $t, $in->period);
 
 		return $this->resultFrom($out);

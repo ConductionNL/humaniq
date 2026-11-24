@@ -217,6 +217,27 @@ final class CalculationResult {
 	public readonly int $rvuFinalLevyCents;
 
 	/**
+	 * The pension base this period (payroll-engine-port-from-shillinq D1); 0 without a participation.
+	 *
+	 * @var integer
+	 */
+	public readonly int $pensionBaseCents;
+
+	/**
+	 * The employee pension premium withheld from net pay; 0 without a participation.
+	 *
+	 * @var integer
+	 */
+	public readonly int $pensionEmployeeCents;
+
+	/**
+	 * The employer pension premium, an employer charge; 0 without a participation.
+	 *
+	 * @var integer
+	 */
+	public readonly int $pensionEmployerCents;
+
+	/**
 	 * Read every figure off one pack run. `nettoPayCents` and
 	 * `employerChargesCents` are the interpreter's incidence folds: read, not
 	 * computed here (REQ-JP-003). The fields stay flat and in this order.
@@ -226,6 +247,7 @@ final class CalculationResult {
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function __construct(PackRunResult|array $out) {
 		if (is_array($out) === true) {
@@ -254,6 +276,9 @@ final class CalculationResult {
 			$this->specialLoonheffingCents = (int)($out['specialLoonheffingCents'] ?? 0);
 			$this->eindejaarsuitkeringReservedCents = (int)($out['eindejaarsuitkeringReservedCents'] ?? 0);
 			$this->rvuFinalLevyCents = (int)($out['rvuFinalLevyCents'] ?? 0);
+			$this->pensionBaseCents = (int)($out['pensionBaseCents'] ?? 0);
+			$this->pensionEmployeeCents = (int)($out['pensionEmployeeCents'] ?? 0);
+			$this->pensionEmployerCents = (int)($out['pensionEmployerCents'] ?? 0);
 
 			return;
 		}
@@ -285,6 +310,9 @@ final class CalculationResult {
 		$this->taxableWageCents = (self::optionalCents(out: $out, id: 'belastbaarLoon') + $this->specialPaymentCents);
 		$this->premiumWageCents = min((self::optionalCents(out: $out, id: 'belastbaarLoon') + $this->specialPaymentCents), self::optionalCents(out: $out, id: 'premieloonCap'));
 		$this->rvuFinalLevyCents = self::optionalStepCents(out: $out, id: 'rvuEindheffing');
+		$this->pensionBaseCents = self::optionalStepCents(out: $out, id: 'pensioengrondslag');
+		$this->pensionEmployeeCents = self::optionalStepCents(out: $out, id: 'pensionEmployee');
+		$this->pensionEmployerCents = self::optionalStepCents(out: $out, id: 'pensionEmployer');
 
 	}//end __construct()
 
@@ -304,7 +332,7 @@ final class CalculationResult {
 	 */
 	public static function combined(self $fourWeeks, self $week53): self {
 		$sum = [];
-		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'specialPaymentCents', 'specialLoonheffingCents', 'eindejaarsuitkeringReservedCents', 'rvuFinalLevyCents'] as $field) {
+		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'specialPaymentCents', 'specialLoonheffingCents', 'eindejaarsuitkeringReservedCents', 'rvuFinalLevyCents', 'pensionBaseCents', 'pensionEmployeeCents', 'pensionEmployerCents'] as $field) {
 			$sum[$field] = ($fourWeeks->$field + $week53->$field);
 		}
 

@@ -1182,6 +1182,8 @@ OC.L10N.register(
         "Pending": "Pending",
         "Pending expenses": "Pending expenses",
         "Pension contribution": "Pension contribution",
+        "Pension base": "Pension base",
+        "Employer pension premium": "Employer pension premium",
         "Pension filing": "Pension filing",
         "Pension filings": "Pension filings",
         "People": "People",

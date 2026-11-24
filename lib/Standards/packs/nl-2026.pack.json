@@ -89,6 +89,18 @@
     "rvuFinalLevyRate": {
       "type": "percent",
       "default": 0
+    },
+    "pensionBase": {
+      "type": "cents",
+      "default": 0
+    },
+    "pensionEmployeePercentage": {
+      "type": "percent",
+      "default": 0
+    },
+    "pensionEmployerPercentage": {
+      "type": "percent",
+      "default": 0
     }
   },
   "bindings": [
@@ -127,12 +139,45 @@
       }
     },
     {
-      "id": "belastbaarLoon",
-      "_note": "The TAXABLE wage after the 30%-ruling exemption. Every step below that used to read @binding.tvl as its tax/premium/vakantiegeld base now reads THIS instead. grossRef stays @binding.tvl (unreduced) -- the exempted cash never leaves net pay, only the tax base. 30-procent-regeling D2.",
+      "id": "loonNaVrijstelling",
+      "_note": "The wage after the 30%-ruling exemption and before the employee pension premium: the base of the holiday and end-of-year reserves, which a pension premium does not lower. 30-procent-regeling D2, payroll-engine-port-from-shillinq D1.",
       "op": "derive",
       "using": {
         "op": "expr",
         "expression": "max(0, @binding.tvl - @binding.thirtyPercentExemption)"
+      }
+    },
+    {
+      "id": "pensionBase",
+      "_note": "payroll-engine-port-from-shillinq D1/O1: the period's pension base, computed by the run with PensionBase from the participation and the fund's PensionScheme (min(wage x participationFactor, cap) - franchise x partTimeFactor, never below 0), so the payslip and the pension filing share one base. Defaults to 0: no participation, no premium.",
+      "op": "derive",
+      "using": {
+        "op": "clamp",
+        "value": "@input.pensionBase",
+        "min": 0
+      }
+    },
+    {
+      "id": "pensionEmployeePremium",
+      "_note": "payroll-engine-port-from-shillinq D1: the employee pension premium, the scheme's employee percentage of the pension base, rounded per cent. A binding so the taxable wage below can deduct it.",
+      "op": "derive",
+      "using": {
+        "op": "rate",
+        "base": "@binding.pensionBase",
+        "rate": "@input.pensionEmployeePercentage"
+      },
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "belastbaarLoon",
+      "_note": "The TAXABLE wage after the 30%-ruling exemption and the employee pension premium. Every tax and premium step below reads THIS. grossRef stays @binding.tvl (unreduced) -- the exempted cash never leaves net pay, only the tax base. The employee pension premium is deducted before wage tax and the premiums (payroll-engine-port-from-shillinq D1); it reduces net through its own step. 30-procent-regeling D2.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "max(0, @binding.loonNaVrijstelling - @binding.pensionEmployeePremium)"
       }
     },
     {
@@ -393,7 +438,7 @@
       "_note": "Vakantiegeldreservering — 8% of the gross wage. RESERVE: neither cash to the employee this period nor an employer charge this period. Folding it into either would misstate one of them.",
       "op": "rate",
       "incidence": "reserve",
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.loonNaVrijstelling",
       "rate": "@binding.vakantiegeldRate",
       "round": {
         "mode": "nearest",
@@ -410,7 +455,7 @@
         "left": "@input.endOfYearRate",
         "right": 0
       },
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.loonNaVrijstelling",
       "rate": "@input.endOfYearRate",
       "round": {
         "mode": "nearest",
@@ -685,6 +730,36 @@
         "right": 0
       },
       "expression": "max(0, @binding.grossWithSpecial - @input.rvuThreshold) * @input.rvuFinalLevyRate / 100",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "pensioengrondslag",
+      "_note": "payroll-engine-port-from-shillinq D1: the pension base on the payslip. Informative: the premiums below are what move money.",
+      "op": "expr",
+      "incidence": "informative",
+      "expression": "@binding.pensionBase"
+    },
+    {
+      "id": "pensionEmployee",
+      "_note": "payroll-engine-port-from-shillinq D1: the employee pension premium. REDUCES-NET; it was deducted from the taxable wage before the wage tax and the premiums.",
+      "op": "expr",
+      "incidence": "reduces-net",
+      "expression": "@binding.pensionEmployeePremium",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "pensionEmployer",
+      "_note": "payroll-engine-port-from-shillinq D1: the employer pension premium, the scheme's employer percentage of the pension base. EMPLOYER-COST, so net is unchanged.",
+      "op": "rate",
+      "incidence": "employer-cost",
+      "base": "@binding.pensionBase",
+      "rate": "@input.pensionEmployerPercentage",
       "round": {
         "mode": "nearest",
         "unit": "cent"
