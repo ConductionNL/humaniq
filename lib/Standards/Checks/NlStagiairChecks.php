@@ -39,7 +39,17 @@
  *
  * @link https://conduction.nl
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the rule is declared as OpenRegister decision tables
+ * via the ProvidesTables capability (one per object type, the contract table
+ * guarded to type bbl), so the gates are matched by the shared
+ * Dmn\DecisionTableEvaluator and only the derivations (strict signed flag,
+ * whether the placement has started) stay here. The closure predicates remain
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @spec openspec/specs/stagiair-bbl-admin/spec.md
+ * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -51,16 +61,113 @@ use DateTimeImmutable;
 /**
  * The single hr-stagiair BPV-overeenkomst obligation, over Stagiair + bbl EmploymentContract.
  */
-final class NlStagiairChecks implements CheckProvider {
+final class NlStagiairChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: every check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/stagiair-bbl-admin/spec.md
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
+		return [];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * REQ-STAG-005 as derivation + FIRST-hit decision table, once per object
+	 * type: a started placement without a signed BPV-overeenkomst violates;
+	 * on EmploymentContract only when the contract type is bbl (design.md D4).
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/stagiair-bbl-admin/spec.md
+	 */
+	public static function tables(): array {
+		return [
+			'Stagiair' => [
+				// A stage placement that has started must have a signed
+				// BPV-overeenkomst on file (REQ-STAG-005).
+				'nl-bpv-overeenkomst-vereist' => [
+					'derive' => self::bpvInputs(...),
+					'table' => self::satisfiedTable(
+						[['name' => 'bpvSigned', 'type' => 'boolean'], ['name' => 'placementStarted', 'type' => 'boolean']],
+						[['id' => 'started-unsigned', 'inputEntries' => ['false', 'true'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+			'EmploymentContract' => [
+				// The SAME rule, guarded to type: bbl -- vacuous for every
+				// other contract type (REQ-STAG-005, design.md D4).
+				'nl-bpv-overeenkomst-vereist' => [
+					'derive' => self::bblBpvInputs(...),
+					'table' => self::satisfiedTable(
+						[['name' => 'contractType', 'type' => 'string'], ['name' => 'bpvSigned', 'type' => 'boolean'], ['name' => 'placementStarted', 'type' => 'boolean']],
+						[['id' => 'bbl-started-unsigned', 'inputEntries' => ['"bbl"', 'false', 'true'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * Inputs of the Stagiair table: whether the BPV-overeenkomst is strictly
+	 * signed and whether the placement's start date lies before today (an
+	 * unreadable start date counts as not started).
+	 *
+	 * @param array<string, mixed> $object The Stagiair.
+	 *
+	 * @return array{bpvSigned: bool, placementStarted: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function bpvInputs(array $object): array {
+		$startDate = strtotime((string)($object['startDate'] ?? ''));
+
+		return [
+			'bpvSigned' => (($object['bpvOvereenkomstOndertekend'] ?? false) === true),
+			'placementStarted' => ($startDate !== false && $startDate < (new DateTimeImmutable('today'))->getTimestamp()),
+		];
+
+	}//end bpvInputs()
+
+	/**
+	 * Inputs of the EmploymentContract table: the contract type plus the
+	 * Stagiair inputs.
+	 *
+	 * @param array<string, mixed> $object The EmploymentContract.
+	 *
+	 * @return array{contractType: string, bpvSigned: bool, placementStarted: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function bblBpvInputs(array $object): array {
+		return ['contractType' => (string)($object['type'] ?? '')] + self::bpvInputs($object);
+
+	}//end bblBpvInputs()
+
+	/**
+	 * The pre-conversion closure predicates, kept as the PARITY ORACLE only:
+	 * not registered in the engine (checks() is empty), consumed by the
+	 * table/legacy parity test, retired with the other converted rules after
+	 * the table form is proven on an OpenRegister-backed audit run
+	 * (REQ-RULE-009, tasks section 6).
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/stagiair-bbl-admin/spec.md
+	 */
+	public static function legacyChecks(): array {
 		return [
 			'Stagiair' => [
 				// A stage placement that has started must have a signed
@@ -74,7 +181,7 @@ final class NlStagiairChecks implements CheckProvider {
 			],
 		];
 
-	}//end checks()
+	}//end legacyChecks()
 
 	/**
 	 * {@inheritDoc}
