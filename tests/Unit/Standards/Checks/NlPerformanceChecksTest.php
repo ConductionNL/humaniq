@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlPerformanceChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -48,7 +49,11 @@ class NlPerformanceChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlPerformanceChecks::checks()['PerformanceReview'];
+		// The engine's table path: derive, then the shared Dmn evaluator.
+		$this->checks = [];
+		foreach (TableCheckRegistry::checks([NlPerformanceChecks::class])['PerformanceReview'] as $ruleId => $predicate) {
+			$this->checks[$ruleId] = static fn (array $review): bool => $predicate($review, ['jurisdiction' => 'NL']);
+		}
 
 	}//end setUp()
 
@@ -145,5 +150,24 @@ class NlPerformanceChecksTest extends TestCase {
 		$this->assertTrue(($this->checks['nl-performance-dossiervorming'])($review));
 
 	}//end testBesprokenWithoutRatingPassesVacuously()
+
+	/**
+	 * @return void
+	 */
+	public function testOndertekendWithoutAfsprakenViolates(): void {
+		$review = $this->review(['status' => 'ondertekend', 'afspraken' => null]);
+
+		$this->assertFalse(($this->checks['nl-performance-dossiervorming'])($review));
+
+	}//end testOndertekendWithoutAfsprakenViolates()
+
+	/**
+	 * @return void
+	 */
+	public function testTheRuleIsTableDeclaredOnly(): void {
+		$this->assertSame([], NlPerformanceChecks::checks());
+		$this->assertArrayHasKey('nl-performance-dossiervorming', NlPerformanceChecks::tables()['PerformanceReview']);
+
+	}//end testTheRuleIsTableDeclaredOnly()
 
 }//end class

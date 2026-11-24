@@ -57,3 +57,4 @@
 - [ ] 6.3 Next conversion wave: sweep the remaining 36 providers for tabular shapes (thresholds,
       enumerations, boolean gates over derived values) and convert them provider-by-provider with
       the same parity discipline; leave genuinely non-tabular predicates as closures.
+      Progress: `NlPerformanceChecks` (`nl-performance-dossiervorming`: status set + two presence gates) is table-declared, legacy predicate kept as oracle, `NlPerformanceTableParityTest` over every status x present/missing/blank/whitespace rating and afspraken. Left: the other 35 providers.
