@@ -996,6 +996,48 @@
 							},
 							"emptyText": "No split: the wage costs go to the cost centre of the department"
 						}
+					},
+					{
+						"id": "pension-participations",
+						"type": "object-list",
+						"title": "Pension",
+						"icon": "AccountClockOutline",
+						"content": {
+							"register": "humaniq",
+							"schema": "PensionParticipation",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"sort": {
+								"field": "startDate",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "schemeCode",
+									"label": "Scheme"
+								},
+								{
+									"key": "startDate",
+									"label": "Start date"
+								},
+								{
+									"key": "endDate",
+									"label": "End date"
+								},
+								{
+									"key": "participationFactor",
+									"label": "Participation factor"
+								}
+							],
+							"limit": 10,
+							"rowRoute": "PensionParticipationDetail",
+							"viewAllRoute": "PensionParticipations",
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"emptyText": "Not in a pension scheme"
+						}
 					}
 				],
 				"layout": [
@@ -1220,6 +1262,14 @@
 						"widgetId": "cost-allocations",
 						"gridX": 6,
 						"gridY": 86,
+						"gridWidth": 6,
+						"gridHeight": 4
+					},
+					{
+						"id": 28,
+						"widgetId": "pension-participations",
+						"gridX": 0,
+						"gridY": 90,
 						"gridWidth": 6,
 						"gridHeight": 4
 					}

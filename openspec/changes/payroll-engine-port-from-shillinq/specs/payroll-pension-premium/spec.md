@@ -6,7 +6,9 @@
 
 For an employee with a `PensionParticipation` in force in the period, the payroll calculation
 SHALL compute the pension base as the pensionable salary times the participation factor,
-minus the scheme's franchise for the period, and never below zero. It SHALL compute the
+capped at the scheme's maximum pensionable salary for the period, minus the scheme's
+franchise for the period times the employee's part-time factor, and never below zero. It
+SHALL use the same base the pension filing reports (REQ-PUM-001). It SHALL compute the
 employee premium and the employer premium as the scheme's percentages of that base, rounded
 per cent. The employee premium SHALL reduce net pay and the taxable wage. The employer premium
 SHALL count as an employer charge. Both SHALL be stored on the payslip.
@@ -14,10 +16,10 @@ SHALL count as an employer charge. Both SHALL be stored on the payslip.
 Rows: `pay-pension-premium` (humaniq matrix). Source: `for-ruben/payroll-engine-move-comparison.md`, PayrollCalculator `pensioen`.
 
 #### Scenario: A full-time participant pays the employee premium
-- **GIVEN** a scheme with a yearly franchise of 18,000, an employee premium of 7.5% and an
-  employer premium of 15%
-- **AND** an employee with a monthly pensionable salary of 4,000 and a participation factor
-  of 1
+- **GIVEN** a scheme with a yearly franchise of 18,000, no cap below the salary, an employee
+  premium of 7.5% and an employer premium of 15%
+- **AND** a full-time employee with a monthly pensionable salary of 4,000 and a
+  participation factor of 1
 - **WHEN** the April payroll run is calculated
 - **THEN** the pension base is 2,500.00, the payslip's employee pension premium is 187.50 and
   its employer pension premium is 375.00
@@ -35,16 +37,17 @@ Rows: `pay-pension-premium` (humaniq matrix). Source: `for-ruben/payroll-engine-
 
 ### Requirement: A participation SHALL link an employee to one scheme for a date range (REQ-PPP-002)
 
-HR SHALL record a `PensionParticipation` with an employee, a scheme code, a start date, an
+HR SHALL record a `PensionParticipation` with an employee, a pension fund, a start date, an
 optional end date and a participation factor. The payroll SHALL use the participation in force
-on the last day of the period. Two participations of one employee SHALL NOT overlap.
+on the last day of the period, and the administration's `PensionScheme` of that fund valid on
+that day. Two participations of one employee SHALL NOT overlap.
 
 #### Scenario: HR enrols a new employee
-- **WHEN** an HR adviser adds a participation for an employee in scheme `PFZW` from 1 May
+- **WHEN** an HR adviser adds a participation for an employee in fund `pfab` from 1 May
 - **THEN** the May run computes the employee's premiums and the April run does not
 
 #### Scenario: An overlapping participation is refused
-- **GIVEN** an employee in scheme `PFZW` from 1 January with no end date
+- **GIVEN** an employee in fund `pfab` from 1 January with no end date
 - **WHEN** HR adds a second participation from 1 June
 - **THEN** the save is refused with a message that names the existing participation
 

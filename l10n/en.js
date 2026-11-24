@@ -4262,7 +4262,24 @@ OC.L10N.register(
         "Employees who picked their own language keep it.": "Employees who picked their own language keep it.",
         "The Marketplace offers the same sets later.": "The Marketplace offers the same sets later.",
         "Pay day": "Pay day",
-        "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once.": "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once."
+        "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once.": "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once.",
+        "Add participation": "Add participation",
+        "Not in a pension scheme": "Not in a pension scheme",
+        "Participation factor": "Participation factor",
+        "Pension participation added.": "Pension participation added.",
+        "Pension participation": "Pension participation",
+        "Pension participations": "Pension participations",
+        "Pension": "Pension",
+        "Scheme": "Scheme",
+        "The employee who takes part in the scheme.": "The employee who takes part in the scheme.",
+        "The employee's own account, so they can read their own participation.": "The employee's own account, so they can read their own participation.",
+        "The first day the employee takes part.": "The first day the employee takes part.",
+        "The last day the employee takes part. Empty while it runs on.": "The last day the employee takes part. Empty while it runs on.",
+        "The part of the pensionable salary the employee builds pension on, between 0 and 1. Usually 1.": "The part of the pensionable salary the employee builds pension on, between 0 and 1. Usually 1.",
+        "The payroll administration this participation belongs to.": "The payroll administration this participation belongs to.",
+        "The pension fund whose scheme the employee takes part in.": "The pension fund whose scheme the employee takes part in.",
+        "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.": "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.",
+        "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.": "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force."
     },
     "nplurals=2; plural=(n != 1);"
 )

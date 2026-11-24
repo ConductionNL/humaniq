@@ -1,21 +1,30 @@
 ## 0. Decisions first
 
-- [ ] 0.1 Get Ruben's answers to O1 (schemes and where their parameters live), O2 (calendar
+- [x] 0.1 Get Ruben's answers to O1 (schemes and where their parameters live), O2 (calendar
       or working days) and O3 (`sectorcode`), from `for-ruben/payroll-engine-move-comparison.md`.
       Record them in design.md under each choice before building.
+      Decided under the 22 Nov 2026 delegation and recorded in design.md: O1 the schema (the
+      existing `PensionScheme` of filings-pension-upa-message), O2 calendar days, O3 no.
 
 ## 1. Pension scheme and participation
 
-- [ ] 1.1 O1 "table": add a `pensioen` block per scheme code to
+- [x] 1.1 O1 "table": add a `pensioen` block per scheme code to
       `lib/Standards/tables/nl-2026.json` (franchise per year, employer and employee percentage,
       source URL per scheme). O1 "schema": add `PensionScheme` (`schema:Thing`, code, name,
       year, franchise, employerPct, employeePct, source) in a new fragment
       `lib/Settings/register.d/hr-pension-scheme.json`, with index and detail pages under
       payroll. Verify: `occ maintenance:repair` imports it and `npm run check:manifest` exits 0.
-- [ ] 1.2 Add `PensionParticipation` (D2) to the same fragment, with a guard that refuses an
+      Done by reuse: `PensionScheme` already sits in `hr-pension.json` with its pages
+      (filings-pension-upa-message D1); no second record. `check:manifest` exits 0.
+- [x] 1.2 Add `PensionParticipation` (D2) to the same fragment, with a guard that refuses an
       overlap (REQ-PPP-002), an index page and a tab on `EmployeeDetail`, en and nl labels and
       two mock objects. Verify: unit test of the guard with two overlapping and two adjacent
       participations.
+      Built in `hr-pension.json` (keyed on `fund`, per O1), the guard
+      `PensionParticipationOverlapListener`, pages `PensionParticipations` and
+      `PensionParticipationDetail`, a Pension list on `EmployeeDetail`, en and nl, two seeded
+      participations; `tests/Unit/Listener/PensionParticipationOverlapListenerTest.php` and
+      `tests/Unit/Settings/PensionParticipationDeclarationTest.php`.
 
 ## 2. Premium in the pack and the run
 
@@ -40,9 +49,10 @@
 
 ## 4. Sector code (only if O3 is yes)
 
-- [ ] 4.1 Add `sectorcode` to `hrAdministration` and a sector table for the Whk sector fund
+- [x] 4.1 Add `sectorcode` to `hrAdministration` and a sector table for the Whk sector fund
       part. Verify: unit test that two administrations in different sectors get different Whk
       premiums.
+      Not built: O3 is decided no (design.md), so this task does not apply.
 
 ## 5. Hand-over
 

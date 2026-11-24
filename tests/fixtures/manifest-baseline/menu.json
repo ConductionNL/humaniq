@@ -772,6 +772,12 @@
 				"route": "PensionSchemes"
 			},
 			{
+				"id": "PensionParticipations",
+				"label": "Pension participations",
+				"icon": "AccountClockOutline",
+				"route": "PensionParticipations"
+			},
+			{
 				"id": "WntDisclosures",
 				"label": "WNT disclosures",
 				"icon": "ScaleBalance",

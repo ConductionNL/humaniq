@@ -4262,7 +4262,24 @@ OC.L10N.register(
         "Employees who picked their own language keep it.": "Medewerkers die zelf een taal kozen, houden die.",
         "The Marketplace offers the same sets later.": "De Marketplace biedt dezelfde sets later aan.",
         "Pay day": "Betaaldag",
-        "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once.": "De dag van de maand waarop het loon wordt betaald; in een kortere maand de laatste dag. Leeg: een goedgekeurde loonrun wordt meteen geboekt."
+        "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once.": "De dag van de maand waarop het loon wordt betaald; in een kortere maand de laatste dag. Leeg: een goedgekeurde loonrun wordt meteen geboekt.",
+        "Add participation": "Deelname toevoegen",
+        "Not in a pension scheme": "Neemt niet deel aan een pensioenregeling",
+        "Participation factor": "Deelnamefactor",
+        "Pension participation added.": "Pensioendeelname toegevoegd.",
+        "Pension participation": "Pensioendeelname",
+        "Pension participations": "Pensioendeelnames",
+        "Pension": "Pensioen",
+        "Scheme": "Regeling",
+        "The employee who takes part in the scheme.": "De werknemer die deelneemt aan de regeling.",
+        "The employee's own account, so they can read their own participation.": "Het eigen account van de werknemer, zodat die de eigen deelname kan lezen.",
+        "The first day the employee takes part.": "De eerste dag dat de werknemer deelneemt.",
+        "The last day the employee takes part. Empty while it runs on.": "De laatste dag dat de werknemer deelneemt. Leeg zolang de deelname doorloopt.",
+        "The part of the pensionable salary the employee builds pension on, between 0 and 1. Usually 1.": "Het deel van het pensioengevend salaris waarover de werknemer pensioen opbouwt, tussen 0 en 1. Meestal 1.",
+        "The payroll administration this participation belongs to.": "De loonadministratie waar deze deelname bij hoort.",
+        "The pension fund whose scheme the employee takes part in.": "Het pensioenfonds aan wiens regeling de werknemer deelneemt.",
+        "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.": "Welke werknemer deelneemt aan de pensioenregeling van welk fonds, en vanaf wanneer. De salarisverwerking houdt de werknemerspremie in en legt de werkgeverspremie vast zolang een deelname loopt. Een werknemer kan niet twee keer op dezelfde dag deelnemen.",
+        "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.": "Het lidmaatschap van een werknemer van de pensioenregeling van een fonds over een periode. De salarisverwerking houdt de premies in en legt ze vast zolang het loopt."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -990,6 +990,12 @@
 					"route": "PensionSchemes"
 				},
 				{
+					"icon": "AccountClockOutline",
+					"id": "PensionParticipations",
+					"label": "Pension participations",
+					"route": "PensionParticipations"
+				},
+				{
 					"icon": "ScaleBalance",
 					"id": "WntDisclosures",
 					"label": "WNT disclosures",
@@ -7237,6 +7243,14 @@
 						"gridY": 86,
 						"id": 27,
 						"widgetId": "cost-allocations"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 90,
+						"id": 28,
+						"widgetId": "pension-participations"
 					}
 				],
 				"register": "humaniq",
@@ -8227,6 +8241,48 @@
 						"icon": "ScaleBalance",
 						"id": "cost-allocations",
 						"title": "Cost allocation",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "schemeCode",
+									"label": "Scheme"
+								},
+								{
+									"key": "startDate",
+									"label": "Start date"
+								},
+								{
+									"key": "endDate",
+									"label": "End date"
+								},
+								{
+									"key": "participationFactor",
+									"label": "Participation factor"
+								}
+							],
+							"emptyText": "Not in a pension scheme",
+							"filter": {
+								"employeeId": "@objectId"
+							},
+							"limit": 10,
+							"register": "humaniq",
+							"rowRoute": "PensionParticipationDetail",
+							"schema": "PensionParticipation",
+							"sort": {
+								"dir": "desc",
+								"field": "startDate"
+							},
+							"viewAllQuery": {
+								"employeeId": "@objectId"
+							},
+							"viewAllRoute": "PensionParticipations"
+						},
+						"icon": "AccountClockOutline",
+						"id": "pension-participations",
+						"title": "Pension",
 						"type": "object-list"
 					}
 				]
@@ -19833,6 +19889,106 @@
 			"id": "PensionSchemeDetail",
 			"route": "/pension-schemes/:id",
 			"title": "Pension scheme",
+			"type": "detail"
+		},
+		{
+			"actions": [
+				{
+					"icon": "PlusCircleOutline",
+					"id": "create-pension-participation",
+					"label": "Add participation",
+					"onSuccessRoute": "PensionParticipationDetail",
+					"register": "humaniq",
+					"schema": "PensionParticipation",
+					"successMessage": "Pension participation added.",
+					"type": "open-form"
+				}
+			],
+			"config": {
+				"_note": "payroll-engine-port-from-shillinq D2 (REQ-PPP-002): the run uses the participation in force on the last day of the period and the administration's scheme of the same fund.",
+				"allowExport": true,
+				"columns": [
+					"employeeId",
+					"fund",
+					"startDate",
+					"endDate",
+					"participationFactor"
+				],
+				"description": "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.",
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"filters": [
+					"fund"
+				],
+				"register": "humaniq",
+				"schema": "PensionParticipation",
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				}
+			},
+			"id": "PensionParticipations",
+			"route": "/pension-participations",
+			"title": "Pension participations",
+			"type": "index"
+		},
+		{
+			"config": {
+				"_note": "payroll-engine-port-from-shillinq D2 (REQ-PPP-002): a plain record, no lifecycle. PensionParticipationOverlapListener refuses a participation that overlaps another of the same employee.",
+				"layout": [
+					{
+						"gridHeight": 8,
+						"gridWidth": 8,
+						"gridX": 0,
+						"gridY": 0,
+						"id": 1,
+						"widgetId": "data"
+					},
+					{
+						"gridHeight": 8,
+						"gridWidth": 4,
+						"gridX": 8,
+						"gridY": 0,
+						"id": 2,
+						"widgetId": "related"
+					}
+				],
+				"register": "humaniq",
+				"schema": "PensionParticipation",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"widgets": [
+					{
+						"content": {
+							"columns": 2,
+							"exclude": [
+								"userId",
+								"administrationId"
+							],
+							"title": "Pension participation"
+						},
+						"icon": "AccountClockOutline",
+						"id": "data",
+						"title": "Pension participation",
+						"type": "data"
+					},
+					{
+						"content": {
+							"title": "Related"
+						},
+						"icon": "LinkVariant",
+						"id": "related",
+						"title": "Related",
+						"type": "related"
+					}
+				]
+			},
+			"id": "PensionParticipationDetail",
+			"route": "/pension-participations/:id",
+			"title": "Pension participation",
 			"type": "detail"
 		},
 		{

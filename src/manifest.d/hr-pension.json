@@ -156,6 +156,66 @@
 				"gridHeight": 8,
 				"note": "filings-pension-upa-message (2026-11-14): D1. A plain configuration record, no lifecycle."
 			}
+		},
+		{
+			"templateRef": "indexScaffold",
+			"register": "humaniq",
+			"schema": "PensionParticipation",
+			"params": {
+				"id": "PensionParticipations",
+				"route": "/pension-participations",
+				"title": "Pension participations",
+				"columns": [
+					"employeeId",
+					"fund",
+					"startDate",
+					"endDate",
+					"participationFactor"
+				],
+				"sort": {
+					"field": "startDate",
+					"order": "desc"
+				},
+				"filters": [
+					"fund"
+				],
+				"filter": {
+					"administrationId": "@workspace.activeAdministrationId?"
+				},
+				"description": "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.",
+				"note": "payroll-engine-port-from-shillinq D2 (REQ-PPP-002): the run uses the participation in force on the last day of the period and the administration's scheme of the same fund.",
+				"actions": [
+					{
+						"id": "create-pension-participation",
+						"label": "Add participation",
+						"type": "open-form",
+						"icon": "PlusCircleOutline",
+						"register": "humaniq",
+						"schema": "PensionParticipation",
+						"onSuccessRoute": "PensionParticipationDetail",
+						"successMessage": "Pension participation added."
+					}
+				]
+			}
+		},
+		{
+			"templateRef": "simpleDetailScaffold",
+			"register": "humaniq",
+			"schema": "PensionParticipation",
+			"params": {
+				"id": "PensionParticipationDetail",
+				"route": "/pension-participations/:id",
+				"title": "Pension participation",
+				"dataTitle": "Pension participation",
+				"dataIcon": "AccountClockOutline",
+				"relatedTitle": "Related",
+				"gridHeight": 8,
+				"note": "payroll-engine-port-from-shillinq D2 (REQ-PPP-002): a plain record, no lifecycle. PensionParticipationOverlapListener refuses a participation that overlaps another of the same employee.",
+				"exclude": [
+					"userId",
+					"administrationId"
+				]
+			}
 		}
 	]
 }

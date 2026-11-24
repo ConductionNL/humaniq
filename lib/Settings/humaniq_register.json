@@ -94,6 +94,7 @@
                     "PayslipLine",
                     "PensionFiling",
                     "PensionScheme",
+                    "PensionParticipation",
                     "PerformanceReview",
                     "PersonnelDocument",
                     "ReceiptExtraction",
