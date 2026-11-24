@@ -33,42 +33,44 @@ use OCA\Humaniq\Payroll\PensionPremium;
 /**
  * Resolves each employee's pension base and percentages for one run.
  *
+ * @SuppressWarnings(PHPMD.StaticAccess) PensionBase is pure and static by design, the PensionMessageService precedent.
+ *
  * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
 class PensionPremiumService {
 
 	/**
-	 * @param RecordStoreInterface $store             Reads participations and schemes.
-	 * @param float                $fullTimeHoursWeek The hours per week of a full-time employee, as the UPA filing uses.
+	 * @param float $fullTimeHoursWeek The hours per week of a full-time employee, as the UPA filing uses.
 	 */
 	public function __construct(
-		private readonly RecordStoreInterface $store,
 		private readonly float $fullTimeHoursWeek=AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK,
 	) {
 	}//end __construct()
 
 	/**
 	 * What the run reads once: the period's last day, the participations by
-	 * employee and the administration's schemes.
+	 * employee and the administration's schemes. The run passes the rows it
+	 * read; this class reads nothing itself.
 	 *
-	 * @param string $administrationId The run's administration.
-	 * @param string $period           The run's period, `YYYY-MM`.
+	 * @param array<int, array<string, mixed>> $participations Every PensionParticipation.
+	 * @param array<int, array<string, mixed>> $schemes        Every PensionScheme.
+	 * @param string                           $administrationId The run's administration; empty takes every scheme.
+	 * @param string                           $period         The run's period, `YYYY-MM`.
 	 *
 	 * @return array{lastDay: string, participations: array<string, array<int, array<string, mixed>>>, schemes: array<int, array<string, mixed>>}
 	 *
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
-	public function inputs(string $administrationId, string $period): array {
+	public function inputs(array $participations, array $schemes, string $administrationId, string $period): array {
 		$byEmployee = [];
-		foreach ($this->store->loadAll('PensionParticipation') as $participation) {
+		foreach ($participations as $participation) {
 			$byEmployee[(string)($participation['employeeId'] ?? '')][] = $participation;
 		}
 
-		$filter = ($administrationId === '' ? [] : ['administrationId' => $administrationId]);
 		return [
 			'lastDay' => date('Y-m-t', (int)strtotime($period.'-01')),
 			'participations' => $byEmployee,
-			'schemes' => $this->store->findFiltered('PensionScheme', $filter),
+			'schemes' => array_values(array_filter($schemes, static fn (array $scheme): bool => $administrationId === '' || (string)($scheme['administrationId'] ?? '') === $administrationId)),
 		];
 	}//end inputs()
 

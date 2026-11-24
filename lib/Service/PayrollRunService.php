@@ -303,7 +303,6 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param ReservationPayoutRunService|null $reservations Pays out the holiday allowance, end-of-year and IKB reserves (payroll-reservation-payouts); null runs without it.
 	 * @param PayslipLineageService|null $lineage Writes each payslip's source-carrying lines (payroll-mutation-lineage D1); null runs without it.
 	 * @param FinalLeavePayoutService|null $leavePayout Pays a leaver's open leave balance on the final payslip (REQ-OFC-005); null runs without it.
-	 * @param PensionPremiumService|null $pensions Resolves each employee's pension base and percentages (payroll-engine-port-from-shillinq D1); null runs without pension premiums.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each optional fold (hours, claims and allowances) and the run check is its own collaborator, so a run without one stays byte-identical and a test names which fold ran.
 	 */
@@ -326,7 +325,6 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		private readonly ?ReservationPayoutRunService $reservations = null,
 		private readonly ?PayslipLineageService $lineage = null,
 		private readonly ?FinalLeavePayoutService $leavePayout = null,
-		private readonly ?PensionPremiumService $pensions = null,
 	) {
 
 	}//end __construct()
@@ -595,7 +593,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$state['vehicleAssets'] = $this->vehicleAssetsById();
 		$state['hours'] = $this->hoursInputs(period: $period);
 		$state['expenseInputs'] = $this->expenses?->inputs(norm: $this->expenses->normFrom($state['tables']));
-		$state['pensionInputs'] = $this->pensions?->inputs(administrationId: $state['administrationId'], period: $period);
+		$state['pensionInputs'] = (new PensionPremiumService())->inputs(participations: $this->loadAll('PensionParticipation'), schemes: $this->loadAll('PensionScheme'), administrationId: $state['administrationId'], period: $period);
 		$state['reservationInputs'] = $this->reservations?->inputs(run: ['period' => $period, 'administrationId' => $state['administrationId'], 'runId' => $state['runId'], 'tables' => $state['tables']]);
 
 		return array_merge($state, self::EMPTY_TALLY);
@@ -962,8 +960,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 
 	/**
 	 * The pension part of the input: the participation in force, its fund's
-	 * scheme and the base of the regular wage. None without the service, a
-	 * participation or a scheme, so the payslip is what it was before.
+	 * scheme and the base of the regular wage. None without a participation
+	 * or a scheme, so the payslip is what it was before.
 	 *
 	 * @param array<string, mixed> $state The run state.
 	 * @param array<string, mixed> $slip  The folded slip.
@@ -973,11 +971,11 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	private function pensionOf(array $state, array $slip): ?PensionPremium {
-		if ($this->pensions === null || ($state['pensionInputs'] ?? null) === null) {
+		if (($state['pensionInputs'] ?? null) === null) {
 			return null;
 		}
 
-		return $this->pensions->premiumFor(inputs: $state['pensionInputs'], employeeId: $slip['employeeId'], grossCents: (int)$slip['regularWageCents'], contract: $slip['contract']);
+		return (new PensionPremiumService())->premiumFor(inputs: $state['pensionInputs'], employeeId: $slip['employeeId'], grossCents: (int)$slip['regularWageCents'], contract: $slip['contract']);
 	}//end pensionOf()
 
 	/**

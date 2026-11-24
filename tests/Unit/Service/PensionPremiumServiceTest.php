@@ -34,7 +34,6 @@ use OCA\Humaniq\Payroll\InsuranceTariffs;
 use OCA\Humaniq\Payroll\PensionPremium;
 use OCA\Humaniq\Payroll\WageTaxElection;
 use OCA\Humaniq\Service\PensionPremiumService;
-use OCA\Humaniq\Service\HoursRegisterGateway;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -61,26 +60,6 @@ class PensionPremiumServiceTest extends TestCase {
 	private const FULL_TIME = ['hoursPerWeek' => 40.0];
 
 	/**
-	 * A service over a fixed set of rows per schema.
-	 *
-	 * @param array<string, array<int, array<string, mixed>>> $rows The rows.
-	 *
-	 * @return PensionPremiumService
-	 */
-	private function service(array $rows): PensionPremiumService {
-		$store = $this->getMockBuilder(HoursRegisterGateway::class)
-			->disableOriginalConstructor()
-			->onlyMethods(['loadAll', 'findFiltered'])
-			->getMock();
-		$store->method('loadAll')->willReturnCallback(static fn (string $schema): array => ($rows[$schema] ?? []));
-		$store->method('findFiltered')->willReturnCallback(
-			static fn (string $schema, array $filters): array => array_values(array_filter(($rows[$schema] ?? []), static fn (array $row): bool => array_intersect_assoc($filters, $row) === $filters))
-		);
-
-		return new PensionPremiumService(store: $store);
-	}//end service()
-
-	/**
 	 * The premium for one employee in a period.
 	 *
 	 * @param array<int, array<string, mixed>> $participations The participations.
@@ -90,9 +69,10 @@ class PensionPremiumServiceTest extends TestCase {
 	 * @return PensionPremium|null
 	 */
 	private function premium(array $participations, string $period, int $grossCents): ?PensionPremium {
-		$service = $this->service(['PensionParticipation' => $participations, 'PensionScheme' => [self::SCHEME, array_merge(self::SCHEME, ['administrationId' => 'ADM-002', 'employeePercentage' => 99.0])]]);
+		$service = new PensionPremiumService();
+		$inputs  = $service->inputs(participations: $participations, schemes: [self::SCHEME, array_merge(self::SCHEME, ['administrationId' => 'ADM-002', 'employeePercentage' => 99.0])], administrationId: 'ADM-001', period: $period);
 
-		return $service->premiumFor(inputs: $service->inputs(administrationId: 'ADM-001', period: $period), employeeId: 'emp-1', grossCents: $grossCents, contract: self::FULL_TIME);
+		return $service->premiumFor(inputs: $inputs, employeeId: 'emp-1', grossCents: $grossCents, contract: self::FULL_TIME);
 	}//end premium()
 
 	/**
@@ -156,8 +136,8 @@ class PensionPremiumServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheFactorScalesTheWageAndPartTimeTheFranchise(): void {
-		$service = $this->service(['PensionParticipation' => [['employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-01-01', 'participationFactor' => 0.5]], 'PensionScheme' => [self::SCHEME]]);
-		$inputs  = $service->inputs(administrationId: 'ADM-001', period: '2026-04');
+		$service = new PensionPremiumService();
+		$inputs  = $service->inputs(participations: [['employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-01-01', 'participationFactor' => 0.5]], schemes: [self::SCHEME], administrationId: 'ADM-001', period: '2026-04');
 
 		// 4,000 x 0.5 = 2,000 less 1,500 = 500.
 		$this->assertSame(50000, $service->premiumFor(inputs: $inputs, employeeId: 'emp-1', grossCents: 400000, contract: self::FULL_TIME)?->pensionBaseCents);

@@ -49,6 +49,8 @@ use InvalidArgumentException;
 
 /**
  * Immutable input to one gross-to-net calculation.
+ *
+ * @SuppressWarnings(PHPMD.TooManyFields) Each readonly field is one input of the jurisdiction pack's declared contract; the optional parts (special payment, pension) are already grouped into their own value objects.
  */
 final class CalculationInput {
 

@@ -61,7 +61,6 @@ use OCA\Humaniq\Service\PayrollRunCheckService;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\FinalLeavePayoutService;
 use OCA\Humaniq\Service\PayslipLineageService;
-use OCA\Humaniq\Service\PensionPremiumService;
 use OCA\Humaniq\Service\ReservationPayoutRunService;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Services\IAppConfig;
@@ -275,7 +274,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return array{0: PayrollRunService, 1: object, 2: PayrollRetentionGuardService&\PHPUnit\Framework\MockObject\MockObject}
 	 */
-	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, ?ReservationPayoutRunService $reservations = null, bool $withLineage = false, bool $withLeavePayout = false, ?PensionPremiumService $pensions = null): array {
+	private function service(array $rowsBySchema = [], ?PayrollRetentionGuardService $retentionGuard = null, ?HoursPayService $hoursPay = null, ?PayrollExpenseFoldService $expenses = null, ?PayrollRunCheckService $runCheck = null, ?CaoComponentPayService $caoComponents = null, ?CostAllocationService $costAllocation = null, ?AwfReviewService $awfReview = null, ?ReservationPayoutRunService $reservations = null, bool $withLineage = false, bool $withLeavePayout = false): array {
 		$fake = $this->fakeObjectService($rowsBySchema);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -321,7 +320,7 @@ class PayrollRunServiceTest extends TestCase {
 		}
 
 		return [
-			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, reservations: $reservations, lineage: $lineage, leavePayout: $leavePayout, pensions: $pensions),
+			new PayrollRunService($container, $settings, new EmployerPremiumSettings($this->createMock(IAppConfig::class)), new PayrollCalculator(), new SickPayCalculator(), $retentionGuard, $logger, hoursPay: $hoursPay, expenses: $expenses, runCheck: $runCheck, caoComponents: $caoComponents, costAllocation: $costAllocation, awfReview: $awfReview, reservations: $reservations, lineage: $lineage, leavePayout: $leavePayout),
 			$fake,
 			$retentionGuard,
 		];
@@ -2487,9 +2486,10 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testAnExtendedPeriod13AddsWeek53AsAOneWeekCalculation()
 
 	/**
-	 * The payslip of a 4,000 a month full-timer in April and May, with the
-	 * pension service over the given participations and the spec's scheme
-	 * (franchise 18,000, 7.5% and 15%), and the same payslip without it.
+	 * The payslip of a 4,000 a month full-timer (40 hours, the full-time week
+	 * the pension filing uses) with the given participations and the spec's
+	 * scheme (franchise 18,000, 7.5% and 15%), and the same payslip without
+	 * any participation.
 	 *
 	 * @param array<int, array<string, mixed>> $participations The participations.
 	 * @param string                           $period         The period.
@@ -2497,15 +2497,17 @@ class PayrollRunServiceTest extends TestCase {
 	 * @return array{0: array<string, mixed>, 1: array<string, mixed>} The payslip with and without the service.
 	 */
 	private function pensionPayslips(array $participations, string $period): array {
-		$rows = ['Employee' => [$this->employee(['grossMonthlySalary' => 4000.00])], 'EmploymentContract' => [$this->contract()], 'PayrollRun' => [], 'Payslip' => []];
-		$schemes = [['fund' => 'pfab', 'franchise' => 18000, 'maxPensionableSalary' => 137800, 'employeePercentage' => 7.5, 'employerPercentage' => 15.0, 'validFrom' => '2026-01-01', 'validUntil' => '2026-12-31']];
-		$store = $this->getMockBuilder(HoursRegisterGateway::class)->disableOriginalConstructor()->onlyMethods(['loadAll', 'findFiltered'])->getMock();
-		$store->method('loadAll')->willReturn($participations);
-		$store->method('findFiltered')->willReturn($schemes);
+		$rows = [
+			'Employee' => [$this->employee(['grossMonthlySalary' => 4000.00])],
+			'EmploymentContract' => [$this->contract(['hoursPerWeek' => 40.0])],
+			'PayrollRun' => [],
+			'Payslip' => [],
+			'PensionScheme' => [['administrationId' => 'ADM-001', 'fund' => 'pfab', 'franchise' => 18000, 'maxPensionableSalary' => 137800, 'employeePercentage' => 7.5, 'employerPercentage' => 15.0, 'validFrom' => '2026-01-01', 'validUntil' => '2026-12-31']],
+		];
 
 		$payslips = [];
-		foreach ([new PensionPremiumService(store: $store, fullTimeHoursWeek: 36.0), null] as $pensions) {
-			[$service, $fake] = $this->service($rows, pensions: $pensions);
+		foreach ([$participations, []] as $rowsOfParticipation) {
+			[$service, $fake] = $this->service(array_merge($rows, ['PensionParticipation' => $rowsOfParticipation]));
 			self::assertSame('calculated', $service->runFor($period)['status']);
 			$payslips[] = $this->savedFor($fake, 'Payslip')[0];
 		}
