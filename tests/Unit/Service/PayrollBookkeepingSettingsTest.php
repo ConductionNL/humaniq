@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
  */
 
 declare(strict_types=1);

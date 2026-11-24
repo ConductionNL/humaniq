@@ -10580,9 +10580,9 @@
    "personio": "unknown",
    "orangehrm": "unknown",
    "built": {
-    "requirement": "openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq :: A confirmed wage tax return SHALL become one draft payable in shillinq (REQ-PWR-001)",
+    "requirement": "openspec/specs/payroll-wage-tax-remittance-shillinq :: A confirmed wage tax return SHALL become one draft payable in shillinq (REQ-PWR-001)",
     "state": "building",
-    "evidence": "lib/Service/WageTaxRemittanceService.php and occ humaniq:wagetax:remit (PR #632, merged e74a8451) write a draft APTransaction into shillinq per confirmed return; tasks 3.2 (pages) and 3.4 (live check) of openspec/changes/payroll-wage-tax-remittance-shillinq are open.",
+    "evidence": "lib/Service/WageTaxRemittanceService.php and occ humaniq:wagetax:remit (PR #632, merged e74a8451) write a draft APTransaction into shillinq per confirmed return; tasks 3.2 (pages) and 3.4 (live check) of openspec/changes/archive/2026-11-24-payroll-wage-tax-remittance-shillinq are open.",
     "change": "payroll-wage-tax-remittance-shillinq",
     "owner": "ConductionNL/humaniq"
    },

@@ -28,7 +28,7 @@ use OCP\AppFramework\Services\IAppConfig;
 /**
  * Reads the payroll bookkeeping settings from humaniq's app config.
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
  */
 final class PayrollBookkeepingSettings {
 
@@ -132,7 +132,7 @@ final class PayrollBookkeepingSettings {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
 	 */
 	public function getWageTaxPayeeId(): string {
 		return trim($this->appConfig->getAppValueString('wagetax_payee_id', ''));

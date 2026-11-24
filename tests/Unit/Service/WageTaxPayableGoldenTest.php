@@ -9,7 +9,7 @@
  * amount on the payable and its one line, the account and the
  * administration.
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 
 declare(strict_types=1);

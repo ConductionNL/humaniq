@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use OCA\Humaniq\Support\ResolvesObjectService;
 /**
  * Reads and writes shillinq's payables, duck-typed (design D5, D6).
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 class ShillinqPayables {
 
@@ -85,7 +85,7 @@ class ShillinqPayables {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
 	 */
 	public function available(): bool {
 		if ($this->appManager->isInstalled(self::SHILLINQ_APP_ID) === false) {
@@ -108,7 +108,7 @@ class ShillinqPayables {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-004
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-004
 	 */
 	public function hasPayee(string $payeeId): bool {
 		foreach ($this->rows(schema: 'Payee', filters: []) as $payee) {
@@ -127,7 +127,7 @@ class ShillinqPayables {
 	 *
 	 * @return string The shillinq APTransaction id.
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-002
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-002
 	 */
 	public function createOrAdopt(array $payload): string {
 		$filters = ['vendorId' => $payload['vendorId'], 'invoiceNumber' => $payload['invoiceNumber']];
@@ -154,7 +154,7 @@ class ShillinqPayables {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
 	 */
 	public function toArray(mixed $row): array {
 		if (is_array($row) === true) {
@@ -180,7 +180,7 @@ class ShillinqPayables {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
 	 */
 	public function idOf(array $row): string {
 		return (string)($row['id'] ?? ($row['@self']['id'] ?? ''));

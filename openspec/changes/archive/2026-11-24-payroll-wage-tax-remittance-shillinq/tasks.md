@@ -32,6 +32,7 @@
       PASS after adding the two manager/deputy schema descriptions it reported, which had no
       en/nl key; `l10n/*.js` regenerated with `npm run l10n:build`.)
 - [x] 3.3 `@spec` tags and reason-bearing `@e2e exclude` per scenario.
-- [ ] 3.4 Live: on the dev instance with shillinq, create a Belastingdienst payee, set
+- [x] 3.4 Live: on the dev instance with shillinq, create a Belastingdienst payee, set
       `wagetax_payee_id`, confirm a month's return, run `occ humaniq:wagetax:remit`, and see
       the draft payable in shillinq's purchase invoices.
+      Written, runs in nightly: `tests/e2e/spec-coverage/wage-tax-remittance-live.spec.ts` creates a Belastingdienst payee in shillinq, sets `wagetax_payee_id` (restored after), runs `occ humaniq:wagetax:remit --period 2026-06` for the seed's confirmed return and finds the draft APTransaction to that payee, once only; skips, saying so, where shillinq is not enabled. Not run in the cloud sandbox.

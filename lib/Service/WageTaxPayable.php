@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ use InvalidArgumentException;
 /**
  * The draft payable to the Belastingdienst for one return.
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 class WageTaxPayable {
 
@@ -39,7 +39,7 @@ class WageTaxPayable {
 	 * @param string $payeeId The shillinq payee.
 	 * @param string $account The wage tax liability account.
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
 	 */
 	public function __construct(
 		private readonly float $amount,
@@ -56,7 +56,7 @@ class WageTaxPayable {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
 	 */
 	public function build(array $run, array $filing): array {
 		$period = (string)($filing['period'] ?? '');
