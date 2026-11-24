@@ -17,7 +17,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use InvalidArgumentException;
  *
  * @SuppressWarnings(PHPMD.StaticAccess) PayPeriod::parse is the pure value-object factory every period reader uses.
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
  */
 final class OpeningBalanceIndex {
 
@@ -45,7 +45,7 @@ final class OpeningBalanceIndex {
 	 *
 	 * @return array{byEmployeeYear: array<string, array<int, array<string, mixed>>>, firstPeriod: array<string, array<int, string>>}
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public function build(iterable $balances, iterable $payslips): array {
 		$byEmployeeYear = [];
@@ -67,7 +67,7 @@ final class OpeningBalanceIndex {
 	 *
 	 * @return array<string, array<int, string>>
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function firstPeriods(iterable $payslips): array {
 		$firstPeriod = [];

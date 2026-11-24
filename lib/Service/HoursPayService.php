@@ -76,7 +76,7 @@ class HoursPayService {
 	 * @return list<array<string, mixed>>
 	 *
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-001
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function timesheetsToPay(array $timesheets, string $employeeId, string $period, string $runId, array $runsById): array {
 		$window = new MonthEndWindow(period: $period);

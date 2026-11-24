@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use InvalidArgumentException;
  * D3). Period 13's own dates stay weeks 49 to 52, because those are the weeks its
  * four-weekly tijdvak covers; the run adds week 53 as a separate one-week tijdvak.
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
  */
 final class PayPeriod {
 
@@ -102,7 +102,7 @@ final class PayPeriod {
 	 *
 	 * @throws InvalidArgumentException When the id is not a period, or names a week 53 the year does not have.
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public static function parse(string $id): self {
 		if (preg_match('/^(\d{4})-(0[1-9]|1[0-2])$/', $id, $month) === 1) {
@@ -134,7 +134,7 @@ final class PayPeriod {
 	 *
 	 * @throws InvalidArgumentException When the id is no period, or not one of that frequency.
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public static function forFrequency(string $id, string $frequency, string $week53Handling=''): self {
 		$frequency = ($frequency === '') ? 'monthly' : $frequency;
@@ -165,7 +165,7 @@ final class PayPeriod {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
 	 */
 	public static function yearHasWeek53(int $year): bool {
 		return (new DateTimeImmutable(sprintf('%04d-12-28', $year)))->format('W') === '53';
@@ -176,7 +176,7 @@ final class PayPeriod {
 	 *
 	 * @return float
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function shareOfYear(): float {
 		return 1 / $this->periodsPerYear();
@@ -187,7 +187,7 @@ final class PayPeriod {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function periodsPerYear(): int {
 		return match ($this->tijdvak) {

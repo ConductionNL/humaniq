@@ -28,7 +28,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use OCA\Humaniq\Payroll\PayPeriod;
 /**
  * Opening balances against humaniq's own payslips.
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
  */
 final class NlOpeningBalanceChecks implements CheckProvider {
 
@@ -49,7 +49,7 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public static function checks(): array {
 		return [
@@ -65,7 +65,7 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 *
 	 * @return array<string, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -81,7 +81,7 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public static function doesNotOverlap(array $payslip, array $context): bool {
 		$period = self::period(id: (string)($payslip['period'] ?? ''));
@@ -109,7 +109,7 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public static function hasBalanceWhenNeeded(array $payslip, array $context): bool {
 		$employeeId = trim((string)($payslip['employeeId'] ?? ''));
@@ -141,7 +141,7 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private static function balanceFor(string $employeeId, int $year, array $context): ?array {
 		$balance = ($context['openingBalances']['byEmployeeYear'][trim($employeeId)][$year] ?? null);
@@ -156,7 +156,7 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 *
 	 * @return PayPeriod|null
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) PayPeriod::parse is the pure value-object factory every period reader uses.
 	 */
@@ -175,7 +175,7 @@ final class NlOpeningBalanceChecks implements CheckProvider {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private static function yearOf(PayPeriod $period): int {
 		return (int)substr($period->id, 0, 4);

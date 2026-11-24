@@ -17,7 +17,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use InvalidArgumentException;
  *
  * @SuppressWarnings(PHPMD.StaticAccess) PayPeriod::parse is the pure value-object factory every period reader uses.
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
  */
 final class MonthEndWindow {
 
@@ -52,7 +52,7 @@ final class MonthEndWindow {
 	 *
 	 * @param string $period The run's period: YYYY-MM, YYYY-Pnn or YYYY-Wnn.
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function __construct(
 		private readonly string $period,
@@ -73,7 +73,7 @@ final class MonthEndWindow {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function admits(string $month): bool {
 		if ($this->periodEnd === null || preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month) !== 1) {

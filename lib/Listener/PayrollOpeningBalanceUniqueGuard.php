@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+ * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
  */
 class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 
@@ -54,7 +54,7 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 * @param HoursRegisterGateway $gateway Reads the stored balances and resolves schema ids.
 	 * @param LoggerInterface      $logger  Logs a balance that could not be checked.
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -69,7 +69,7 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) PreSaveEvents::entityOf and ::refuse are the shared reader and refusal every pre-save guard uses.
 	 */
@@ -102,7 +102,7 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function ownId(Event $event, object $entity): ?string {
 		if ($event instanceof ObjectUpdatingEvent) {
@@ -121,7 +121,7 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function duplicateOf(array $payload, ?string $uuid): bool {
 		$employeeId = trim((string)($payload['employeeId'] ?? ''));
@@ -152,7 +152,7 @@ class PayrollOpeningBalanceUniqueGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function isBalance(object $entity): bool {
 		return strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) === self::SCHEMA_SLUG;

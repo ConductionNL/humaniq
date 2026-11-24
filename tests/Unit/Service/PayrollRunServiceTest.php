@@ -2358,7 +2358,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	public function testARunTakesOnlyPeriodsOfTheAdministrationsFrequency(): void {
 		[$service, $fake] = $this->service(

@@ -300,7 +300,7 @@ final class CalculationResult {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-002
 	 */
 	public static function combined(self $fourWeeks, self $week53): self {
 		$sum = [];
