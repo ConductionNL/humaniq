@@ -41,6 +41,7 @@ namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlAorChecks;
 use OCA\Humaniq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -62,7 +63,11 @@ class NlAorChecksTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		RuleEngine::reset();
-		$this->checks = NlAorChecks::checks()['Employee'];
+		// The engine's table path: derive, then the shared Dmn evaluator.
+		$this->checks = array_map(
+			static fn (callable $predicate): callable => static fn (array $o): bool => $predicate($o, ['jurisdiction' => 'NL']),
+			TableCheckRegistry::checks([NlAorChecks::class])['Employee']
+		);
 
 	}//end setUp()
 

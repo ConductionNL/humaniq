@@ -38,7 +38,17 @@
  *
  * @link https://conduction.nl
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): both rules are declared as OpenRegister decision
+ * tables via the ProvidesTables capability, so the ambtenaar scope and the
+ * two presence gates are matched by the shared Dmn\DecisionTableEvaluator and
+ * only the derivations (trimmed regime and oath date, strict disclosure flag)
+ * stay here. The closure predicates remain available as legacyChecks() -- the
+ * parity oracle, NOT registered in the engine -- until staged retirement
+ * (REQ-RULE-009).
+ *
  * @spec openspec/specs/aor-ambtenarenrecht/spec.md
+ * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -48,16 +58,82 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * The two ambtenarenwet-2017 presence-only obligations that survived Wnra.
  */
-final class NlAorChecks implements CheckProvider {
+final class NlAorChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
+
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: every check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/aor-ambtenarenrecht/spec.md
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
+		return [];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Both ambtenaar-scoped Employee rules as derivation + FIRST-hit decision
+	 * table; an employee without a public-sector regime falls to the
+	 * catch-all row and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/aor-ambtenarenrecht/spec.md
+	 */
+	public static function tables(): array {
+		return [
+			'Employee' => [
+				// Ambtenarenwet 2017 art. 5 -- the ambtseed/-belofte must be
+				// recorded for every ambtenaar.
+				'nl-ambtenaar-eed-vereist' => [
+					'derive' => static fn (array $object): array => [
+						'ambtenaar' => self::isAmbtenaar($object),
+						'eedRecorded' => (trim((string)($object['ambtseedAfgelegdOp'] ?? '')) !== ''),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'ambtenaar', 'type' => 'boolean'], ['name' => 'eedRecorded', 'type' => 'boolean']],
+						[['id' => 'ambtenaar-without-eed', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+				// Ambtenarenwet 2017 art. 9 -- the nevenwerkzaamheden
+				// integrity-disclosure attestation must be on file.
+				'nl-ambtenaar-nevenwerkzaamheden-melding' => [
+					'derive' => static fn (array $object): array => [
+						'ambtenaar' => self::isAmbtenaar($object),
+						'nevenwerkzaamhedenGemeld' => (($object['nevenwerkzaamhedenGemeld'] ?? false) === true),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'ambtenaar', 'type' => 'boolean'], ['name' => 'nevenwerkzaamhedenGemeld', 'type' => 'boolean']],
+						[['id' => 'ambtenaar-without-melding', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * The pre-conversion closure predicates, kept as the PARITY ORACLE only:
+	 * not registered in the engine (checks() is empty), consumed by the
+	 * table/legacy parity test, retired with the other converted rules after
+	 * the table form is proven on an OpenRegister-backed audit run
+	 * (REQ-RULE-009, tasks section 6).
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/aor-ambtenarenrecht/spec.md
+	 */
+	public static function legacyChecks(): array {
 		return [
 			'Employee' => [
 				// Ambtenarenwet 2017 art. 5 -- the ambtseed/-belofte must be
@@ -69,7 +145,7 @@ final class NlAorChecks implements CheckProvider {
 			],
 		];
 
-	}//end checks()
+	}//end legacyChecks()
 
 	/**
 	 * {@inheritDoc}
