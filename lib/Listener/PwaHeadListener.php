@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
  *
- * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
+ * @spec openspec/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -53,7 +53,7 @@ class PwaHeadListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
+	 * @spec openspec/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof BeforeTemplateRenderedEvent === false) {
@@ -81,7 +81,7 @@ class PwaHeadListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
+	 * @spec openspec/specs/self-service-mobile/spec.md#requirement-mijn-hr-shall-be-installable-on-a-phones-home-screen-req-mob-001
 	 */
 	protected function addHeader(string $tag, array $attributes): void {
 		Util::addHeader($tag, $attributes);

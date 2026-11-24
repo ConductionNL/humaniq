@@ -39,5 +39,6 @@
       Done: a reason-bearing `@e2e exclude` on each of the four scenarios (each needs a phone,
       a camera, an offline device or a push service), naming the unit tests that cover what can
       be covered; `@spec` on the new methods, `PwaHeadListener::addHeader` included.
-- [ ] 3.2 One live check on a phone: add `Mijn HR` to the home screen, request leave and
+- [x] 3.2 One live check on a phone: add `Mijn HR` to the home screen, request leave and
       photograph a receipt into an expense; record the screenshots in the PR.
+      Written, runs in nightly: `tests/e2e/spec-coverage/self-service-mobile.spec.ts` runs as an employee in a Pixel 7 viewport: what the browser checks before it offers Add to home screen (manifest link, name, standalone, icons, start URL in scope, active service worker), a leave request found under the employee's own leave, and a receipt photo handed to the `capture=environment` field stored as the expense's receipt; screenshots attached to the report. The home-screen gesture itself is an OS action no headless run makes. Not run in the cloud sandbox.

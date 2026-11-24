@@ -563,7 +563,7 @@ class ReceiptExtractionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-self-service-mobile/tasks.md#task-2.2
 	 */
 	public function testARenderedFileObjectIsSentAsItsFileId(): void {
 		$file = ['id' => 812, 'path' => '/humaniq/Expense/receipt.jpg', 'mimeType' => 'image/jpeg'];

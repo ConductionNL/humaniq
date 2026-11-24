@@ -7,8 +7,8 @@
  * shows what openregister's web push sends, and registering it asks the
  * employee nothing.
  *
- * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-the-app-shall-keep-no-personal-data-on-the-phone-req-mob-002
- * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
+ * @spec openspec/specs/self-service-mobile/spec.md#requirement-the-app-shall-keep-no-personal-data-on-the-phone-req-mob-002
+ * @spec openspec/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
  */
 import assert from 'node:assert/strict'
 import { test } from 'node:test'

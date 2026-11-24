@@ -145,7 +145,7 @@ class ReceiptExtractionRepository {
 	 *
 	 * @return string The trimmed reference, or '' for none.
 	 *
-	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-self-service-mobile/tasks.md#task-2.2
 	 */
 	public function receiptReference(mixed $value): string {
 		if (is_array($value) === true) {
@@ -166,7 +166,7 @@ class ReceiptExtractionRepository {
 	 *
 	 * @return int|string|null The id or path.
 	 *
-	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-self-service-mobile/tasks.md#task-2.2
 	 */
 	private function fileObjectReference(array $file): int|string|null {
 		$fileId = $file['id'] ?? $file['fileId'] ?? null;
@@ -187,7 +187,7 @@ class ReceiptExtractionRepository {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-self-service-mobile/tasks.md#task-2.2
 	 */
 	public function eligibleBacklogExpenses(): array {
 		$out = [];

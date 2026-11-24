@@ -63,7 +63,7 @@ export default {
 		 *
 		 * @return {boolean}
 		 *
-		 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
+		 * @spec openspec/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
 		 */
 		switchable() {
 			return this.state === 'on' || this.state === 'off'
@@ -74,7 +74,7 @@ export default {
 		 *
 		 * @return {string}
 		 *
-		 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
+		 * @spec openspec/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
 		 */
 		hint() {
 			switch (this.state) {
@@ -97,7 +97,7 @@ export default {
 	 *
 	 * @return {Promise<void>}
 	 *
-	 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
+	 * @spec openspec/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
 	 */
 	async mounted() {
 		try {
@@ -116,7 +116,7 @@ export default {
 		 * @param {boolean} on Whether the employee turned the switch on.
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/self-service-mobile/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
+		 * @spec openspec/specs/self-service-mobile/spec.md#requirement-notifications-shall-reach-the-installed-app-only-after-the-employee-turns-them-on-req-mob-004
 		 */
 		async toggle(on) {
 			this.busy = true
