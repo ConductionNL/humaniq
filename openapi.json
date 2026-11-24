@@ -5692,6 +5692,102 @@
                     }
                 }
             }
+        },
+        "/onboarding/{id}/read-document": {
+            "post": {
+                "operationId": "onboarding-document-read-document",
+                "summary": "Read document: read the case's unread documents through filinq",
+                "description": "Read document: every document of the onboarding case that is not read yet goes to filinq as an employment contract or an identity document; only empty employee fields are filled. 200 when read; 422 with the reason otherwise. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "onboarding-document"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The onboarding case id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "description": "The profile was left unchanged; the body says why."
+                    }
+                }
+            }
+        },
+        "/onboarding/{id}/contract-from-document": {
+            "post": {
+                "operationId": "onboarding-document-contract-from-document",
+                "summary": "Create contract from document",
+                "description": "Makes the employment contract from the case's read contract document, at most one per document. 200 when made; 422 with the reason otherwise. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "onboarding-document"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The onboarding case id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "description": "The profile was left unchanged; the body says why."
+                    }
+                }
+            }
         }
     },
     "components": {

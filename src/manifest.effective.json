@@ -10033,6 +10033,30 @@
 		{
 			"config": {
 				"_note": "onboarding-wizard-mvp (2026-07-13): the 'Case' widget excludes employeeId (Related resolves the hired Employee) and the six checklist gate fields, leaving startDate/proeftijdEndDate/status; the 'Checklist' widget groups exactly the six gate booleans plus widCheckDate and notes -- the SickLeaveCaseDetail grouped-data pattern. lifecycleActions expose exactly the REQ-OBW-002 edges (contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren) -- no invented edges. Checklist gates are audit-enforced (lib/Standards/Checks/NlOnboardingChecks.php), except the right-to-work check: people-dossier-completeness (2026-09-29) adds RightToWorkGuard on gereed_melden and starten (REQ-DCP-004) and a Right-to-work checks object-list (RightToWorkCheck.onboardingId = @objectId) where HR records the check; a pass ticks widCheckDone. Audit history is a sidebar tab. platform-hr-workflows 1.1a (2026-11-14): the checklist is split per owner, as HuInwerken draws it: HR (contract, identity, BSN, IBAN, pension, notes), IT (itProvisioned) and Manager (workplace and buddy, first month's programme, probation talk), each ticked by its task in the Indiensttreding flow.",
+				"headerActions": [
+					{
+						"confirm": false,
+						"icon": "FileAccountOutline",
+						"id": "read-document",
+						"label": "Read document",
+						"method": "POST",
+						"params": {},
+						"successMessage": "The documents were read. Check every value before the checklist moves on.",
+						"type": "api-call",
+						"url": "/api/onboarding/@objectId/read-document"
+					},
+					{
+						"confirm": true,
+						"icon": "FileDocumentPlusOutline",
+						"id": "contract-from-document",
+						"label": "Create contract from document",
+						"method": "POST",
+						"params": {},
+						"successMessage": "The contract was made from the document. Check it before it is signed.",
+						"type": "api-call",
+						"url": "/api/onboarding/@objectId/contract-from-document"
+					}
+				],
 				"layout": [
 					{
 						"gridHeight": 5,
@@ -10062,9 +10086,17 @@
 						"gridHeight": 4,
 						"gridWidth": 12,
 						"gridX": 0,
-						"gridY": 24,
+						"gridY": 28,
 						"id": 4,
 						"widgetId": "files"
+					},
+					{
+						"gridHeight": 4,
+						"gridWidth": 12,
+						"gridX": 0,
+						"gridY": 24,
+						"id": 8,
+						"widgetId": "documents-read"
 					},
 					{
 						"gridHeight": 4,
@@ -10281,6 +10313,58 @@
 						"icon": "ShieldCheckOutline",
 						"id": "object-list",
 						"title": "Right-to-work checks",
+						"type": "object-list"
+					},
+					{
+						"content": {
+							"columns": [
+								{
+									"key": "docType",
+									"label": "Document type"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "appliedFields",
+									"label": "Fields filled"
+								},
+								{
+									"key": "notAppliedFields",
+									"label": "Read but not applied"
+								},
+								{
+									"key": "message",
+									"label": "Message"
+								}
+							],
+							"emptyText": "No document to read yet. Add the signed contract or the identity document, then press Read document.",
+							"filter": {
+								"onboardingId": "@objectId"
+							},
+							"formExcludeFields": [
+								"employeeId",
+								"status",
+								"extractedFields",
+								"appliedFields",
+								"notAppliedFields",
+								"contractId",
+								"message",
+								"readAt",
+								"readBy"
+							],
+							"limit": 10,
+							"register": "humaniq",
+							"schema": "EmployeeDocumentExtraction",
+							"sort": {
+								"dir": "desc",
+								"field": "readAt"
+							}
+						},
+						"icon": "FileAccountOutline",
+						"id": "documents-read",
+						"title": "Documents read",
 						"type": "object-list"
 					}
 				]

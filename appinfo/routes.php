@@ -123,6 +123,9 @@ return \OCA\Humaniq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'recruiting#evaluationSummary', 'url' => '/api/applications/{id}/evaluation-summary', 'verb' => 'GET'],
         // hiring-cv-profile-extraction REQ-CAS-004: fill an empty profile from the CV through filinq.
         ['name' => 'applicationCv#readCv', 'url' => '/api/applications/{id}/read-cv', 'verb' => 'POST'],
+        // hiring-document-to-employee REQ-HTE-003: read the case's documents through filinq; make the contract from a read contract.
+        ['name' => 'onboardingDocument#readDocument', 'url' => '/api/onboarding/{id}/read-document', 'verb' => 'POST'],
+        ['name' => 'onboardingDocument#contractFromDocument', 'url' => '/api/onboarding/{id}/contract-from-document', 'verb' => 'POST'],
         ['name' => 'recruiting#matches', 'url' => '/api/vacancies/{id}/matches', 'verb' => 'GET'],
         ['name' => 'hire#matches', 'url' => '/api/applications/{id}/hire-matches', 'verb' => 'GET'],
         ['name' => 'hire#hire', 'url' => '/api/applications/{id}/hire', 'verb' => 'POST'],
