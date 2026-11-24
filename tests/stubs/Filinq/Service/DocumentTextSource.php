@@ -5,7 +5,7 @@
  *
  * Only `resolveText()`, answering the text a test sets per file id. The two
  * classes beside it are filinq's own, vendored verbatim from filinq
- * development (f95c1ed2, filinq#2320), so humaniq's Read CV is tested
+ * development (f95c1ed2, filinq#2320; only their filinq @spec lines read "Provenance:"), so humaniq's Read CV is tested
  * against the real profile rules (hiring-cv-profile-extraction 1.2).
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>

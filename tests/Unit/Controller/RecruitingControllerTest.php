@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\RecruitingController;
-use OCA\Humaniq\Service\CvProfileReader;
 use OCA\Humaniq\Service\HoursRegisterGateway;
 use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RbacObjectReader;
@@ -106,11 +105,10 @@ class RecruitingControllerTest extends TestCase {
 	 * @param boolean                   $hr       Whether the caller is HR.
 	 * @param VacancyMatchService|null  $matcher  The matcher.
 	 * @param HoursRegisterGateway|null $gateway  The gateway.
-	 * @param CvProfileReader|null      $cvReader The CV reader.
 	 *
 	 * @return RecruitingController
 	 */
-	private function controller(bool $readable, bool $hr, ?VacancyMatchService $matcher=null, ?HoursRegisterGateway $gateway=null, ?CvProfileReader $cvReader=null): RecruitingController {
+	private function controller(bool $readable, bool $hr, ?VacancyMatchService $matcher=null, ?HoursRegisterGateway $gateway=null): RecruitingController {
 		$rbac = $this->createMock(RbacObjectReader::class);
 		$rbac->method('findOrNull')->willReturn($readable ? ['id' => 'x'] : null);
 		$roles = $this->createMock(HumaniqRoles::class);
@@ -126,50 +124,8 @@ class RecruitingControllerTest extends TestCase {
 			roles: $roles,
 			matcher: ($matcher ?? $this->createMock(VacancyMatchService::class)),
 			gateway: ($gateway ?? $this->createMock(HoursRegisterGateway::class)),
-			userSession: $session,
-			cvReader: ($cvReader ?? $this->createMock(CvProfileReader::class))
+			userSession: $session
 		);
 	}//end controller()
-
-	/**
-	 * Read CV answers the reader's outcome: 200 only when the profile was
-	 * filled, 422 with the reason otherwise.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
-	 */
-	public function testReadCvAnswersTheOutcome(): void {
-		$reader = $this->createMock(CvProfileReader::class);
-		$reader->expects($this->exactly(2))->method('read')->willReturnOnConsecutiveCalls(
-			['status' => 'filled', 'message' => 'The profile was read from the CV.', 'profile' => ['educationLevel' => 7]],
-			['status' => 'kept', 'message' => 'The profile was filled by hand and is left as it is.', 'profile' => []]
-		);
-		$controller = $this->controller(readable: true, hr: true, cvReader: $reader);
-
-		$filled = $controller->readCv('app-1');
-		$this->assertSame(200, $filled->getStatus());
-		$this->assertSame(7, $filled->getData()['profile']['educationLevel']);
-
-		$kept = $controller->readCv('app-1');
-		$this->assertSame(422, $kept->getStatus());
-		$this->assertSame('The profile was filled by hand and is left as it is.', $kept->getData()['message']);
-	}//end testReadCvAnswersTheOutcome()
-
-	/**
-	 * Read CV resolves the application as the caller first, then needs HR,
-	 * and never reaches the reader otherwise.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
-	 */
-	public function testReadCvIsForHrOnAReadableApplication(): void {
-		$reader = $this->createMock(CvProfileReader::class);
-		$reader->expects($this->never())->method('read');
-
-		$this->assertSame(404, $this->controller(readable: false, hr: true, cvReader: $reader)->readCv('app-1')->getStatus());
-		$this->assertSame(403, $this->controller(readable: true, hr: false, cvReader: $reader)->readCv('app-1')->getStatus());
-	}//end testReadCvIsForHrOnAReadableApplication()
 
 }//end class

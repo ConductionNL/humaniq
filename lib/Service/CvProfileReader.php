@@ -9,17 +9,15 @@
  * called duck-typed, by class name, as the receipt OCR is; without it the
  * application is left as it is and the answer says why.
  *
- * @category Service
- * @package  OCA\Humaniq\Service
- *
- * @author    Conduction Development Team <info@conduction.nl>
- * @copyright 2026 Conduction B.V.
- * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @link https://conduction.nl
+ * @category  Service
+ * @package   OCA\Humaniq\Service
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://conduction.nl
  *
  * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
  */
@@ -47,11 +45,13 @@ class CvProfileReader {
 	/**
 	 * @param ContainerInterface   $container The server container, to find filinq.
 	 * @param RecordStoreInterface $store     Reads the vacancy and saves the application.
+	 * @param HumaniqRoles         $roles     Who is HR.
 	 * @param LoggerInterface      $logger    Logs a failed read.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly RecordStoreInterface $store,
+		private readonly HumaniqRoles $roles,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -60,8 +60,9 @@ class CvProfileReader {
 	 * Read the CV of an application into its profile.
 	 *
 	 * The answer is `{status, message, profile}`: `filled` with the fields
-	 * written, or `kept` (HR filled the profile), `no-cv`, `skipped-no-filinq`,
-	 * `unreadable` or `failed`, each leaving the application unchanged.
+	 * written, or `forbidden` (not HR or an administrator), `kept` (HR filled
+	 * the profile), `no-cv`, `skipped-no-filinq`, `unreadable` or `failed`,
+	 * each leaving the application unchanged.
 	 *
 	 * @param array<string, mixed> $application The application, as the caller may read it.
 	 * @param string               $userId      Who asked.
@@ -71,6 +72,10 @@ class CvProfileReader {
 	 * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
 	 */
 	public function read(array $application, string $userId): array {
+		if ($this->roles->isHr($userId) === false) {
+			return self::answer(status: 'forbidden', message: 'Only HR or an administrator can read a CV into the profile.');
+		}
+
 		if (self::hasProfile(application: $application) === true) {
 			return self::answer(status: 'kept', message: 'The profile was filled by hand and is left as it is.');
 		}

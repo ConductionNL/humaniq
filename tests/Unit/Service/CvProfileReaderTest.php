@@ -32,6 +32,7 @@ use OCA\Filinq\Service\DocumentTextSource;
 use OCA\Filinq\Service\Extraction\CvProfileParser;
 use OCA\Filinq\Service\ProfileExtractionService;
 use OCA\Humaniq\Service\CvProfileReader;
+use OCA\Humaniq\Service\HumaniqRoles;
 use OCA\Humaniq\Service\RecordStoreInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
@@ -59,10 +60,11 @@ class CvProfileReaderTest extends TestCase {
 	 * The reader, with or without filinq.
 	 *
 	 * @param bool $filinq Whether filinq is installed.
+	 * @param bool $hr     Whether the caller is HR.
 	 *
 	 * @return CvProfileReader
 	 */
-	private function reader(bool $filinq = true): CvProfileReader {
+	private function reader(bool $filinq = true, bool $hr = true): CvProfileReader {
 		$source = new DocumentTextSource();
 		$source->texts[501] = self::CV;
 		$time = $this->createMock(ITimeFactory::class);
@@ -89,7 +91,10 @@ class CvProfileReaderTest extends TestCase {
 			}
 		);
 
-		return new CvProfileReader(container: $container, store: $store, logger: $this->createMock(LoggerInterface::class));
+		$roles = $this->createMock(HumaniqRoles::class);
+		$roles->method('isHr')->willReturn($hr);
+
+		return new CvProfileReader(container: $container, store: $store, roles: $roles, logger: $this->createMock(LoggerInterface::class));
 	}//end reader()
 
 	/**
@@ -171,6 +176,18 @@ class CvProfileReaderTest extends TestCase {
 		$this->assertStringContainsString('could not be read', $answer['message']);
 		$this->assertSame([], $this->saved);
 	}//end testAnUnreadableFileWritesNothing()
+
+	/**
+	 * Only HR or an administrator reads a CV into the profile.
+	 *
+	 * @return void
+	 */
+	public function testOnlyHrReadsACv(): void {
+		$answer = $this->reader(hr: false)->read(application: $this->application(), userId: 'employee');
+
+		$this->assertSame('forbidden', $answer['status']);
+		$this->assertSame([], $this->saved);
+	}//end testOnlyHrReadsACv()
 
 	/**
 	 * An application without a CV is answered without asking filinq.
