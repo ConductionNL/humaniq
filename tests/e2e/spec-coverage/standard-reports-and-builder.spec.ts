@@ -179,6 +179,7 @@ test.describe('ready-made and own reports', () => {
 		await admin?.dispose()
 	})
 
+	// @e2e hr-reports::a-controller-opens-the-wage-cost-report
 	test('A controller opens the wage cost report', async ({ page }) => {
 		const runs = await admin.get(`${OR_BASE}/PayrollRun?_limit=1`, { headers: HEADERS })
 		expect(runs.ok(), `read the payroll runs: ${runs.status()}`).toBeTruthy()
@@ -198,6 +199,7 @@ test.describe('ready-made and own reports', () => {
 		await expect(perRun.getByRole('row'), 'the table has at least one run').not.toHaveCount(1)
 	})
 
+	// @e2e hr-reports::hr-sees-whose-leave-expires
 	test('HR sees whose leave expires', async ({ page }) => {
 		const balances = await admin.get(`${OR_BASE}/LeaveBalance?_limit=1`, { headers: HEADERS })
 		expect(balances.ok(), `read the leave balances: ${balances.status()}`).toBeTruthy()
@@ -214,6 +216,7 @@ test.describe('ready-made and own reports', () => {
 		await expect(table.getByRole('row'), 'the table lists balances').not.toHaveCount(1)
 	})
 
+	// @e2e hr-reports::hr-builds-a-report-of-contracts-ending-this-quarter
 	test('HR builds a report of contracts ending this quarter', async ({ browser, page }) => {
 		const employeeId = await seed('Employee', {
 			employeeNumber: `${RUN_ID}-e`,
@@ -268,6 +271,7 @@ test.describe('ready-made and own reports', () => {
 		await colleague.context().close()
 	})
 
+	// @e2e hr-reports::an-export-leaves-out-fields-the-user-may-not-read
 	test('An export leaves out fields the user may not read', async ({ browser }) => {
 		await seed('Employee', {
 			employeeNumber: `${RUN_ID}-s`,

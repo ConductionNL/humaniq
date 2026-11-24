@@ -89,7 +89,7 @@ test.describe('booking time that is not for a project', () => {
 	})
 
 	test('a training afternoon is booked without a project and counts as non-project hours @spec REQ-TAC-001', async () => {
-		// @e2e openspec/changes/time-non-project-activities/specs/time-activities/spec.md#scenario-an-employee-books-a-training-afternoon
+		// @e2e time-activities::an-employee-books-a-training-afternoon
 		const res = await employee.post(`${OR_BASE}/TimeEntry`, {
 			headers: HEADERS,
 			data: {
@@ -115,7 +115,7 @@ test.describe('booking time that is not for a project', () => {
 	})
 
 	test('leave cannot be booked as time, and the refusal says where leave comes from @spec REQ-TAC-001', async () => {
-		// @e2e openspec/changes/time-non-project-activities/specs/time-activities/spec.md#scenario-leave-cannot-be-booked-twice
+		// @e2e time-activities::leave-cannot-be-booked-twice
 		const res = await employee.post(`${OR_BASE}/TimeEntry`, {
 			headers: HEADERS,
 			data: {

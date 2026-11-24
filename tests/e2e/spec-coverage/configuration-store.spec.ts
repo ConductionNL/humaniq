@@ -113,6 +113,7 @@ test.describe('published configuration sets', () => {
 		await admin?.dispose()
 	})
 
+	// @e2e first-time-setup::an-administrator-installs-a-published-leave-policy
 	test('An administrator installs a published leave policy', async ({ page }) => {
 		test.skip(outcome === 'not_configured', 'needs a trusted registry; this instance runs the no-registry scenario')
 		test.skip(LEAVE_POLICY_SLUG === '', 'needs E2E_STORE_LEAVE_POLICY naming a leave policy set the registry publishes')
@@ -128,6 +129,7 @@ test.describe('published configuration sets', () => {
 		expect(await leaveTypeCount(admin), 'the set\'s leave types appear in humaniq').toBeGreaterThan(before)
 	})
 
+	// @e2e first-time-setup::no-registry-means-no-outside-call
 	test('No registry means no outside call', async ({ page }) => {
 		test.skip(outcome !== 'not_configured', 'needs an instance without a marketplace registry')
 
@@ -148,6 +150,7 @@ test.describe('published configuration sets', () => {
 		expect(search.cards, 'no remote cards without a registry').toEqual([])
 	})
 
+	// @e2e first-time-setup::picked-templates-show-in-the-summary
 	test('Picked templates show in the summary', async ({ page }) => {
 		const status = await setupStatus(admin)
 		test.skip(status?.steps?.templates === undefined, 'the setup status reports no Sjablonen step yet (configuration-store 1.1 and 1.2)')
@@ -178,6 +181,7 @@ test.describe('published configuration sets', () => {
 		}
 	})
 
+	// @e2e first-time-setup::a-skipped-step-stays-closed
 	test('A skipped step stays closed', async () => {
 		const status = await setupStatus(admin)
 		test.skip(status?.steps?.templates === undefined, 'the setup status reports no Sjablonen step yet (configuration-store 1.1 and 1.2)')

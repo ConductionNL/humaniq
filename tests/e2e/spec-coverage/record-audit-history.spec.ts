@@ -123,6 +123,7 @@ test.describe.serial("every humaniq record shows who viewed or changed it", () =
 	/**
 	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-opening-an-employee-leaves-a-read-entry
 	 */
+	// @e2e record-audit-history::opening-an-employee-leaves-a-read-entry
 	test("opening an employee leaves a read entry naming the adviser @spec REQ-RAH-001", async ({ browser }) => {
 		const page = await loginAs(browser, ADVISER);
 		await page.goto(`/index.php/apps/humaniq/employees/${employeeId}`, { waitUntil: "domcontentloaded" });
@@ -139,6 +140,7 @@ test.describe.serial("every humaniq record shows who viewed or changed it", () =
 	/**
 	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-a-changed-iban-shows-in-the-history
 	 */
+	// @e2e record-audit-history::a-changed-iban-shows-in-the-history
 	test("a changed IBAN shows in the record's history @spec REQ-RAH-002", async ({ page }) => {
 		const read = await api.get(`${OR_API}/objects/${REGISTER}/Employee/${employeeId}`);
 		const current = (await read.json()) as Record<string, unknown>;
@@ -165,6 +167,7 @@ test.describe.serial("every humaniq record shows who viewed or changed it", () =
 	/**
 	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
 	 */
+	// @e2e record-audit-history::the-newest-entries-read-as-sentences
 	test("the Audittrail section shows the newest entries as sentences @spec REQ-RAH-003", async ({ page }) => {
 		await page.goto("/index.php/settings/admin/humaniq", { waitUntil: "domcontentloaded" });
 		const section = page.getByTestId("humaniq-admin-audit-trail");
@@ -183,6 +186,7 @@ test.describe.serial("every humaniq record shows who viewed or changed it", () =
 	/**
 	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-full-trail-opens-filtered
 	 */
+	// @e2e record-audit-history::the-full-trail-opens-filtered
 	test("the full trail opens in OpenRegister filtered to the humaniq register @spec REQ-RAH-003", async ({ page }) => {
 		const register = await api.get(`${OR_API}/registers/${REGISTER}`);
 		expect(register.ok()).toBeTruthy();
