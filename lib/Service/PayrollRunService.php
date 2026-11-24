@@ -282,6 +282,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			'withholdings' => 0,
 			'net' => 0,
 			'reimbursements' => 0,
+			'pensionEmployee' => 0,
+			'pensionEmployer' => 0,
 		],
 	];
 
@@ -1187,6 +1189,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param array<string, mixed> $slip  The saved slip, with `payslipId`.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	private function tallySlip(array &$state, array $slip): void {
 		$result = $slip['result'];
@@ -1200,6 +1204,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$state['totals']['withholdings'] += ($result->loonheffingCents + $result->specialLoonheffingCents + $retro['loonheffing']);
 		$state['totals']['net'] += ($slip['nettoPaySoFarCents'] - $slip['loonbeslagDeductionCents']);
 		$state['totals']['reimbursements'] += $slip['expenseNetCents'];
+		$state['totals']['pensionEmployee'] += $result->pensionEmployeeCents;
+		$state['totals']['pensionEmployer'] += $result->pensionEmployerCents;
 	}//end tallySlip()
 
 	/**
@@ -1271,6 +1277,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param array<string, mixed> $state The run state after every employee.
 	 *
 	 * @return array<string, mixed>|null The failed outcome when the run cannot be saved.
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	private function saveRunTotals(array $state): ?array {
 		$runUpdate = array_merge(
@@ -1278,6 +1286,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			$this->euroTotals($state['totals']),
 			[
 				'totalReimbursements' => $this->euros($state['totals']['reimbursements']),
+				'totalPensionEmployee' => $this->euros($state['totals']['pensionEmployee']),
+				'totalPensionEmployer' => $this->euros($state['totals']['pensionEmployer']),
 				'engineVersion' => $state['pack']->engineVersion(),
 				'calculatedAt' => gmdate('Y-m-d\TH:i:s\Z'),
 			]
