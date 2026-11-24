@@ -24,10 +24,15 @@ draaien, loonpakket 2026 geladen."), then Annuleren, Terug and Inrichting afrond
 No step is required, so `GET /api/setup/status` keeps `completed: true` and the wizard never
 gates the app.
 
-### D2. No welcome step
+### D2. The welcome step and the example data offer stay first
 
-The board draws no welcome step. The orientation sentence of the old `welcome` step moves into
-the body of the Administraties step.
+The board draws no welcome step, but ADR-111 rule 4, enforced by hydra gate 100
+(`check_setup_demo_first.py`), requires every app's wizard to open with `welcome` and the example
+data offer as `steps[1]`. The ADR is the cross-app rule and the gate blocks every PR that breaks
+it, so humaniq keeps `welcome` (with the orientation sentence) and `demo-data` first, and the
+board's other steps follow in the board's order: `administrations`, `working-mode`, `language`,
+`templates`, `done`. Decided in the cloud builder lane on 24 Nov 2026 under the delegated
+product decisions; a change to ADR-111 would be needed to drop `welcome`.
 
 ### D3. Werkwijze values map to the existing mode enum
 

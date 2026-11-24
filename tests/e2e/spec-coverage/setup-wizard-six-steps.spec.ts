@@ -7,11 +7,11 @@
  * openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md
  *   Scenario: The administrator changes the language from the recap
  *
- * WRITTEN AHEAD OF THE FEATURE. The recap rows and their Wijzigen button come
- * from nextcloud-vue (tasks 1.1 and 1.3) and the six-step setup block from
- * tasks 2.1 to 2.5. Until those land this spec fails at the Taal step or at
- * the Wijzigen button. It is written from the scenario so the scenario has its
- * test the day the steps ship. Not run when written.
+ * WRITTEN AHEAD OF THE FEATURE, NOW SHIPPED. The recap rows and their Wijzigen
+ * button come from nextcloud-vue (tasks 1.1 and 1.3) and the setup block from
+ * tasks 2.1 to 2.5: welcome, demo-data, administrations, working-mode,
+ * language, templates and done. It runs in the nightly; it was not run in the
+ * cloud lane that wrote it.
  *
  * WHY A CLICK-THROUGH AND NOT THE API. SetupControllerTest already proves that
  * a stored `default_language` reads back. What only a browser shows is that the

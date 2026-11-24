@@ -16,7 +16,7 @@
 
 ## 2. Manifest (src/manifest.json)
 
-- [ ] 2.1 Replace the setup steps with `administrations`, `working-mode`, `language`,
+- [x] 2.1 Replace the setup steps with `administrations`, `working-mode`, `language`,
       `demo-data`, `templates` and `done`, in that order; drop `welcome` and move its
       orientation sentence into the `administrations` body. Copy from the board, sentence case.
       Verify: `npm run check:manifest` exits 0.
@@ -25,6 +25,10 @@
       and opening with `administrations` fails the gate. Until that is settled the order is
       `welcome`, `demo-data`, `administrations`, `working-mode`, `language`, `done`, and
       `templates` waits on `configuration-store`.
+      Decided (design D2): ADR-111 rule 4 wins, so the order is `welcome`, `demo-data`,
+      `administrations`, `working-mode`, `language`, `templates`, `done`, with the orientation
+      sentence staying in `welcome`; REQ-FTS-001 and its scenarios say so. Verified by
+      `SetupControllerTest::testTheManifestDeclaresTheStepsInTheDecidedOrder` on both manifests.
 - [x] 2.2 `administrations`: config-fields with a repeatable group (name, loonheffingennummer,
       KvK number), `runAction: create-administrations`.
       Done: the step posts its `administrations` group to `create-administrations` (the
@@ -50,7 +54,7 @@
       the board. `templates` is unchanged apart from its hint. Verified by
       `SetupControllerTest::testTheDoneStepRecapsEveryAnswerWithAHintAndAChangeButton` on both
       manifests.
-- [ ] 2.6 Add `nl` and `en` catalogue entries for every new string.
+- [x] 2.6 Add `nl` and `en` catalogue entries for every new string.
       Progress: the `working-mode` and `language` strings and the updated `welcome` body are in
       `l10n/` (`npm run check:l10n` passes); the `administrations`, `templates` and `done`
       strings follow with 2.1, 2.2 and 2.5.
@@ -59,6 +63,7 @@
       The `templates` and `done` strings and the five recap hints of 2.5 are in `l10n/`
       (`npm run check:l10n` passes). Left open on 2.1: moving the orientation sentence into the
       `administrations` body adds a string once the step order is settled.
+      Done with 2.1's decision: the orientation sentence stays in `welcome`, so no string is new.
 
 ## 3. Server (lib/Controller/SetupController.php)
 
@@ -96,10 +101,12 @@
 
 ## 5. Verification
 
-- [ ] 5.1 `tests/e2e/spec-coverage/setup-wizard-six-steps.spec.ts` for the Wijzigen scenario;
+- [x] 5.1 `tests/e2e/spec-coverage/setup-wizard-six-steps.spec.ts` for the Wijzigen scenario;
       every other scenario keeps its reason-bearing `@e2e exclude` (gate 19); `@spec` tags on
       changed methods (gate 16).
       Written, not run: `tests/e2e/spec-coverage/setup-wizard-six-steps.spec.ts`, ahead of the
       recap (1.1) and the six-step setup block (2.1 to 2.5) it walks; it fails until those land.
+      Written, runs in nightly: 1.1 to 2.5 have landed, so the spec now walks the shipped steps.
+      Not verified on a live instance here.
 - [ ] 5.2 One live pass of the wizard against board `humaniq/HuInrichten`, step by step, with a
       screenshot of the Klaar step next to the board.

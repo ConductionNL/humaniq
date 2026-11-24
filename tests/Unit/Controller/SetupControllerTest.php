@@ -583,6 +583,31 @@ class SetupControllerTest extends TestCase {
 	}
 
 	/**
+	 * The setup block declares welcome and the example data offer first
+	 * (ADR-111 rule 4), then the board's remaining steps in the board's
+	 * order, and no step is required, so the wizard never gates the app.
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-the-wizard-declares-the-six-drawn-steps
+	 *
+	 * @return void
+	 */
+	public function testTheManifestDeclaresTheStepsInTheDecidedOrder(): void {
+		foreach (['manifest.json', 'manifest.effective.json'] as $file) {
+			$manifest = json_decode((string)file_get_contents(__DIR__ . '/../../../src/' . $file), true);
+			$steps    = $manifest['setup']['steps'];
+
+			$this->assertSame(
+				['welcome', 'demo-data', 'administrations', 'working-mode', 'language', 'templates', 'done'],
+				array_column($steps, 'id'),
+				$file
+			);
+			foreach ($steps as $step) {
+				$this->assertNotTrue($step['required'] ?? false, $file.' '.$step['id']);
+			}
+		}
+	}
+
+	/**
 	 * Administraties reads not done until administrations were created or
 	 * the step was skipped; either answer closes it.
 	 *

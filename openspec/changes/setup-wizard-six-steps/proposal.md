@@ -12,8 +12,8 @@ Change `configuration-store` (humaniq #724, open) already adds the Sjablonen ste
 
 ## What changes
 
-- REQ-FTS-001 is modified: the wizard declares six steps in the board's order, and the separate
-  `welcome` step goes, because the board draws none.
+- REQ-FTS-001 is modified: the wizard declares the board's six steps behind `welcome` and the
+  example data offer, which ADR-111 rule 4 keeps first in every app (design D2).
 - The Administraties step creates the administrations the app starts with (REQ-FTS-008).
 - The Werkwijze step sets the mode of those administrations through the existing
   `hrAdministration.mode` (single-person-modes, REQ-SPM-001) (REQ-FTS-009).

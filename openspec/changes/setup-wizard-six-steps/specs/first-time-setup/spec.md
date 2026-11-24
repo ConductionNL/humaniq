@@ -10,10 +10,12 @@
 ### Requirement: humaniq SHALL declare a six-step setup wizard that never gates the app (REQ-FTS-001)
 
 `src/manifest.json` SHALL declare a `setup` block, version 1, with exactly these steps in this
-order, as drawn on board `humaniq/HuInrichten`: `administrations` (Administraties),
-`working-mode` (Werkwijze), `language` (Taal), `demo-data` (Voorbeelddata, a cards choice,
-options from the server's `datasets`), `templates` (Sjablonen, REQ-FTS-007) and `done` (Klaar,
-summary with a health check). The setup block SHALL NOT declare a separate `welcome` step. No
+order: `welcome` (Welkom, an info step with the orientation sentence), `demo-data`
+(Voorbeelddata, a cards choice, options from the server's `datasets`), `administrations`
+(Administraties), `working-mode` (Werkwijze), `language` (Taal), `templates` (Sjablonen,
+REQ-FTS-007) and `done` (Klaar, summary with a health check). These are the six steps drawn on
+board `humaniq/HuInrichten` behind the `welcome` step and the example data offer that ADR-111
+rule 4 (hydra gate 100) puts first in every app's wizard. No
 step SHALL be required, so `GET /api/setup/status` (`appinfo/routes.php:17`) SHALL report
 `completed: true` and the wizard SHALL never block access to the app. Each step SHALL read done
 once the administrator has answered or skipped it, and the status SHALL report exactly the ids of
@@ -25,14 +27,14 @@ Rows: `plt-setup-wizard` (humaniq matrix). Board: `humaniq/HuInrichten`.
 @e2e exclude manifest shape, covered by a unit test that reads src/manifest.json and compares the step ids and their order
 - **GIVEN** `src/manifest.json`
 - **WHEN** its `setup.steps` are read
-- **THEN** the ids are `administrations`, `working-mode`, `language`, `demo-data`, `templates`
-  and `done`, in that order, and no step carries `required: true`
+- **THEN** the ids are `welcome`, `demo-data`, `administrations`, `working-mode`, `language`,
+  `templates` and `done`, in that order, and no step carries `required: true`
 
 #### Scenario: The status names every step
 @e2e exclude endpoint shape, covered by SetupControllerTest
 - **GIVEN** a fresh install on which no step was answered
 - **WHEN** an administrator reads `/api/setup/status`
-- **THEN** the response carries `completed: true`, all six step ids, each step except `done`
+- **THEN** the response carries `completed: true`, every step id, each step except `welcome` and `done`
   reads not done, and `datasets` lists the cards to offer
 
 #### Scenario: The wizard offers the example data step
