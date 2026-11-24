@@ -44,7 +44,7 @@ citing this requirement as evidence that unscoped listing was intended.
   unscoped drop branch)
 
 #### Scenario: An administratie-scoped index page never sends its filter token unresolved
-@e2e exclude no e2e suite exists yet (tracked by humaniq-test-coverage-baseline); the defect this scenario guards is a pure filter-string-resolution bug with zero DOM/rendering involvement, so the `boot-integrity` capability's Node-level manifest-sentinel-resolution and bundle-freshness checks are the layer that actually catches it — see openspec/specs/boot-integrity/spec.md
+@e2e tests/e2e/spec-coverage/boot-integrity-drop-branch.spec.ts
 - **GIVEN** a session with no active administratie selected
 - **WHEN** `/employees` (or any other administratie-scoped index page) fetches its list
 - **THEN** the request sent to OpenRegister does not contain the literal string
