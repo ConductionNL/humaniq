@@ -1815,8 +1815,6 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			'wkrVrijeRuimteRemaining' => 0.0,
 			'wkrExcess' => 0.0,
 			'pensionContribution' => $this->euros($result->pensionEmployeeCents),
-			'pensionEmployer' => $this->euros($result->pensionEmployerCents),
-			'pensionBase' => $this->euros($result->pensionBaseCents),
 			'statementProvided' => true,
 			'showsGrossWage' => true,
 			'showsDeductionBasis' => true,
@@ -1836,6 +1834,13 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		if ($periodsPerYear !== 12) {
 			// The factor monthly figures were scaled by; absent on a monthly payslip.
 			$payload['tijdvakFactor'] = $periodsPerYear;
+		}
+
+		if (isset($slip['input']) === true && $slip['input']->pension->isEmpty() === false) {
+			// payroll-engine-port-from-shillinq D1: a participant's base and
+			// employer premium; absent otherwise, so that payslip stays as it was.
+			$payload['pensionBase'] = $this->euros($result->pensionBaseCents);
+			$payload['pensionEmployer'] = $this->euros($result->pensionEmployerCents);
 		}
 
 		if (isset($slip['week53']) === true) {
