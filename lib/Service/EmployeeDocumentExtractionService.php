@@ -97,7 +97,7 @@ class EmployeeDocumentExtractionService {
 
 		$documents = [];
 		foreach ($unread as $extraction) {
-			$saved = $this->readOne(extraction: $extraction, onboarding: $onboarding, userId: $userId);
+			$saved = $this->readOne(extraction: $extraction, by: ['userId' => $userId, 'employeeId' => trim((string)($onboarding['employeeId'] ?? $extraction['employeeId'] ?? ''))]);
 			$documents[] = ['id' => self::idOf(row: $saved), 'docType' => $saved['docType'] ?? '', 'status' => $saved['status'], 'message' => $saved['message'], 'appliedFields' => $saved['appliedFields']];
 		}
 
@@ -141,19 +141,18 @@ class EmployeeDocumentExtractionService {
 	 * Read one document and record the outcome; write the empty employee
 	 * fields it fills.
 	 *
-	 * @param array<string, mixed> $extraction The extraction record.
-	 * @param array<string, mixed> $onboarding The onboarding case.
-	 * @param string               $userId     Who asked.
+	 * @param array<string, mixed>                    $extraction The extraction record.
+	 * @param array{userId: string, employeeId: string} $by         Who asked, and the case's employee.
 	 *
 	 * @return array<string, mixed> The saved record.
 	 */
-	private function readOne(array $extraction, array $onboarding, string $userId): array {
-		$employeeId = trim((string)($onboarding['employeeId'] ?? $extraction['employeeId'] ?? ''));
+	private function readOne(array $extraction, array $by): array {
+		['userId' => $userId, 'employeeId' => $employeeId] = $by;
 		$outcome = $this->extract(extraction: $extraction, userId: $userId);
 		$record = ['status' => $outcome['status'], 'message' => $outcome['message'], 'extractedFields' => $outcome['fields'], 'appliedFields' => [], 'notAppliedFields' => []];
 
 		if ($outcome['status'] === 'extracted' && $employeeId !== '') {
-			$record = array_merge($record, $this->fillEmployee(employeeId: $employeeId, docType: (string)($extraction['docType'] ?? ''), fields: $outcome['fields']));
+			$record = array_merge($record, $this->fillEmployee(employeeId: $employeeId, read: ['docType' => (string)($extraction['docType'] ?? ''), 'fields' => $outcome['fields']]));
 		}
 
 		$saved = array_merge($extraction, $record, ['employeeId' => ($employeeId === '' ? null : $employeeId), 'readAt' => gmdate('Y-m-d\TH:i:s\Z'), 'readBy' => $userId]);
@@ -200,15 +199,15 @@ class EmployeeDocumentExtractionService {
 	 * field (a save replaces the whole object); a field HR filled is listed
 	 * as read but not applied.
 	 *
-	 * @param string               $employeeId The employee.
-	 * @param string               $docType    The document type.
-	 * @param array<string, mixed> $fields     filinq's values.
+	 * @param string                                             $employeeId The employee.
+	 * @param array{docType: string, fields: array<string, mixed>} $read       The document type and filinq's values.
 	 *
 	 * @return array{appliedFields: list<string>, notAppliedFields: list<string>}
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) PersonPart::elfproef is the pure BSN check the wage tax return uses.
 	 */
-	private function fillEmployee(string $employeeId, string $docType, array $fields): array {
+	private function fillEmployee(string $employeeId, array $read): array {
+		['docType' => $docType, 'fields' => $fields] = $read;
 		$employee = $this->store->findObjectData($employeeId, 'Employee');
 		if ($employee === null) {
 			return ['appliedFields' => [], 'notAppliedFields' => []];
