@@ -31,8 +31,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-006
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-006
  */
 
 declare(strict_types=1);
@@ -60,7 +60,7 @@ use RuntimeException;
  *     is real: the vendored test stub mirrors it method-for-method and the
  *     unit suite compiles against it.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
 abstract class PayrollFlowNodeBase implements ICallFlowNode {
 
@@ -142,7 +142,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @return string The icon URL.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	public function getIcon(): string {
 		return $this->urls->imagePath('humaniq', 'app-dark.svg');
@@ -157,7 +157,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @return bool Whether the node is offered in this scope.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	public function isAvailableForScope(int $scope): bool {
 		return in_array($scope, [IManager::SCOPE_ADMIN, IManager::SCOPE_USER], true);
@@ -175,7 +175,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $config is part of the
 	 *     IFlowNode::validateConfig() contract; the base accepts every config.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	public function validateConfig(array $config): void {
 
@@ -192,7 +192,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @return string The rendered value.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	protected function render(string $value, array $json): string {
 		$rendered = preg_replace_callback(
@@ -228,7 +228,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @throws RuntimeException When no run id resolves or no run matches it.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
 	 */
 	protected function requireRun(array $config, array $json): array {
 		$runId = $this->render((string)($config['runId'] ?? '{{ payroll.runId }}'), $json);
@@ -276,7 +276,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	protected function idOf(array $row): string {
 		return (string)($row['id'] ?? $row['@self']['id'] ?? '');
@@ -295,7 +295,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @return array<string, mixed> The item with the outcome merged in.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	protected function withOutcome(array $item, string $key, array $outcome): array {
 		$json = (array)($item['json'] ?? []);
@@ -314,7 +314,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @return array<int, array<string, mixed>> The items, each carrying its outcome.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	protected function stampEachItem(FlowNodeCall $call, Closure $step): array {
 		$out = [];
@@ -337,7 +337,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @throws RuntimeException When an item's run cannot be resolved.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	protected function stampEachRun(FlowNodeCall $call, Closure $step): array {
 		$config = $call->config;
@@ -362,7 +362,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @throws RuntimeException When the status is not accepted.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	protected function requireStatus(array $outcome, ExpectedStatus $expected): array {
 		$status = (string)($outcome['status'] ?? '');
@@ -382,7 +382,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	 *
 	 * @throws RuntimeException When OpenRegister is not installed.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	protected function objectService(): mixed {
 		if ($this->settingsService->isOpenRegisterAvailable() === false) {
@@ -397,7 +397,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	/**
 	 * @return string The configured humaniq register slug.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	protected function register(): string {
 		return $this->settingsService->getRegisterSlug();

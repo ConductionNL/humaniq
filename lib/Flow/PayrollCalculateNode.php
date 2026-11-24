@@ -29,7 +29,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use UnexpectedValueException;
  *     is real: the vendored test stub mirrors it method-for-method and the
  *     unit suite compiles against it.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
  */
 class PayrollCalculateNode extends PayrollFlowNodeBase {
 
@@ -68,7 +68,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 * @param LoggerInterface $logger Logger.
 	 * @param PayrollRunServiceInterface $payrollRunService The existing draft-run generator, reused as-is.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function __construct(
 		PayrollFlowNodeServices $services,
@@ -84,7 +84,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The id.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function getId(): string {
 		return 'humaniq.payroll-calculate';
@@ -95,7 +95,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The display name.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function getDisplayName(): string {
 		return $this->l10n->t('Calculate payroll run');
@@ -106,7 +106,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The description.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function getDescription(): string {
 		return $this->l10n->t('Create or recalculate the draft payroll run and its payslips for a wage period.');
@@ -123,7 +123,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 *
 	 * @throws UnexpectedValueException When a literal `period` is malformed.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function validateConfig(array $config): void {
 		$period = trim((string)($config['period'] ?? ''));
@@ -150,7 +150,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 *
 	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function execute(FlowNodeCall $call): array {
 		$config = $call->config;
@@ -178,7 +178,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 *
 	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	private function calculateFor(array $json, array $config): array {
 		$period = $this->render((string)($config['period'] ?? ''), $json);

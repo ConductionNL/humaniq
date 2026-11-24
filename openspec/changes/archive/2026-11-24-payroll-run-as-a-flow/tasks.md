@@ -67,11 +67,12 @@
 - [x] 6.5 Record the rig's flow-PUT-ignores-`owner` observation as an OR follow-up question
       (design.md D9), not a humaniq fix.
 
-## 7. Staged follow-ups (deliberately unchecked — design.md D7)
+## 7. Staged follow-ups (moved out — design.md D7)
 
-- [ ] 7.1 Pay-date wait: land a pay-date field on the administration surface, then an
-      `openregister.wait` (or run-scoped FlowTimer) between approve and glpost.
-- [ ] 7.2 Schedule adoption recipe on the admin/docs surface (`openregister.trigger-schedule`
-      + explicit `runAs`), plus oversight registration if the scheduled flow qualifies.
-- [ ] 7.3 Once adopted flows carry approval everywhere, guard the raw `status` edit so the
-      recorded decision is the only approver.
+The three staged follow-ups (pay-date wait, schedule adoption, the flow as the only approver)
+moved on 2026-11-24 to their own change, `payroll-run-pay-date-and-schedule`, so this change
+could be archived with what it shipped.
+
+- [x] 7.1 Moved to `payroll-run-pay-date-and-schedule` 1.1.
+- [x] 7.2 Moved to `payroll-run-pay-date-and-schedule` 2.1.
+- [x] 7.3 Moved to `payroll-run-pay-date-and-schedule` 3.1.

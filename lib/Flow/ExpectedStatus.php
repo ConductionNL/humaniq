@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
  */
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ namespace OCA\Humaniq\Flow;
 /**
  * Accepted statuses plus the refusal's opening words.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
  */
 final class ExpectedStatus {
 
@@ -38,7 +38,7 @@ final class ExpectedStatus {
 	 * @param array<int, string> $accepted The statuses the step carries on with.
 	 * @param string             $refusal  The refusal's opening words, before the status and the service message.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
 	 */
 	public function __construct(
 		public readonly array $accepted,

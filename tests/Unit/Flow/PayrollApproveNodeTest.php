@@ -16,7 +16,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use RuntimeException;
 /**
  * Tests for the approve node.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
  */
 class PayrollApproveNodeTest extends FlowNodeTestCase {
 

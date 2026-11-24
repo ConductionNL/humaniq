@@ -29,7 +29,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ namespace OCA\Humaniq\Service;
  * Detects, rewrites and compares user-task outcome keypaths in a flow
  * graph's exit conditions.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 class FlowGraphKeypaths {
 
@@ -59,7 +59,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return array<int, string> The outcome keys, deduplicated.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function outcomeKeys(array $nodes): array {
 		$keys = [];
@@ -87,7 +87,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return bool True when the v1 defect is present.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function carriesUnprefixedOutcomePath(array $nodes, array $outcomeKeys): bool {
 		foreach ($this->conditionVarPaths($nodes) as $path) {
@@ -111,7 +111,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return array<int, mixed> The rewritten nodes.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function withJsonOutcomePaths(array $nodes, array $outcomeKeys): array {
 		return $this->rewriteVarPaths(
@@ -138,7 +138,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return array<int, mixed> The rewritten nodes.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function withV1OutcomePaths(array $nodes, array $outcomeKeys): array {
 		return $this->rewriteVarPaths(
@@ -164,7 +164,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return array<int, string> The keypaths, in document order.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function conditionVarPaths(array $nodes): array {
 		$paths = [];
@@ -194,7 +194,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return bool Whether they carry the same structure and values.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function sameStructure(array $left, array $right): bool {
 		return json_encode($this->normalised($left)) === json_encode($this->normalised($right));
@@ -209,7 +209,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function collectVarPaths(mixed $logic, array &$paths): void {
 		if (is_array($logic) === false) {
@@ -238,7 +238,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return array<int, mixed> The rewritten nodes.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function rewriteVarPaths(array $nodes, callable $map): array {
 		foreach ($nodes as $nodeIndex => $node) {
@@ -267,7 +267,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return mixed The rewritten expression.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function rewriteLogicVars(mixed $logic, callable $map): mixed {
 		if (is_array($logic) === false) {
@@ -327,7 +327,7 @@ class FlowGraphKeypaths {
 	 *
 	 * @return mixed The normalised value.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function normalised(mixed $value): mixed {
 		if (is_array($value) === false) {

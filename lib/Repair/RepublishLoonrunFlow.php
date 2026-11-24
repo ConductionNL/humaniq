@@ -36,7 +36,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
  */
 
@@ -54,7 +54,7 @@ use Psr\Log\LoggerInterface;
  * Republishes the shipped Loonrun flow when its published gate still reads
  * the v1 keypath.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 class RepublishLoonrunFlow implements IRepairStep {
 
@@ -65,7 +65,7 @@ class RepublishLoonrunFlow implements IRepairStep {
 	 * @param LoggerInterface                    $logger        The logger.
 	 * @param ShippedFlowPublisherInterface|null $publisher     Publishes the other shipped flows; skipped when null.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function __construct(
 		private readonly LoonrunFlowRepairServiceInterface $repairService,
@@ -80,7 +80,7 @@ class RepublishLoonrunFlow implements IRepairStep {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function getName(): string {
 		return 'Republish the shipped humaniq flows, so Loonrun approvals stop taking the rejected exit and new flows get published';
@@ -94,7 +94,7 @@ class RepublishLoonrunFlow implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function run(IOutput $output): void {
 		try {

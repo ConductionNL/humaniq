@@ -22,8 +22,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-005
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-006
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-005
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-006
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use RuntimeException;
  * Tests pinning the shipped flow JSON to the contributed node ids and the
  * engine's graph rules.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-005
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-005
  */
 class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 
@@ -282,7 +282,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function testGateConditionRoutesOnlyAnApprovedReviewDownTheApprovedExit(): void {
 		$outcomeKey = $this->declaredOutcomeKey();
@@ -311,7 +311,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function testOutcomeConditionsReadTheRecordKeypath(): void {
 		$outcomeKeys = [];
@@ -352,7 +352,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return string The key the engine parks the outcome bag under.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function declaredOutcomeKey(): string {
 		foreach (($this->declaration()['nodes'] ?? []) as $node) {
@@ -372,7 +372,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return array<string, mixed> The JSONLogic expression.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function approvedExitCondition(): array {
 		foreach (($this->declaration()['nodes'] ?? []) as $node) {
@@ -394,7 +394,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return array<int, string> The keypaths.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function conditionVarPaths(): array {
 		$paths = [];
@@ -415,7 +415,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function collectVarPaths(mixed $logic, array &$paths): void {
 		if (is_array($logic) === false) {
@@ -450,7 +450,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return array<string, mixed> The engine-shaped item.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function engineShapedItem(string $outcomeKey, string $outcome): array {
 		return [
@@ -484,7 +484,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return array<string, mixed> The data document.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function conditionData(array $item): array {
 		return [
@@ -509,7 +509,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return mixed The evaluation result.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function evaluateCondition(mixed $logic, array $data): mixed {
 		if (is_array($logic) === false) {
@@ -545,7 +545,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 	 *
 	 * @return mixed The value, or null.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function lookupPath(string $path, array $data): mixed {
 		$value = $data;

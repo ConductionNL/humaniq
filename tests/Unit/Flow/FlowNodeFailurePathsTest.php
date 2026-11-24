@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
  */
 
 declare(strict_types=1);

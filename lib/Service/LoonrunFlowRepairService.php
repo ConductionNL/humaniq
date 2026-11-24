@@ -48,7 +48,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 
 declare(strict_types=1);
@@ -64,7 +64,7 @@ use RuntimeException;
  * Republishes the shipped Loonrun flow when its published gate still reads
  * the v1 keypath, leaving modified graphs and open drafts alone.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 
@@ -97,7 +97,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 * @param FlowGraphKeypaths $keypaths The graph arithmetic.
 	 * @param LoggerInterface $logger The logger.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function __construct(
 		private readonly OpenRegisterAvailability $openRegister,
@@ -113,7 +113,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return array{status: string, detail: string} What happened, for the repair output.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function repair(): array {
 		if ($this->openRegister->isAvailable() === false) {
@@ -137,7 +137,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return array{status: string, detail: string}
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function repairFlow(object $flow): array {
 		$published = $this->publishedGraph((string)$flow->getUuid());
@@ -168,7 +168,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return array{status: string, detail: string}|null
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function reasonToLeave(object $flow, array $published): ?array {
 		$publishedNodes = (array)($published['nodes'] ?? []);
@@ -199,7 +199,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return object|null The flow entity, or null when never imported.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function shippedFlow(): ?object {
 		$mapper = $this->container->get('OCA\OpenRegister\Db\FlowMapper');
@@ -223,7 +223,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The published graph document.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function publishedGraph(string $flowUuid): ?array {
 		$graph = $this->container->get('OCA\OpenRegister\Service\Flow\FlowPublishedGraph')
@@ -249,7 +249,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return bool True when nodes and edges equal the v1 import exactly.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function matchesShippedV1(array $published): bool {
 		$declaration = $this->shippedDeclaration();
@@ -270,7 +270,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The declaration, or null when unreadable.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function shippedDeclaration(): ?array {
 		$path = (__DIR__ . '/../Settings/register.d/hr-objects.json');
@@ -295,7 +295,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The declaration, or null when absent.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private static function loonrunIn(mixed $flows): ?array {
 		if (is_array($flows) === false) {
@@ -326,7 +326,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 *
 	 * @throws RuntimeException When the head still routes approvals wrongly after the rewrite.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	private function republish(object $flow): void {
 		$versions = $this->container->get('OCA\OpenRegister\Service\Flow\FlowVersionService');

@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use Psr\Log\NullLogger;
 /**
  * Every answer of the repair, and the calls it makes when it republishes.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 class LoonrunFlowRepairOutcomesTest extends TestCase {
 

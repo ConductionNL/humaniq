@@ -27,7 +27,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use PHPUnit\Framework\TestCase;
  * Pins the v1-keypath detection, the two rewrites and the structural
  * equality against the real shipped declaration.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
  */
 class LoonrunFlowRepairServiceTest extends TestCase {
 
@@ -80,7 +80,7 @@ class LoonrunFlowRepairServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function testShippedNodesAreCleanAndTheirV1VariantIsBroken(): void {
 		$nodes = $this->shippedNodes();
@@ -108,7 +108,7 @@ class LoonrunFlowRepairServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function testRewritesRoundTripAndTouchOnlyTheOutcomePaths(): void {
 		$nodes = $this->shippedNodes();
@@ -133,7 +133,7 @@ class LoonrunFlowRepairServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function testUnrelatedKeypathsAreLeftAlone(): void {
 		$nodes = [
@@ -168,7 +168,7 @@ class LoonrunFlowRepairServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function testSameStructureIgnoresKeyOrderAndCatchesEdits(): void {
 		$nodes = $this->shippedNodes();

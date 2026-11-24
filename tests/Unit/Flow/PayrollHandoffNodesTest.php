@@ -16,7 +16,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use RuntimeException;
 /**
  * Tests for the shillinq handoff adapters.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
  */
 class PayrollHandoffNodesTest extends FlowNodeTestCase {
 

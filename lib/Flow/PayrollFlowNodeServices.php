@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use OCP\IL10N;
 /**
  * The shared collaborators of {@see PayrollFlowNodeBase}.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
 final class PayrollFlowNodeServices {
 
