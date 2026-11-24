@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ namespace OCA\Humaniq\Service\Setup;
 /**
  * The Sjablonen step and the Klaar step's health check.
  *
- * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
  */
 final class SetupStepServices {
 	/**
@@ -36,7 +36,7 @@ final class SetupStepServices {
 	 * @param SetupHealthCheck $healthCheck The Klaar step's health check.
 	 * @param SetupTemplates   $templates   The Sjablonen step.
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	public function __construct(
 		public readonly SetupHealthCheck $healthCheck,

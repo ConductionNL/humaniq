@@ -6,7 +6,7 @@
  *
  * SCENARIOS COVERED
  * -----------------
- * openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md
+ * openspec/specs/record-audit-history/spec.md
  *   Scenario: Opening an employee leaves a read entry
  *   Scenario: A changed IBAN shows in the history
  *   Scenario: The newest entries read as sentences
@@ -121,7 +121,7 @@ test.describe.serial("every humaniq record shows who viewed or changed it", () =
 	});
 
 	/**
-	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-opening-an-employee-leaves-a-read-entry
+	 * @spec openspec/specs/record-audit-history/spec.md#scenario-opening-an-employee-leaves-a-read-entry
 	 */
 	// @e2e record-audit-history::opening-an-employee-leaves-a-read-entry
 	test("opening an employee leaves a read entry naming the adviser @spec REQ-RAH-001", async ({ browser }) => {
@@ -138,7 +138,7 @@ test.describe.serial("every humaniq record shows who viewed or changed it", () =
 	});
 
 	/**
-	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-a-changed-iban-shows-in-the-history
+	 * @spec openspec/specs/record-audit-history/spec.md#scenario-a-changed-iban-shows-in-the-history
 	 */
 	// @e2e record-audit-history::a-changed-iban-shows-in-the-history
 	test("a changed IBAN shows in the record's history @spec REQ-RAH-002", async ({ page }) => {
@@ -165,7 +165,7 @@ test.describe.serial("every humaniq record shows who viewed or changed it", () =
 	});
 
 	/**
-	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
+	 * @spec openspec/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
 	 */
 	// @e2e record-audit-history::the-newest-entries-read-as-sentences
 	test("the Audittrail section shows the newest entries as sentences @spec REQ-RAH-003", async ({ page }) => {
@@ -184,7 +184,7 @@ test.describe.serial("every humaniq record shows who viewed or changed it", () =
 	});
 
 	/**
-	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-full-trail-opens-filtered
+	 * @spec openspec/specs/record-audit-history/spec.md#scenario-the-full-trail-opens-filtered
 	 */
 	// @e2e record-audit-history::the-full-trail-opens-filtered
 	test("the full trail opens in OpenRegister filtered to the humaniq register @spec REQ-RAH-003", async ({ page }) => {

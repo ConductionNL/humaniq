@@ -4,7 +4,7 @@
 /**
  * Exporting a humaniq list (reporting-full-list-export 3.1).
  *
- * openspec/changes/reporting-full-list-export/specs/hr-list-export/spec.md
+ * openspec/specs/hr-list-export/spec.md
  *   Scenario: HR exports all active employees
  *   Scenario: A self-service list exports only the user's own rows
  *   Scenario: The sick leave list has no export

@@ -26,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+ * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use DateTimeImmutable;
 /**
  * Spreads leave and sickness over days.
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+ * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
  */
 class AbsenceDays {
 
@@ -64,7 +64,7 @@ class AbsenceDays {
 	 *
 	 * @return array<string, float>
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function contracted(EmployeeWorkingTime $time, array $range): array {
 		$hours = [];
@@ -83,7 +83,7 @@ class AbsenceDays {
 	 *
 	 * @return AbsenceWindow
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function window(EmployeeWorkingTime $time, array $range): AbsenceWindow {
 		return new AbsenceWindow(time: $time, range: $range, contract: $this->contracted(time: $time, range: $range));
@@ -97,7 +97,7 @@ class AbsenceDays {
 	 *
 	 * @return array<string, float> Hours by ISO date, only working days inside the range.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function leave(array $request, AbsenceWindow $window): array {
 		$range = $window->range;
@@ -129,7 +129,7 @@ class AbsenceDays {
 	 *
 	 * @return array<string, float> Hours by ISO date.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function sickness(array $sickCase, AbsenceWindow $window): array {
 		$range = $window->range;
@@ -163,7 +163,7 @@ class AbsenceDays {
 	 *
 	 * @return list<DateTimeImmutable>
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function days(DateTimeImmutable $from, DateTimeImmutable $to): array {
 		$days = [];

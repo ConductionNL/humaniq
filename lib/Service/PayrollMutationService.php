@@ -261,7 +261,7 @@ class PayrollMutationService implements PayrollMutationServiceInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.5
 	 */
 	private function withCauses(array $report, array $runIds): array {
 		$changed = array_filter((array)($report['lines'] ?? []), static fn (array $line): bool => ($line['classification'] ?? '') === 'changed');
@@ -288,7 +288,7 @@ class PayrollMutationService implements PayrollMutationServiceInterface {
 	 *
 	 * @return array<string, array<int, array<string, mixed>>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.5
 	 */
 	private function payslipLinesBySlip(): array {
 		$linesBySlip = [];
@@ -306,7 +306,7 @@ class PayrollMutationService implements PayrollMutationServiceInterface {
 	 *
 	 * @return array<string, string>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function payslipIdsByEmployee(string $runId): array {
 		$out = [];

@@ -145,7 +145,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function testHoursPerKindAddUpWithTheBookedHours(): void {
 		$aggregates = $this->service->computeAggregates(
@@ -170,7 +170,7 @@ class TimesheetAggregationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function testRecomputeStoresTheAbsenceHoursAndKinds(): void {
 		$this->store->seed('Timesheet', 'ts-1', ['employeeId' => 'employee-jansen', 'period' => '2026-05', 'status' => 'draft']);

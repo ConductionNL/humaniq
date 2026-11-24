@@ -272,7 +272,7 @@ class TimeEntryStampListenerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+	 * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
 	 */
 	public function testABookingOnAnAbsenceActivityIsRefused(): void {
 		$event = new ObjectCreatingEvent($this->entryEntity([
@@ -294,7 +294,7 @@ class TimeEntryStampListenerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+	 * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
 	 */
 	public function testABookingOnANonProjectActivityIsAccepted(): void {
 		$event = new ObjectCreatingEvent($this->entryEntity([

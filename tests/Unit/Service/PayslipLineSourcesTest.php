@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The sources read from a folded slip.
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-each-calculated-payslip-shall-carry-one-line-per-component-with-its-source-req-pml-001
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-each-calculated-payslip-shall-carry-one-line-per-component-with-its-source-req-pml-001
  */
 final class PayslipLineSourcesTest extends TestCase {
 

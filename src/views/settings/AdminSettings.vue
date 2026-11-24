@@ -324,7 +324,7 @@ export default defineComponent({
 		 * Read the Audittrail section's entries and links.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
+		 * @spec openspec/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
 		 */
 		async loadAuditTrail() {
 			const urls = auditUrls(generateUrl, loadState('humaniq', 'registerSlug', 'humaniq'))
@@ -454,7 +454,7 @@ export default defineComponent({
 		 *
 		 * @param {object} entry The entry.
 		 * @return {string}
-		 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
+		 * @spec openspec/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
 		 */
 		auditLine(entry) {
 			return auditSentence(entry, (text, vars) => t('humaniq', text, vars), new Date())

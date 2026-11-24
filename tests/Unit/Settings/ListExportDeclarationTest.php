@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/reporting-full-list-export/specs/hr-list-export/spec.md
+ * @spec openspec/specs/hr-list-export/spec.md
  */
 
 declare(strict_types=1);

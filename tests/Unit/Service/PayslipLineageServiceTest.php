@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use RuntimeException;
 /**
  * The salary source rule and the line replacement.
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-the-salary-line-shall-name-the-raise-or-the-edit-that-set-the-salary-req-pml-002
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-the-salary-line-shall-name-the-raise-or-the-edit-that-set-the-salary-req-pml-002
  */
 final class PayslipLineageServiceTest extends TestCase {
 

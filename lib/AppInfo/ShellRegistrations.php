@@ -18,7 +18,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\Server;
 /**
  * Registers the head link and the store controller binding.
  *
- * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
  */
 final class ShellRegistrations {
 
@@ -52,7 +52,7 @@ final class ShellRegistrations {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
 	 */
 	public function register(IRegistrationContext $context): void {
 		// self-service-mobile (design.md D1): link the web manifest from the
@@ -78,7 +78,7 @@ final class ShellRegistrations {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) Server::get, OC_App::registerAutoloading and Bootstrap::aliasStoreController are the published one-call contracts for this binding.
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
 	 */
 	private function bindStoreController(IRegistrationContext $context): void {
 		try {

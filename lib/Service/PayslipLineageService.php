@@ -26,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Builds and replaces the source-carrying lines of a payslip.
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md
  */
 final class PayslipLineageService {
 
@@ -98,7 +98,7 @@ final class PayslipLineageService {
 	 * @param SettingsService    $settingsService The register slug and OpenRegister availability.
 	 * @param LoggerInterface    $logger          Logger.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -114,7 +114,7 @@ final class PayslipLineageService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.3
 	 */
 	public function beginRun(): void {
 		$this->auditCache = [];
@@ -132,7 +132,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array<string, mixed> A source: `component`, `amountCents`, `sourceSchema`, `sourceId`, `sourceKind`, and `audit` when already resolved.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-the-salary-line-shall-name-the-raise-or-the-edit-that-set-the-salary-req-pml-002
+	 * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-the-salary-line-shall-name-the-raise-or-the-edit-that-set-the-salary-req-pml-002
 	 */
 	public function salarySource(array $employee, int $salaryCents, string $calculatedAt): array {
 		$this->cutoff = $this->timestamp($calculatedAt);
@@ -163,7 +163,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array<int, array<string, mixed>> The lines written.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-each-calculated-payslip-shall-carry-one-line-per-component-with-its-source-req-pml-001
+	 * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-each-calculated-payslip-shall-carry-one-line-per-component-with-its-source-req-pml-001
 	 */
 	public function replaceLines(array $payslip, array $sources, string $calculatedAt): array {
 		$this->cutoff = $this->timestamp($calculatedAt);
@@ -191,7 +191,7 @@ final class PayslipLineageService {
 	 *
 	 * @return bool Whether it was saved.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function saveLine(array $line): bool {
 		try {
@@ -216,7 +216,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array<string, array<int, array<string, mixed>>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.5
 	 */
 	public function linesByPayslip(array $payslipIds): array {
 		$wanted = array_fill_keys(array_filter($payslipIds, static fn (string $id): bool => $id !== ''), true);
@@ -243,7 +243,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function line(array $payslip, array $source): array {
 		$sourceId = (string)($source['sourceId'] ?? '');
@@ -274,7 +274,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array{id: int|null, user: string|null, at: int|null}|null
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function auditOf(array $source, string $sourceId): ?array {
 		if (array_key_exists('audit', $source) === true) {
@@ -306,7 +306,7 @@ final class PayslipLineageService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function deleteLinesOf(string $payslipId): void {
 		foreach (($this->linesByPayslip([$payslipId])[$payslipId] ?? []) as $line) {
@@ -339,7 +339,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function appliedRaise(string $employeeId, int $salaryCents): ?array {
 		if ($employeeId === '') {
@@ -373,7 +373,7 @@ final class PayslipLineageService {
 	 *
 	 * @return integer|null
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function raiseAppliedAt(array $raise, string $employeeId): ?int {
 		$appliedAt = $this->timestamp($raise['appliedAt'] ?? null);
@@ -392,7 +392,7 @@ final class PayslipLineageService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function proposesSalary(array $raise, int $salaryCents): bool {
 		if (is_numeric($raise['proposedSalary'] ?? null) === false) {
@@ -424,7 +424,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array{id: int|null, user: string|null, at: int|null}|null
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function lastChange(string $uuid, ?string $field = null): ?array {
 		$best = null;
@@ -453,7 +453,7 @@ final class PayslipLineageService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function isLater(array $row, array $than): bool {
 		if ((int)($row['at'] ?? 0) !== (int)($than['at'] ?? 0)) {
@@ -471,7 +471,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array<int, array{id: int|null, user: string|null, at: int|null, changed: array<string, mixed>}>|null
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function auditRows(string $uuid): ?array {
 		if (array_key_exists($uuid, $this->auditCache) === true) {
@@ -498,7 +498,7 @@ final class PayslipLineageService {
 	 *
 	 * @return array{id: int|null, user: string|null, at: int|null, changed: array<string, mixed>}
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function auditRow(mixed $entry): array {
 		$data = $entry;
@@ -542,7 +542,7 @@ final class PayslipLineageService {
 	 *
 	 * @return int|null
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function timestamp(mixed $value): ?int {
 		if ($value instanceof DateTimeInterface) {
@@ -561,7 +561,7 @@ final class PayslipLineageService {
 	/**
 	 * @return string The configured humaniq register slug.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function register(): string {
 		return $this->settingsService->getRegisterSlug();

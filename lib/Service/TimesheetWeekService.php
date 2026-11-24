@@ -28,7 +28,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+ * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use DateTimeImmutable;
 /**
  * Composes a timesheet's week view and its totals per kind.
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+ * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
  */
 class TimesheetWeekService {
 
@@ -81,7 +81,7 @@ class TimesheetWeekService {
 	 *
 	 * @return array<string, mixed>|null The view, as {@see compose()} returns it.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function weekFor(string $timesheetId): ?array {
 		$timesheetId = trim($timesheetId);
@@ -108,7 +108,7 @@ class TimesheetWeekService {
 	 *
 	 * @return float The absence hours.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function absenceHoursFor(array $timesheet, array $entries): float {
 		$records = $this->absenceRecordsOf(employeeId: trim((string)($timesheet['employeeId'] ?? '')));
@@ -126,7 +126,7 @@ class TimesheetWeekService {
 	 *
 	 * @return array{period: string, from: string|null, to: string|null, patternOnly: bool, lines: list<array<string, mixed>>, weeks: list<array<string, mixed>>, totals: array<string, float>}
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function compose(array $timesheet, array $records): array {
 		$period = trim((string)($timesheet['period'] ?? ''));
@@ -172,7 +172,7 @@ class TimesheetWeekService {
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}|null
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public static function periodRange(string $period): ?array {
 		$parts = [];

@@ -20,7 +20,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/platform-integrations-catalogue/design.md
+ * @spec openspec/changes/archive/2026-11-24-platform-integrations-catalogue/design.md
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use Throwable;
 /**
  * Sends a connection report to integriq when integriq is installed.
  *
- * @spec openspec/changes/platform-integrations-catalogue/design.md
+ * @spec openspec/changes/archive/2026-11-24-platform-integrations-catalogue/design.md
  */
 class ConnectionReporter {
 
@@ -102,7 +102,7 @@ class ConnectionReporter {
 	 *
 	 * @return bool True when the report was sent.
 	 *
-	 * @spec openspec/changes/platform-integrations-catalogue/design.md
+	 * @spec openspec/changes/archive/2026-11-24-platform-integrations-catalogue/design.md
 	 */
 	public function report(string $key, string $status, string $message = ''): bool {
 		if ($this->isValid(key: $key, status: $status) === false) {

@@ -149,7 +149,7 @@ class SetupController extends Controller {
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-the-status-names-every-step
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-an-answered-step-stays-closed
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function status(): JSONResponse {
@@ -215,7 +215,7 @@ class SetupController extends Controller {
 	 *       additionally admit delegated settings admins.
 	 *
 	 * @spec exclude Setup action dispatch; ADR-042 contract, no per-app behavioural spec.
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	#[AuthorizedAdminSetting(HumaniqAdmin::class)]
 	public function runAction(string $actionId): JSONResponse {
@@ -392,7 +392,7 @@ class SetupController extends Controller {
 	 *
 	 * @return JSONResponse|null
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	private function templatesAction(string $actionId): ?JSONResponse {
 		if ($actionId === 'install-template') {

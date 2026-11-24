@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.4
  */
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * A correction may only name a line of its own original payslip.
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
  */
 final class PayrollAdjustmentLineGuardTest extends TestCase {
 

@@ -9,7 +9,7 @@
  * schemas are exportable, and My reports lists the saved views of exactly
  * those seven lists.
  *
- * @spec openspec/changes/reporting-standard-reports-and-builder/specs/hr-reports/spec.md
+ * @spec openspec/specs/hr-reports/spec.md
  */
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'

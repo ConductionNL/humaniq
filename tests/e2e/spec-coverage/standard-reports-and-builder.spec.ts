@@ -4,7 +4,7 @@
 /**
  * Ready-made reports and own reports (reporting-standard-reports-and-builder 3.1).
  *
- * openspec/changes/reporting-standard-reports-and-builder/specs/hr-reports/spec.md
+ * openspec/specs/hr-reports/spec.md
  *   Scenario: A controller opens the wage cost report
  *   Scenario: HR sees whose leave expires
  *   Scenario: HR builds a report of contracts ending this quarter

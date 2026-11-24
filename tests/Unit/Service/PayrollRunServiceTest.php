@@ -334,7 +334,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.1
 	 */
 	public function testTwoCorrectionsAreOneTotalAndTwoLines(): void {
 		$adjustment = ['employeeId' => 'emp-1', 'originalPeriod' => '2026-01', 'status' => 'applied', 'settlementPeriod' => '2026-02', 'deltaLoonheffing' => 0.00];
@@ -380,7 +380,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.3
 	 */
 	public function testARecalculatedDraftKeepsOnlyItsCurrentLines(): void {
 		[$service, $fake] = $this->service(
@@ -470,7 +470,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-every-read-and-every-change-of-a-humaniq-record-shall-be-recorded-in-openregisters-audit-trail-req-rah-001
+	 * @spec openspec/specs/record-audit-history/spec.md#requirement-every-read-and-every-change-of-a-humaniq-record-shall-be-recorded-in-openregisters-audit-trail-req-rah-001
 	 */
 	public function testACalculationMakesNoSingleObjectReadsThatWouldBeAudited(): void {
 		[$service, $fake] = $this->service(
