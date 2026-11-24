@@ -724,6 +724,14 @@
 		"route": "/pension-schemes/:id"
 	},
 	{
+		"id": "PensionParticipations",
+		"route": "/pension-participations"
+	},
+	{
+		"id": "PensionParticipationDetail",
+		"route": "/pension-participations/:id"
+	},
+	{
 		"id": "ReviewCycles",
 		"route": "/review-cycles"
 	},

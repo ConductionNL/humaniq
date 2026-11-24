@@ -77,7 +77,7 @@ lower. `coversPeriod()` stays the gate for "in the run at all".
 both premiums on a pension payable account (a new setting `gl_account_pension_payable`). The
 credit to net wages drops by the employee premium, because net pay is lower.
 
-## Open choices (for Ruben; not decided here)
+## Choices (decided 24 Nov 2026 under the delegation of 22 Nov 2026)
 
 Each choice is named in the comparison, section "What I would port, in order".
 
@@ -93,6 +93,20 @@ parameters live (a table in the pack or a `PensionScheme` schema)".
 
 The specs below hold for both. The tasks name the files for each option.
 
+**Decided: the schema, and the one that already exists.** `filings-pension-upa-message` D1
+shipped `PensionScheme` in `hr-pension.json` (fund, scheme code, delivery format, franchise,
+maximum pensionable salary, employer and employee percentage, validity, source, verified),
+with index and detail pages under payroll, and `PensionBase` computes the base from it for
+the UPA delivery. The run reads the same record and the same arithmetic, so the premium a
+payslip withholds is the premium the fund is told about. A second scheme record or a pack
+table would give two answers. Consequences: a participation names the **fund**, not a
+per-year scheme code; the run takes the administration's scheme of that fund valid on the
+last day of the period (the `PensionMessageService` lookup); the base is `PensionBase`'s:
+`max(0, min(wage, cap) - franchise x partTimeFactor)`, per month, with the wage times the
+participation factor. For a full-time employee with factor 1 that is D1's formula; for a
+part-timer the franchise follows the part-time factor, as funds compute it. No fund rates
+are shipped as fact: the seeded schemes stay `verified: false`.
+
 ### O2. Calendar days or working days
 
 The comparison: "after you decide the method (calendar or working days)".
@@ -102,11 +116,20 @@ The comparison: "after you decide the method (calendar or working days)".
 - **Working days**: days employed on which the employee's `WorkingPattern` has hours, over
   all such days in the period. Fairer for part-timers; depends on the pattern being kept.
 
+**Decided: calendar days.** The spec's scenario is written for it, the result does not move
+when a working pattern is edited after the run, and a missing pattern cannot zero a salary.
+A working-day method can come later as an administration setting without changing the
+payslip field.
+
 ### O3. `sectorcode` on `hrAdministration`
 
 The comparison: "port `sectorcode` if the Whk or sector premium needs it (it does for the
 sector fund)". Without it, humaniq computes the Whk premium from the administration's own
 percentage (`getPayrollWhkPercentage`). With it, a sector table can set the sector fund part.
+
+**Decided: no.** The Whk percentage an employer pays is set per employer in the
+Belastingdienst's beschikking, which the administration already holds; a sector table
+would be a second source for the same figure. Task 4.1 is not built.
 If Ruben says no, tasks section 4 is dropped.
 
 ## Risks

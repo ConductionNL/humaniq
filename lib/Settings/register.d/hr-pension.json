@@ -317,6 +317,112 @@
                         "x-notes": "The {value, source, verified} discipline of the tables: unverified figures are advisory."
                     }
                 }
+            },
+            "PensionParticipation": {
+                "slug": "PensionParticipation",
+                "authorization": {
+                    "read": [
+                        "humaniq-hr",
+                        "humaniq-payroll",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "userId": "$userId"
+                            }
+                        }
+                    ],
+                    "create": [
+                        "humaniq-hr",
+                        "humaniq-payroll"
+                    ],
+                    "update": [
+                        "humaniq-hr",
+                        "humaniq-payroll"
+                    ],
+                    "delete": [
+                        "humaniq-hr",
+                        "humaniq-payroll"
+                    ]
+                },
+                "icon": "AccountCash",
+                "version": "0.1.0",
+                "title": "Pension participation",
+                "description": "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.",
+                "type": "object",
+                "x-schema-org": "schema:Role",
+                "required": [
+                    "employeeId",
+                    "fund",
+                    "startDate"
+                ],
+                "configuration": {
+                    "exportable": true
+                },
+                "x-notes": "payroll-engine-port-from-shillinq D2, REQ-PPP-002. The run uses the participation in force on the last day of the period and the administration's PensionScheme of the same fund valid on that day (the scheme lookup of PensionMessageService). PensionParticipationOverlapListener refuses a write that would give one employee two participations on the same day, naming the stored one.",
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "$ref": "Employee",
+                        "title": "Employee",
+                        "description": "The employee who takes part in the scheme."
+                    },
+                    "userId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Account",
+                        "description": "The employee's own account, so they can read their own participation."
+                    },
+                    "fund": {
+                        "type": "string",
+                        "title": "Fund",
+                        "description": "The pension fund whose scheme the employee takes part in.",
+                        "x-enum-labels": {
+                            "abp": "ABP",
+                            "spw": "SPW",
+                            "bpf-bouw": "BPF Bouw",
+                            "schoonmaak": "Schoonmaak",
+                            "pfab": "PFAB",
+                            "pwri": "PWRI"
+                        },
+                        "enum": [
+                            "abp",
+                            "spw",
+                            "bpf-bouw",
+                            "schoonmaak",
+                            "pfab",
+                            "pwri"
+                        ]
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Start date",
+                        "description": "The first day the employee takes part."
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "title": "End date",
+                        "description": "The last day the employee takes part. Empty while it runs on."
+                    },
+                    "participationFactor": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "default": 1,
+                        "title": "Participation factor",
+                        "description": "The part of the pensionable salary the employee builds pension on, between 0 and 1. Usually 1."
+                    },
+                    "administrationId": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Administration",
+                        "description": "The payroll administration this participation belongs to.",
+                        "x-notes": "Denormalized administratie key, a plain nullable string and NOT a $ref (ADR-062 rule 7)."
+                    }
+                }
             }
         }
     }

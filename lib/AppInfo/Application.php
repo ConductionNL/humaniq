@@ -87,6 +87,7 @@ use OCA\Humaniq\Listener\PayrollRunApprovedListener;
 use OCA\Humaniq\Listener\CaoComponentOverrideListener;
 use OCA\Humaniq\Listener\CostAllocationGuardListener;
 use OCA\Humaniq\Listener\PayrollRunFindingStampListener;
+use OCA\Humaniq\Listener\PensionParticipationOverlapListener;
 use OCA\Humaniq\Listener\RecurringAllowanceStampListener;
 use OCA\Humaniq\Listener\RelationsCaseListener;
 use OCA\Humaniq\Listener\AnnouncementConfirmationListener;
@@ -655,6 +656,19 @@ class Application extends App implements IBootstrap {
 				listener: WorkingPatternOverlapListener::class,
 				registers: null,
 				schemas: [WorkingPatternOverlapListener::WORKINGPATTERN_SLUG]
+			);
+		}
+
+		// payroll-engine-port-from-shillinq REQ-PPP-002: refuse a
+		// PensionParticipation whose dates overlap one the same employee
+		// already has, so the run never picks a scheme by query order.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$this->registerFilteredObjectListener(
+				dispatcher: $dispatcher,
+				event: $event,
+				listener: PensionParticipationOverlapListener::class,
+				registers: null,
+				schemas: [PensionParticipationOverlapListener::PENSIONPARTICIPATION_SLUG]
 			);
 		}
 

@@ -737,6 +737,31 @@
             {
                 "@self": {
                     "register": "humaniq",
+                    "schema": "PensionParticipation",
+                    "slug": "pensionparticipation-jansen-pfab"
+                },
+                "employeeId": "@ref:employee-jansen",
+                "fund": "pfab",
+                "startDate": "2026-01-01",
+                "participationFactor": 1,
+                "administrationId": "ADM-001"
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
+                    "schema": "PensionParticipation",
+                    "slug": "pensionparticipation-devries-pfab"
+                },
+                "employeeId": "@ref:employee-devries",
+                "fund": "pfab",
+                "startDate": "2026-05-01",
+                "participationFactor": 1,
+                "administrationId": "ADM-001",
+                "_note": "payroll-engine-port-from-shillinq REQ-PPP-002: starts on 1 May, so the May run computes the premiums and the April run does not."
+            },
+            {
+                "@self": {
+                    "register": "humaniq",
                     "schema": "LeaveRequest",
                     "slug": "leave-devries-onbetaald"
                 },
