@@ -66,6 +66,8 @@ final class NlPerformanceChecks implements CheckProvider, ProvidesTables {
 	 * Empty: the one check this provider owns is table-declared (see tables()).
 	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
