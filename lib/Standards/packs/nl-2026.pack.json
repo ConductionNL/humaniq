@@ -2,7 +2,7 @@
   "id": "nl-2026",
   "jurisdiction": "NL",
   "taxYear": 2026,
-  "packVersion": "1.2.0",
+  "packVersion": "1.3.0",
   "dslVersion": "1.0",
   "tables": "nl-2026",
   "currency": "EUR",
@@ -89,6 +89,18 @@
     "rvuFinalLevyRate": {
       "type": "percent",
       "default": 0
+    },
+    "pensionBase": {
+      "type": "cents",
+      "default": 0
+    },
+    "pensionEmployeePct": {
+      "type": "percent",
+      "default": 0
+    },
+    "pensionEmployerPct": {
+      "type": "percent",
+      "default": 0
     }
   },
   "bindings": [
@@ -133,6 +145,28 @@
       "using": {
         "op": "expr",
         "expression": "max(0, @binding.tvl - @binding.thirtyPercentExemption)"
+      }
+    },
+    {
+      "id": "pensionEmployee",
+      "_note": "payroll-engine-port-from-shillinq D1: the employee pension premium, the scheme's employee percentage of the pension base. The run computes the base with PensionBase, the same base the UPA filing reports, and passes it; without a participation both are 0. A binding, because it lowers the wage the tax and premium chain reads.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "@input.pensionBase * @input.pensionEmployeePct / 100"
+      },
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "heffingsLoon",
+      "_note": "payroll-engine-port-from-shillinq D1: the wage the wage tax and the premiums are levied on, the taxable wage less the employee pension premium, which is deducted before wage tax and premiums. The holiday-allowance and end-of-year reserves keep reading belastbaarLoon: they accrue on the salary, not on the wage after pension.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "max(0, @binding.belastbaarLoon - @binding.pensionEmployee)"
       }
     },
     {
@@ -219,7 +253,7 @@
       "op": "derive",
       "using": {
         "op": "expr",
-        "expression": "@binding.belastbaarLoon * @binding.tijdvakFactor"
+        "expression": "@binding.heffingsLoon * @binding.tijdvakFactor"
       }
     },
     {
@@ -370,7 +404,7 @@
       "op": "derive",
       "using": {
         "op": "expr",
-        "expression": "@binding.belastbaarLoon + max(0, @input.specialPayment)"
+        "expression": "@binding.heffingsLoon + max(0, @input.specialPayment)"
       }
     },
     {
@@ -691,6 +725,31 @@
       }
     },
     {
+      "id": "pensioengrondslag",
+      "_note": "payroll-engine-port-from-shillinq D1: the pension base the premiums were taken of, shown on the payslip. Informative.",
+      "op": "expr",
+      "incidence": "informative",
+      "expression": "max(0, @input.pensionBase)"
+    },
+    {
+      "id": "pensionEmployee",
+      "_note": "payroll-engine-port-from-shillinq D1 (REQ-PPP-001): the employee pension premium. REDUCES-NET; it already lowered heffingsLoon, so the wage tax and the premiums are taken after it.",
+      "op": "expr",
+      "incidence": "reduces-net",
+      "expression": "@binding.pensionEmployee"
+    },
+    {
+      "id": "pensionEmployer",
+      "_note": "payroll-engine-port-from-shillinq D1 (REQ-PPP-001): the employer pension premium, the scheme's employer percentage of the same base. EMPLOYER-COST.",
+      "op": "expr",
+      "incidence": "employer-cost",
+      "expression": "@input.pensionBase * @input.pensionEmployerPct / 100",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
       "id": "werknemersverzekeringen",
       "_note": "An informative roll-up of the four employer premium lines. It must NOT declare employer-cost: its components already did, and the interpreter's fold would double-count it.",
       "op": "expr",
@@ -801,7 +860,10 @@
           "@step.loonheffingBijzonder": 0,
           "@net": 261317
         }
-      }
+      },
+      {"_note": "payroll-engine-port-from-shillinq REQ-PPP-001, a full-time participant: 4,000 a month, franchise 18,000 a year (1,500 a month), so a pension base of 2,500.00; 7.5% employee premium 187.50 and 15% employer premium 375.00. The employee premium lowers the wage the tax and premiums are taken of, so net drops by 187.50 less the tax and nothing else changes in the reserves.", "period": "2026-04", "input": {"gross": 400000, "dateOfBirth": "1990-04-12", "pensionBase": 250000, "pensionEmployeePct": 7.5, "pensionEmployerPct": 15}, "expected": {"@gross": 400000, "@step.pensioengrondslag": 250000, "@step.pensionEmployee": 18750, "@step.pensionEmployer": 37500, "@step.loonheffing": 72550, "@step.vakantiegeld": 32000, "@net": 308700, "@employerCharges": 97012}},
+      {"_note": "payroll-engine-port-from-shillinq REQ-PPP-001, a salary below the franchise: 1,200 a month is less than 1,500, so PensionBase gives a base of 0 and both premiums are 0.00.", "period": "2026-04", "input": {"gross": 120000, "dateOfBirth": "1990-04-12", "pensionBase": 0, "pensionEmployeePct": 7.5, "pensionEmployerPct": 15}, "expected": {"@step.pensionEmployee": 0, "@step.pensionEmployer": 0, "@net": 117667}},
+      {"_note": "payroll-engine-port-from-shillinq REQ-PPP-001, no participation: the same 4,000 without pension inputs pays what it paid before the pension steps existed.", "period": "2026-04", "input": {"gross": 400000, "dateOfBirth": "1990-04-12"}, "expected": {"@step.pensionEmployee": 0, "@step.pensionEmployer": 0, "@step.loonheffing": 81867, "@net": 318133, "@employerCharges": 62440}}
     ]
   }
 }

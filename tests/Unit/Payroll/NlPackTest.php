@@ -94,14 +94,18 @@ class NlPackTest extends TestCase {
 
 		// The twelve fixtures, the four four-weekly and weekly inline vectors
 		// (payroll-period-edge-cases 2.2), then the three inline special-rate
-		// and end-of-year vectors (payroll-reservation-payouts).
-		$this->assertCount(19, $vectors);
+		// and end-of-year vectors (payroll-reservation-payouts), then the three
+		// pension premium vectors (payroll-engine-port-from-shillinq REQ-PPP-001).
+		$this->assertCount(22, $vectors);
 		$this->assertCount(12, $fixtures);
 		$this->assertSame(['2026-P05', '2026-W20', '2026-P05', '2026-W20'], array_column(array_slice($vectors, 12, 4), 'period'));
-		$special = array_slice($vectors, 16);
+		$special = array_slice($vectors, 16, 3);
 		$this->assertCount(3, $special);
 		$this->assertSame(184115, $special[0]['expected']['@step.loonheffingBijzonder']);
 		$this->assertSame(24990, $special[2]['expected']['@step.eindejaarsuitkering']);
+		$pension = array_slice($vectors, 19);
+		$this->assertSame([18750, 0, 0], array_map(static fn (array $vector): int => $vector['expected']['@step.pensionEmployee'], $pension));
+		$this->assertSame(37500, $pension[0]['expected']['@step.pensionEmployer']);
 		$this->assertSame(
 			[
 				'payroll-2026/anchor.json',
@@ -141,7 +145,8 @@ class NlPackTest extends TestCase {
 	 * REQ-JP-003: no pack declares a net step — net is the interpreter's fold.
 	 * NL's `reduces-net` steps are loonheffing, on a special payment
 	 * loonheffingBijzonder, and the withheld Zvw contribution, which runs
-	 * only in `inhouding` mode (payroll-special-regimes D3), which is exactly
+	 * only in `inhouding` mode (payroll-special-regimes D3), and the employee
+	 * pension premium (payroll-engine-port-from-shillinq D1), which is exactly
 	 * why the fold reproduces `tvl + specialPayment - loonheffing -
 	 * loonheffingBijzonder` without the interpreter knowing anything about
 	 * the Netherlands.
@@ -157,7 +162,7 @@ class NlPackTest extends TestCase {
 			}
 		}
 
-		$this->assertSame(['loonheffing', 'loonheffingBijzonder', 'zvwInhouding'], $reducers);
+		$this->assertSame(['loonheffing', 'loonheffingBijzonder', 'zvwInhouding', 'pensionEmployee'], $reducers);
 
 	}//end testLoonheffingIsTheOnlyStepThatReducesNet()
 
@@ -208,7 +213,7 @@ class NlPackTest extends TestCase {
 
 		$this->assertSame('NL', $pack->jurisdiction());
 		$this->assertSame(2026, $pack->taxYear());
-		$this->assertSame('nl-2026@1.2.0', $pack->engineVersion());
+		$this->assertSame('nl-2026@1.3.0', $pack->engineVersion());
 		$this->assertTrue($pack->isBundled());
 
 	}//end testThePackIsResolvedByItsDeclaredJurisdictionAndTaxYear()

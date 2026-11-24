@@ -543,7 +543,7 @@ class PayrollRunServiceTest extends TestCase {
 		// PACK that computed the run, `{packId}@{packVersion}`, rather than the
 		// bare tables id. Strictly more information — it names the chain as well
 		// as the parameter set. Every cents-exact total above is unchanged.
-		$this->assertSame('nl-2026@1.2.0', $final['engineVersion']);
+		$this->assertSame('nl-2026@1.3.0', $final['engineVersion']);
 		$this->assertNotSame('', trim((string)$final['calculatedAt']));
 		$this->assertArrayNotHasKey('glExpensePosted', $final);
 
