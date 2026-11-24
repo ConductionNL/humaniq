@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use RuntimeException;
  *     is real: the vendored test stub mirrors it method-for-method and the
  *     unit suite compiles against it.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
  */
 class PayrollGlPostNode extends PayrollFlowNodeBase {
 
@@ -61,7 +61,7 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	 * @param LoggerInterface $logger Logger.
 	 * @param PayrollGLPostServiceInterface $glPostService The existing GL handoff service, reused as-is.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function __construct(
 		PayrollFlowNodeServices $services,
@@ -77,7 +77,7 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The id.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function getId(): string {
 		return 'humaniq.payroll-glpost';
@@ -88,7 +88,7 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The display name.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function getDisplayName(): string {
 		return $this->l10n->t('Post payroll run to ledger');
@@ -99,7 +99,7 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The description.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function getDescription(): string {
 		return $this->l10n->t('Post the approved payroll run as a balanced journal entry in the bookkeeping app.');
@@ -114,7 +114,7 @@ class PayrollGlPostNode extends PayrollFlowNodeBase {
 	 *
 	 * @throws RuntimeException When the service reports `failed`.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-004
 	 */
 	public function execute(FlowNodeCall $call): array {
 		return $this->stampEachRun(

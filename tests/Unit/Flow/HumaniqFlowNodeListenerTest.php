@@ -16,7 +16,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use RuntimeException;
 /**
  * Tests for the node registration listener.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
 class HumaniqFlowNodeListenerTest extends FlowNodeTestCase {
 

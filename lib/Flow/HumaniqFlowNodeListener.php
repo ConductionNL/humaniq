@@ -29,7 +29,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
 
 declare(strict_types=1);
@@ -57,7 +57,7 @@ use Throwable;
  *     ::class literals as mixed and rejects the narrowing. The declared type
  *     is the contract this list must satisfy and is kept deliberately.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
  */
 class HumaniqFlowNodeListener implements IEventListener {
 
@@ -86,7 +86,7 @@ class HumaniqFlowNodeListener implements IEventListener {
 	 * @param ContainerInterface $container Resolves each node.
 	 * @param LoggerInterface $logger The logger.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -102,7 +102,7 @@ class HumaniqFlowNodeListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof RegisterFlowNodesEvent === false) {
@@ -132,7 +132,7 @@ class HumaniqFlowNodeListener implements IEventListener {
 	 *
 	 * @return array<int, class-string>
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-001
 	 */
 	public static function nodeClasses(): array {
 		return self::NODES;

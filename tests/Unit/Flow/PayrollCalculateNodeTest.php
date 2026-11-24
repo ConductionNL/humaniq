@@ -16,7 +16,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use UnexpectedValueException;
 /**
  * Tests for the calculate adapter.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
  */
 class PayrollCalculateNodeTest extends FlowNodeTestCase {
 

@@ -42,7 +42,7 @@ interface LoonrunFlowRepairServiceInterface {
 	 *
 	 * @return array{status: string, detail: string} What happened, for the repair output.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function repair(): array;
 }//end interface

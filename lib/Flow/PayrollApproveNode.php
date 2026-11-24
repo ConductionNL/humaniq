@@ -33,8 +33,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-006
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-006
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ use RuntimeException;
  *     is real: the vendored test stub mirrors it method-for-method and the
  *     unit suite compiles against it.
  *
- * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+ * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
  */
 class PayrollApproveNode extends PayrollFlowNodeBase {
 
@@ -71,7 +71,7 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The id.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
 	 */
 	public function getId(): string {
 		return 'humaniq.payroll-approve';
@@ -82,7 +82,7 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The display name.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
 	 */
 	public function getDisplayName(): string {
 		return $this->l10n->t('Approve payroll run');
@@ -93,7 +93,7 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	 *
 	 * @return string The description.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
 	 */
 	public function getDescription(): string {
 		return $this->l10n->t('Set a reviewed draft payroll run to approved. Refuses runs in any other status.');
@@ -108,7 +108,7 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	 *
 	 * @throws RuntimeException When the run is missing, not draft, or the write fails.
 	 *
-	 * @spec openspec/changes/payroll-run-as-a-flow/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
 	 */
 	public function execute(FlowNodeCall $call): array {
 		$items = $call->items;
