@@ -24,10 +24,16 @@ draaien, loonpakket 2026 geladen."), then Annuleren, Terug and Inrichting afrond
 No step is required, so `GET /api/setup/status` keeps `completed: true` and the wizard never
 gates the app.
 
-### D2. No welcome step
+### D2. The welcome step stays, and the example data comes second
 
-The board draws no welcome step. The orientation sentence of the old `welcome` step moves into
-the body of the Administraties step.
+The board draws no welcome step, and this design first moved its orientation sentence into the
+Administraties step. Hydra ADR-111 rule 4, enforced by gate 100 on every fleet app, requires a
+setup wizard to open with `welcome` and then the example-data offer. A fleet rule outranks one
+board, so (decided 2026-11-24, cloud builder under the delegated-decision rule) `welcome` keeps
+the orientation sentence and stays first, `demo-data` second, and the board's steps follow in
+the board's order: `administrations`, `working-mode`, `language`, `templates`, `done`. The board
+should be redrawn to match; until then the pixel pass (task 5.2) reads the welcome and example
+data steps against the fleet pattern, not the board.
 
 ### D3. Werkwijze values map to the existing mode enum
 
