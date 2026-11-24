@@ -4,7 +4,7 @@
 /**
  * The Integrations page (platform-integrations-catalogue 3.1).
  *
- * openspec/changes/platform-integrations-catalogue/specs/humaniq-integrations/spec.md
+ * openspec/specs/humaniq-integrations/spec.md
  *   Scenario: HR sees which connections work
  *   Scenario: Linking a source from humaniq
  *   Scenario: No integriq, no page

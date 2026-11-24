@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Turns a folded slip into the sources of its payslip lines.
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md
  */
 final class PayslipLineSources {
 
@@ -43,7 +43,7 @@ final class PayslipLineSources {
 	 *
 	 * @return array<int, array<string, mixed>> Each `component`, `amountCents`, `sourceSchema`, `sourceId`, `sourceKind`.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-each-calculated-payslip-shall-carry-one-line-per-component-with-its-source-req-pml-001
+	 * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-each-calculated-payslip-shall-carry-one-line-per-component-with-its-source-req-pml-001
 	 */
 	public static function fromSlip(array $slip, ?array $salarySource): array {
 		$sources = [];
@@ -74,7 +74,7 @@ final class PayslipLineSources {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function hoursPay(array $slip, bool $salaried): array {
 		$totalCents = (int)($slip['hoursPay']['hourlyCents'] ?? 0);
@@ -104,7 +104,7 @@ final class PayslipLineSources {
 	 *
 	 * @return array<int, int> The cents per credit index.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function shareByHours(int $totalCents, array $credits): array {
 		$hours = array_sum(array_map(static fn (array $credit): float => (float)($credit['hours'] ?? 0.0), $credits));
@@ -131,7 +131,7 @@ final class PayslipLineSources {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function sickPay(array $slip): array {
 		$case   = ($slip['sickCase'] ?? null);
@@ -152,7 +152,7 @@ final class PayslipLineSources {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function bijtelling(array $slip): array {
 		$assignment = ($slip['assetAssignment'] ?? null);
@@ -170,7 +170,7 @@ final class PayslipLineSources {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function loonbeslag(array $slip): array {
 		$loonbeslag = ($slip['loonbeslag'] ?? null);
@@ -190,7 +190,7 @@ final class PayslipLineSources {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function each(array $entries, array $ref): array {
 		[$component, $schema, $kind] = $ref;
@@ -214,7 +214,7 @@ final class PayslipLineSources {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function source(int $cents, array $ref): array {
 		[$component, $schema, $id, $kind] = $ref;

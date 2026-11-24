@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+ * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Classifies time entries by the kinds of the known activities.
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+ * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
  */
 final class EntryKind {
 
@@ -51,7 +51,7 @@ final class EntryKind {
 	 *
 	 * @return string One of {@see TimeActivityCatalog::KINDS}.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+	 * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
 	 */
 	public function kindOf(array $entry): string {
 		$code = trim((string)($entry['activityCode'] ?? ''));

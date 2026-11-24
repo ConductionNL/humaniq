@@ -259,7 +259,7 @@ class PayrollMutationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-every-read-and-every-change-of-a-humaniq-record-shall-be-recorded-in-openregisters-audit-trail-req-rah-001
+	 * @spec openspec/specs/record-audit-history/spec.md#requirement-every-read-and-every-change-of-a-humaniq-record-shall-be-recorded-in-openregisters-audit-trail-req-rah-001
 	 */
 	public function testADiffMakesNoSingleObjectReadsThatWouldBeAudited(): void {
 		[$service, $fake] = $this->service(
@@ -289,7 +289,7 @@ class PayrollMutationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.5
 	 */
 	public function testAChangedEmployeeListsTheRaiseAsItsCause(): void {
 		[$service] = $this->service(

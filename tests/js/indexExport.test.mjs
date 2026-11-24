@@ -5,7 +5,7 @@
  * Every schema-bound humaniq list turns the full-list Export menu on; the
  * schema's own `configuration.exportable` then decides whether it shows.
  *
- * @spec openspec/changes/reporting-full-list-export/specs/hr-list-export/spec.md#requirement-every-humaniq-list-shall-offer-an-export-of-the-filtered-list-req-hle-001
+ * @spec openspec/specs/hr-list-export/spec.md#requirement-every-humaniq-list-shall-offer-an-export-of-the-filtered-list-req-hle-001
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'

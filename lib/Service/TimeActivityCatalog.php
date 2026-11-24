@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+ * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use OCA\Humaniq\Listener\HoursWriteRefusedException;
 /**
  * Reads the administered time activities and their kinds.
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+ * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
  */
 class TimeActivityCatalog {
 
@@ -83,7 +83,7 @@ class TimeActivityCatalog {
 	 *
 	 * @return array<string, string> Kind by activity code.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+	 * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
 	 */
 	public function kindsByCode(): array {
 		$kinds = [];
@@ -107,7 +107,7 @@ class TimeActivityCatalog {
 	 *
 	 * @return string|null The kind, or null.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+	 * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
 	 */
 	public function kindOf(string $code): ?string {
 		$code = trim($code);
@@ -133,7 +133,7 @@ class TimeActivityCatalog {
 	 *
 	 * @throws HoursWriteRefusedException When the activity is of kind absence.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
+	 * @spec openspec/specs/time-activities/spec.md#requirement-non-project-work-shall-be-bookable-as-an-activity-req-tac-001
 	 */
 	public function assertBookable(array $incoming): void {
 		if ($this->kindOf((string)($incoming['activityCode'] ?? '')) === self::KIND_ABSENCE) {

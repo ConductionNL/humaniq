@@ -6,7 +6,7 @@
  *
  * SCENARIOS COVERED
  * -----------------
- * openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md
+ * openspec/specs/payroll-mutation-lineage/spec.md
  *   Scenario: Two corrections are two lines
  *   Scenario: Recalculation replaces lines
  *   Scenario: A raise explains the salary

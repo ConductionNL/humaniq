@@ -7388,9 +7388,9 @@
     "loket": "https://loket.nl/functionaliteiten/rapportages/: build your own reports and exports on HR and salary data for analyses, controls or management reports."
    },
    "built": {
-    "requirement": "openspec/changes/reporting-standard-reports-and-builder/specs/hr-reports :: Users SHALL build, share and export their own reports (REQ-HRP-002)",
+    "requirement": "openspec/specs/hr-reports :: Users SHALL build, share and export their own reports (REQ-HRP-002)",
     "state": "specified",
-    "evidence": "Specified in openspec/changes/reporting-standard-reports-and-builder on 2026-09-27. Before: grep -rniF 'report.builder|custom-report' lib/ src/ openspec/specs openspec/changes: no hits outside archive",
+    "evidence": "Specified in openspec/changes/archive/2026-11-24-reporting-standard-reports-and-builder on 2026-09-27. Before: grep -rniF 'report.builder|custom-report' lib/ src/ openspec/specs openspec/changes: no hits outside archive",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq",
     "change": "reporting-standard-reports-and-builder"
@@ -7426,9 +7426,9 @@
     "loket": "https://loket.nl/functionaliteiten/rapportages/: ready-made reports on payroll processing, absence, mutations, dossiers and training."
    },
    "built": {
-    "requirement": "openspec/changes/reporting-standard-reports-and-builder/specs/hr-reports :: The Reports page SHALL offer payroll and leave reports ready-made (REQ-HRP-001)",
+    "requirement": "openspec/specs/hr-reports :: The Reports page SHALL offer payroll and leave reports ready-made (REQ-HRP-001)",
     "state": "specified",
-    "evidence": "Specified in openspec/changes/reporting-standard-reports-and-builder on 2026-09-27 for the missing half: payroll, wage-cost, turnover and leave-balance reports beside the three ready-made reports on the Reports page (matrix corrected from no and none: src/manifest.json:816, commit cc2d18ab). Before: Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:816 page Reports (type reports, commit cc2d18ab 2026-09-03) offers three ready-made reports, WorkforceReport /reports/workforce, AbsenceReport /reports/absence and PerformanceReport, as declarative dashboard pages over the register. Partial: no payroll, wage-cost or turnover report. Before: grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
+    "evidence": "Specified in openspec/changes/archive/2026-11-24-reporting-standard-reports-and-builder on 2026-09-27 for the missing half: payroll, wage-cost, turnover and leave-balance reports beside the three ready-made reports on the Reports page (matrix corrected from no and none: src/manifest.json:816, commit cc2d18ab). Before: Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:816 page Reports (type reports, commit cc2d18ab 2026-09-03) offers three ready-made reports, WorkforceReport /reports/workforce, AbsenceReport /reports/absence and PerformanceReport, as declarative dashboard pages over the register. Partial: no payroll, wage-cost or turnover report. Before: grep -rniF 'WorkforceReport|AbsenceReport|PerformanceReport' lib/ src/: no hits outside compiled manifest.json/manifest.effective.json (which contain no such schemas); no 'Reports' page anywhere in src/manifest.d",
     "reachedOn": "Reports /reports (footer menu, ReportsMenu)",
     "owner": "ConductionNL/humaniq",
     "change": "reporting-standard-reports-and-builder"
@@ -7463,7 +7463,7 @@
     "personio": "https://support.personio.de/hc/en-us/articles/115001324149-Overview-of-the-People-List: export the People List with extra columns; https://support.personio.de/hc/en-us/articles/15718133638685-Create-a-report: any report exports as Excel or CSV."
    },
    "built": {
-    "requirement": "openspec/changes/reporting-full-list-export/specs/hr-list-export :: Every humaniq list SHALL offer an export of the filtered list (REQ-HLE-001)",
+    "requirement": "openspec/specs/hr-list-export :: Every humaniq list SHALL offer an export of the filtered list (REQ-HLE-001)",
     "state": "specified",
     "evidence": "nextcloud-vue CnIndexPage.vue:1605 showMassExport defaults true (a mass action exporting only the fetched/selected rows as a blob download); its allowExport prop (native full-list CSV/Excel export via OpenRegister's export leaf, honouring the current filters) defaults false and additionally requires the schema flagged exportable:true; grep -rn 'allowExport|exportable' src/manifest.d lib/Settings/register.d src/manifest.json: no hits anywhere in humaniq. Specified in ConductionNL/nextcloud-vue openspec/changes/index-export-follows-the-page (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
     "reachedOn": "every index page (indexScaffold template), e.g. Timesheets /timesheets, mass-select rows then Export; the full filtered-list export is never enabled",
@@ -7849,8 +7849,8 @@
     "evidence": "src/manifest.d/hr-objects.json:14 sidebar.showMetadata:true on EmployeeDetail; the same 'Audit history is a sidebar tab' pattern is repeated in the design notes of essentially every detail page across src/manifest.d/*.json (OpenRegister's own audit-history sidebar feature)",
     "reachedOn": "every object detail page, 'Audit history' sidebar tab",
     "owner": "ConductionNL/humaniq",
-    "spec": "openspec/changes/record-history-on-every-detail-page",
-    "requirement": ["openspec/changes/record-history-on-every-detail-page/specs/record-audit-history :: Every read and every change of a humaniq record SHALL be recorded in OpenRegister's audit trail (REQ-RAH-001)", "openspec/changes/record-history-on-every-detail-page/specs/record-audit-history :: Every humaniq detail page SHALL show the record's history (REQ-RAH-002)", "openspec/changes/record-history-on-every-detail-page/specs/record-audit-history :: The admin settings SHALL show an Audittrail section across the humaniq register (REQ-RAH-003)"]
+    "spec": "openspec/changes/archive/2026-11-24-record-history-on-every-detail-page",
+    "requirement": ["openspec/specs/record-audit-history :: Every read and every change of a humaniq record SHALL be recorded in OpenRegister's audit trail (REQ-RAH-001)", "openspec/specs/record-audit-history :: Every humaniq detail page SHALL show the record's history (REQ-RAH-002)", "openspec/specs/record-audit-history :: The admin settings SHALL show an Audittrail section across the humaniq register (REQ-RAH-003)"]
    },
    "provider": "openregister",
    "providerHow": "read-from-code",
@@ -8248,9 +8248,9 @@
     "personio": "https://support.personio.de/hc/en-us/articles/24665026109853-Set-up-the-Loket-integration: connect Personio to a Loket administration with a dedicated API user and authorizations; https://support.personio.de/hc/en-us/articles/4404623630993-Generate-and-manage-API-credentials manages credentials for custom and marketplace integrations."
    },
    "built": {
-    "requirement": "openspec/changes/platform-integrations-catalogue/specs/humaniq-integrations :: humaniq SHALL declare its outside connections with an honest status (REQ-HIN-001)",
+    "requirement": "openspec/specs/humaniq-integrations :: humaniq SHALL declare its outside connections with an honest status (REQ-HIN-001)",
     "state": "specified",
-    "evidence": "Specified in openspec/changes/platform-integrations-catalogue on 2026-09-27 for the missing half: configuring a working connection through integriq; the catalogue of intent is built. Before: lib/Settings/register.d/hr-integrations.json:10 IntegrationAccount description: 'deliberately NOT an authorization mechanism ... The actual access grant lives entirely in OpenRegister's own RBAC configuration ... outside this schema and outside any humaniq file'; field grantedSchemas (line 23) 'does NOT grant or enforce access, it is purely a record of intent'; src/manifest.d/hr-integrations.json:8-9 index page IntegrationAccounts /configuratie/integraties",
+    "evidence": "Specified in openspec/changes/archive/2026-11-24-platform-integrations-catalogue on 2026-09-27 for the missing half: configuring a working connection through integriq; the catalogue of intent is built. Before: lib/Settings/register.d/hr-integrations.json:10 IntegrationAccount description: 'deliberately NOT an authorization mechanism ... The actual access grant lives entirely in OpenRegister's own RBAC configuration ... outside this schema and outside any humaniq file'; field grantedSchemas (line 23) 'does NOT grant or enforce access, it is purely a record of intent'; src/manifest.d/hr-integrations.json:8-9 index page IntegrationAccounts /configuratie/integraties",
     "reachedOn": "IntegrationAccounts /configuratie/integraties, IntegrationAccountDetail /configuratie/integraties/:id",
     "owner": "ConductionNL/humaniq",
     "change": "platform-integrations-catalogue"
@@ -8365,8 +8365,8 @@
     "evidence": "Matrix corrected 2026-09-27 in the openspec pass: src/manifest.json:388 page Store (type store, commit bf32851c 2026-09-04) adopts OpenRegister's store plane, which installs configuration sets other organisations publish (a leave policy, a job framework, onboarding flows); with no registry configured it shows the app's own items and makes no network call. Partial: no published HR configuration set exists yet to install. Before: grep -rn 'Store'|'template.store' src/manifest.d/*.json: no hits; no page or schema exists for installing a published, ready-made configuration such as a leave policy",
     "reachedOn": "Store /store (footer menu, StoreMenu)",
     "owner": "ConductionNL/humaniq",
-    "spec": "openspec/changes/configuration-store",
-    "requirement": ["openspec/changes/configuration-store/specs/first-time-setup :: The Store page SHALL install published configuration sets through OpenRegister (REQ-FTS-006)", "openspec/changes/configuration-store/specs/first-time-setup :: The setup wizard SHALL offer a Sjablonen step that installs chosen sets (REQ-FTS-007)"]
+    "spec": "openspec/changes/archive/2026-11-24-configuration-store",
+    "requirement": ["openspec/specs/first-time-setup :: The Store page SHALL install published configuration sets through OpenRegister (REQ-FTS-006)", "openspec/specs/first-time-setup :: The setup wizard SHALL offer a Sjablonen step that installs chosen sets (REQ-FTS-007)"]
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -8623,9 +8623,9 @@
     "loket": "https://developer.loket.nl/ApiDocs#tag/Marketplace: list all applications available to the employer and their authorizations; https://loket.nl/functionaliteiten/koppelingen/: over 100 linked applications; https://loket.nl/roadmap/ (Doorontwikkeling Marketplace)."
    },
    "built": {
-    "requirement": "openspec/changes/platform-integrations-catalogue/specs/humaniq-integrations :: An administrator SHALL add an integration from humaniq (REQ-HIN-002)",
+    "requirement": "openspec/specs/humaniq-integrations :: An administrator SHALL add an integration from humaniq (REQ-HIN-002)",
     "state": "specified",
-    "evidence": "Specified in openspec/changes/platform-integrations-catalogue on 2026-09-27. Before: grep -rliF marketplace lib src openspec: hits only in the rostering proposal's shift-swap 'marketplace' concept (an explicitly named non-goal, unrelated to third-party integrations) and the parity output file itself; no third-party integration marketplace exists",
+    "evidence": "Specified in openspec/changes/archive/2026-11-24-platform-integrations-catalogue on 2026-09-27. Before: grep -rliF marketplace lib src openspec: hits only in the rostering proposal's shift-swap 'marketplace' concept (an explicitly named non-goal, unrelated to third-party integrations) and the parity output file itself; no third-party integration marketplace exists",
     "reachedOn": "nothing reaches it",
     "owner": "ConductionNL/humaniq",
     "change": "platform-integrations-catalogue"
@@ -10498,9 +10498,9 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'payroll' src/plugins src/client/src: no match; salary components (src/plugins/orangehrmPimPlugin/Api/EmployeeSalaryComponentAPI.php) are edited in place with no recalculation lineage"
    },
    "built": {
-    "requirement": ["openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage :: Each calculated payslip SHALL carry one line per component with its source (REQ-PML-001)", "openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage :: The salary line SHALL name the raise or the edit that set the salary (REQ-PML-002)", "openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage :: Corrections and mutation reports SHALL point at payslip lines (REQ-PML-003)"],
+    "requirement": ["openspec/specs/payroll-mutation-lineage :: Each calculated payslip SHALL carry one line per component with its source (REQ-PML-001)", "openspec/specs/payroll-mutation-lineage :: The salary line SHALL name the raise or the edit that set the salary (REQ-PML-002)", "openspec/specs/payroll-mutation-lineage :: Corrections and mutation reports SHALL point at payslip lines (REQ-PML-003)"],
     "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-mutation-lineage on 2026-09-27 for the missing half: tracing a payslip line back to the input mutation that produced it. Before: pay-reproduce: a sealed payslip is recomputed from its stored inputs (lib/Service/PayrollReproduceService.php) and pay-mutation-report compares runs; the OpenRegister audit history records who changed each input; no per-mutation lineage from origin to payslip line",
+    "evidence": "Specified in openspec/changes/archive/2026-11-24-payroll-mutation-lineage on 2026-09-27 for the missing half: tracing a payslip line back to the input mutation that produced it. Before: pay-reproduce: a sealed payslip is recomputed from its stored inputs (lib/Service/PayrollReproduceService.php) and pay-mutation-report compares runs; the OpenRegister audit history records who changed each input; no per-mutation lineage from origin to payslip line",
     "reachedOn": "PayslipDetail /payslips/:id, PayrollMutationReportDetail /payroll-mutations/:id",
     "owner": "ConductionNL/humaniq",
     "change": "payroll-mutation-lineage"
@@ -10969,8 +10969,8 @@
     "owner": "ConductionNL/humaniq",
     "change": "time-non-project-activities",
     "requirement": [
-     "openspec/changes/time-non-project-activities/specs/time-activities :: Non-project work SHALL be bookable as an activity (REQ-TAC-001)",
-     "openspec/changes/time-non-project-activities/specs/time-activities :: Leave and sickness SHALL show on the weekly timesheet from their own records (REQ-TAC-002)"
+     "openspec/specs/time-activities :: Non-project work SHALL be bookable as an activity (REQ-TAC-001)",
+     "openspec/specs/time-activities :: Leave and sickness SHALL show on the weekly timesheet from their own records (REQ-TAC-002)"
     ]
    },
    "provider": "humaniq",

@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.5
  */
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * What differs between two payslips' lines.
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
  */
 final class PayslipLineCausesTest extends TestCase {
 

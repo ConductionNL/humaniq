@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
  */
 class PayrollAdjustmentLineGuard implements IEventListener {
 
@@ -52,7 +52,7 @@ class PayrollAdjustmentLineGuard implements IEventListener {
 	 * @param HoursRegisterGateway $gateway Reads the named payslip line and resolves schema slugs.
 	 * @param LoggerInterface      $logger  Logger.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -68,7 +68,7 @@ class PayrollAdjustmentLineGuard implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.4
 	 */
 	public function handle(Event $event): void {
 		$incoming = $this->incoming($event);
@@ -106,7 +106,7 @@ class PayrollAdjustmentLineGuard implements IEventListener {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.4
 	 */
 	public static function refusal(array $adjustment, ?array $line): ?string {
 		$lineId = trim((string)($adjustment['correctsPayslipLineId'] ?? ''));
@@ -134,7 +134,7 @@ class PayrollAdjustmentLineGuard implements IEventListener {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private function incoming(Event $event): ?array {
 		$entity = null;

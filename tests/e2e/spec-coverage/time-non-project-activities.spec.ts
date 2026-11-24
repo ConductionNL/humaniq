@@ -4,7 +4,7 @@
 /**
  * Booking time that is not for a project (time-non-project-activities 3.1).
  *
- * openspec/changes/time-non-project-activities/specs/time-activities/spec.md
+ * openspec/specs/time-activities/spec.md
  *   Scenario: An employee books a training afternoon
  *   Scenario: Leave cannot be booked twice
  *

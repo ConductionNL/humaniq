@@ -20,7 +20,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Lists, installs and records the configuration sets of the Sjablonen step.
  *
- * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
  */
 class SetupTemplates {
 
@@ -94,7 +94,7 @@ class SetupTemplates {
 	 *
 	 * @return array<int,array{id:string,name:string,description:string}>
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	public function choices(): array {
 		$choices = [[
@@ -128,7 +128,7 @@ class SetupTemplates {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
 	 */
 	public function isAnswered(): bool {
 		return $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, '') !== '';
@@ -139,7 +139,7 @@ class SetupTemplates {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
 	 */
 	public function skip(): void {
 		if ($this->installed() === []) {
@@ -154,7 +154,7 @@ class SetupTemplates {
 	 *
 	 * @return array{success:bool,message:string,status:int}
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
 	 */
 	public function install(mixed $slug): array {
 		if ($slug === self::NONE) {
@@ -192,7 +192,7 @@ class SetupTemplates {
 	 *
 	 * @return array<int,string>
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
 	 */
 	public function installed(): array {
 		$stored = json_decode($this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, ''), true);
@@ -210,7 +210,7 @@ class SetupTemplates {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
 	 */
 	private function record(string $slug): void {
 		$installed = $this->installed();
@@ -228,7 +228,7 @@ class SetupTemplates {
 	 *
 	 * @return array<string,mixed>|null
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	private function ask(callable $call): ?array {
 		$response = $this->respond(call: $call);
@@ -251,7 +251,7 @@ class SetupTemplates {
 	 *
 	 * @return JSONResponse|null
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	private function respond(callable $call): ?JSONResponse {
 		try {
@@ -280,7 +280,7 @@ class SetupTemplates {
 	 *
 	 * @return array<int,array<string,mixed>>
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	private static function listOf(mixed $value): array {
 		if (is_array($value) === false) {
@@ -297,7 +297,7 @@ class SetupTemplates {
 	 *
 	 * @return array{id:string,name:string,description:string}|null
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	private static function choiceOf(array $item): ?array {
 		$slug = $item['slug'] ?? null;

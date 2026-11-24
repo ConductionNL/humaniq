@@ -7,7 +7,7 @@
 // `sidebar.showMetadata: true` hides who viewed or changed the record, so
 // tests/validate-manifest.js fails on it, naming the page.
 //
-// @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-every-humaniq-detail-page-shall-show-the-records-history-req-rah-002
+// @spec openspec/specs/record-audit-history/spec.md#requirement-every-humaniq-detail-page-shall-show-the-records-history-req-rah-002
 
 "use strict";
 

@@ -6,7 +6,7 @@
  * OpenRegister's readable audit list, narrowed to the humaniq register, each
  * as one sentence. humaniq writes no audit entry itself (design D1).
  *
- * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
+ * @spec openspec/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
  */
 
 /**
@@ -35,7 +35,7 @@ const SENTENCES = {
  * @param {(path: string) => string} url Nextcloud's generateUrl.
  * @param {string} registerSlug The humaniq register's slug.
  * @return {{register: string, readable: string, page: string, export: string}}
- * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
+ * @spec openspec/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
  */
 export function auditUrls(url, registerSlug) {
 	return {
@@ -52,7 +52,7 @@ export function auditUrls(url, registerSlug) {
  * @param {{page: string, export: string}} urls From {@link auditUrls}.
  * @param {number|string} registerId The register's id.
  * @return {{full: string, download: string}}
- * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-full-trail-opens-filtered
+ * @spec openspec/specs/record-audit-history/spec.md#scenario-the-full-trail-opens-filtered
  */
 export function auditLinks(urls, registerId) {
 	const register = encodeURIComponent(String(registerId))
@@ -68,7 +68,7 @@ export function auditLinks(urls, registerId) {
  * @param {{get: (url: string, config?: object) => Promise<{data: object}>}} http An axios-like client.
  * @param {{register: string, readable: string}} urls From {@link auditUrls}.
  * @return {Promise<{registerId: number|string, entries: Array<object>}>}
- * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
+ * @spec openspec/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
  */
 export async function loadAuditEntries(http, urls) {
 	const register = await http.get(urls.register)
@@ -98,7 +98,7 @@ function pad(n) {
  * @param {string|null|undefined} created The entry's `created`.
  * @param {Date} now Now.
  * @return {string}
- * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
+ * @spec openspec/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
  */
 export function auditTime(created, now) {
 	const at = new Date(created ?? '')
@@ -121,7 +121,7 @@ export function auditTime(created, now) {
  * @param {(text: string, vars?: object) => string} translate Translates an English source string.
  * @param {Date} now Now.
  * @return {string}
- * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
+ * @spec openspec/specs/record-audit-history/spec.md#scenario-the-newest-entries-read-as-sentences
  */
 export function auditSentence(entry, translate, now) {
 	const person = String(entry.userName || entry.user || '') || translate('someone')

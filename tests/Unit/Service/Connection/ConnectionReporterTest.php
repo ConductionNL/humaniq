@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/platform-integrations-catalogue/design.md
+ * @spec openspec/changes/archive/2026-11-24-platform-integrations-catalogue/design.md
  */
 
 declare(strict_types=1);

@@ -13,7 +13,7 @@
  * The page's two formatters, `connectionStatus` and `connectionSettingsLabel`,
  * are built-ins of @conduction/nextcloud-vue, so this app carries no copy.
  *
- * @spec openspec/changes/platform-integrations-catalogue/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
+ * @spec openspec/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
  */
 
 import { generateUrl as ncGenerateUrl } from '@nextcloud/router'
@@ -29,7 +29,7 @@ export const INTEGRIQ_CONNECTIONS_PATH = '/apps/integriq/connections?app=humaniq
  *
  * @param {{generateUrl: function(string): string, assign: function(string): void}} deps Builds the instance URL and navigates to it.
  * @return {{openIntegriqConnections: function(): void}} The handler, keyed by its manifest name.
- * @spec openspec/changes/platform-integrations-catalogue/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
+ * @spec openspec/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
  */
 export function createConnectionHandlers({ generateUrl, assign }) {
 	return {
@@ -37,7 +37,7 @@ export function createConnectionHandlers({ generateUrl, assign }) {
 		 * Leave for integriq's Connections overview, preset and linking.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/platform-integrations-catalogue/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
+		 * @spec openspec/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
 		 */
 		openIntegriqConnections() {
 			assign(generateUrl(INTEGRIQ_CONNECTIONS_PATH))
@@ -50,7 +50,7 @@ export function createConnectionHandlers({ generateUrl, assign }) {
  * Nextcloud router and the browser location.
  *
  * @return {void}
- * @spec openspec/changes/platform-integrations-catalogue/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
+ * @spec openspec/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
  */
 export function openIntegriqConnections() {
 	createConnectionHandlers({

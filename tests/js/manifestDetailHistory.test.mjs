@@ -6,7 +6,7 @@
  * a `type: "detail"` page without `sidebar.showMetadata: true`, and the
  * shipped effective manifest has none.
  *
- * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-every-humaniq-detail-page-shall-show-the-records-history-req-rah-002
+ * @spec openspec/specs/record-audit-history/spec.md#requirement-every-humaniq-detail-page-shall-show-the-records-history-req-rah-002
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'

@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Compares two payslips' lines.
  *
- * @spec openspec/changes/payroll-mutation-lineage/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
+ * @spec openspec/specs/payroll-mutation-lineage/spec.md#requirement-corrections-and-mutation-reports-shall-point-at-payslip-lines-req-pml-003
  */
 final class PayslipLineCauses {
 
@@ -45,7 +45,7 @@ final class PayslipLineCauses {
 	 *
 	 * @return array<int, array<string, mixed>>|null Each `change`, `component`, `sourceSchema`, `sourceId`, `sourceKind`, `amountBefore`, `amountAfter`.
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.5
 	 */
 	public static function between(array $fromLines, array $toLines): ?array {
 		if ($fromLines === [] || $toLines === []) {
@@ -66,7 +66,7 @@ final class PayslipLineCauses {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function arrivals(array $from, array $to): array {
 		$causes = [];
@@ -93,7 +93,7 @@ final class PayslipLineCauses {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function departures(array $from, array $to): array {
 		$causes = [];
@@ -112,7 +112,7 @@ final class PayslipLineCauses {
 	 *
 	 * @return array<string, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function byKey(array $lines): array {
 		$out = [];
@@ -137,7 +137,7 @@ final class PayslipLineCauses {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function cause(array $line, array $delta): array {
 		return [
@@ -158,7 +158,7 @@ final class PayslipLineCauses {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/design.md
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/design.md
 	 */
 	private static function cents(mixed $euros): int {
 		return (int)round(((float)$euros) * 100);

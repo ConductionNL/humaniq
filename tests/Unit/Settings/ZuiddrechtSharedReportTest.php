@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/reporting-standard-reports-and-builder/tasks.md#2.3
+ * @spec openspec/changes/archive/2026-11-24-reporting-standard-reports-and-builder/tasks.md#2.3
  */
 
 declare(strict_types=1);

@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+ * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Serves the week view of a timesheet the caller may read.
  *
- * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+ * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
  */
 class TimesheetWeekController extends Controller {
 
@@ -75,7 +75,7 @@ class TimesheetWeekController extends Controller {
 	 * @return JSONResponse The view; 400 without an id, 401 without a session,
 	 *                      404 for a timesheet that is gone or not the caller's to read.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	#[NoAdminRequired]
 	public function week(?string $id = null): JSONResponse {

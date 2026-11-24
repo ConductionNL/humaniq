@@ -5,7 +5,7 @@
  * The admin page's Audittrail section: entries read as sentences, the list is
  * narrowed to the humaniq register, and the links carry the same filter.
  *
- * @spec openspec/changes/record-history-on-every-detail-page/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
+ * @spec openspec/specs/record-audit-history/spec.md#requirement-the-admin-settings-shall-show-an-audittrail-section-across-the-humaniq-register-req-rah-003
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'

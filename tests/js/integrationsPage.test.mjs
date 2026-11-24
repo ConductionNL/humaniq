@@ -12,7 +12,7 @@ import { JSDOM } from 'jsdom'
  * header action naming an unregistered handler, renders as nothing without an
  * error, which is why this is checked here.
  *
- * @spec openspec/changes/platform-integrations-catalogue/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
+ * @spec openspec/specs/humaniq-integrations/spec.md#requirement-an-administrator-shall-add-an-integration-from-humaniq-req-hin-002
  */
 import assert from 'node:assert/strict'
 import fs from 'node:fs'

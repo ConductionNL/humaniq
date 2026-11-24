@@ -5,7 +5,7 @@
  * Published configuration sets: the Marketplace page and the Sjablonen setup
  * step (configuration-store 2.1).
  *
- * openspec/changes/configuration-store/specs/first-time-setup/spec.md
+ * openspec/specs/first-time-setup/spec.md
  *   Scenario: An administrator installs a published leave policy
  *   Scenario: No registry means no outside call
  *   Scenario: Picked templates show in the summary

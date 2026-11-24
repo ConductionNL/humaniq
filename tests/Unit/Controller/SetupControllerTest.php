@@ -694,7 +694,7 @@ class SetupControllerTest extends TestCase {
 	/**
 	 * The status carries the Sjablonen cards and reads the step open until answered.
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
 	 *
 	 * @return void
 	 */
@@ -713,7 +713,7 @@ class SetupControllerTest extends TestCase {
 	/**
 	 * A skipped or installed step reads done, so the wizard does not reopen.
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
 	 *
 	 * @return void
 	 */
@@ -732,7 +732,7 @@ class SetupControllerTest extends TestCase {
 	/**
 	 * A card's Load button installs the posted set through the step.
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-picked-templates-show-in-the-summary
 	 *
 	 * @return void
 	 */
@@ -750,7 +750,7 @@ class SetupControllerTest extends TestCase {
 	/**
 	 * A refused install reaches the wizard as a failure with its status.
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 *
 	 * @return void
 	 */
@@ -768,7 +768,7 @@ class SetupControllerTest extends TestCase {
 	/**
 	 * Skipping the step is recorded as an answer.
 	 *
-	 * @spec openspec/changes/configuration-store/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
+	 * @spec openspec/specs/first-time-setup/spec.md#scenario-a-skipped-step-stays-closed
 	 *
 	 * @return void
 	 */

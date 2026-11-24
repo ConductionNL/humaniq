@@ -1052,7 +1052,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.3
 	 */
 	private function recordLineage(array $state, array $slip, array $saved): void {
 		if ($this->lineage === null) {
@@ -2744,7 +2744,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @return array<string, array{net: int, gross: int, loonheffing: int, employerCharges: int, sources: list<array{sourceId: string, cents: int}>}>
 	 *
 	 * @spec openspec/specs/retro-adjustments/spec.md#REQ-RETRO-004
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.1
 	 */
 	private function appliedRetroAdjustmentsByEmployeeId(string $period): array {
 		$out = [];
@@ -2841,7 +2841,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @return array<string, list<array{sourceId: string, cents: int}>>
 	 *
 	 * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-005
-	 * @spec openspec/changes/payroll-mutation-lineage/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-payroll-mutation-lineage/tasks.md#task-2.1
 	 */
 	private function settledLeaveTransactionSourcesByEmployeeId(string $period): array {
 		$out = [];

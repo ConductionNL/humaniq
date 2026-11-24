@@ -72,7 +72,7 @@ class TimesheetAggregationService implements TimesheetAggregationServiceInterfac
 	 * @param TimesheetWeekService|null $weekService The absence lines; without it
 	 *  absenceHours is left as stored.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -162,7 +162,7 @@ class TimesheetAggregationService implements TimesheetAggregationServiceInterfac
 	 *
 	 * @return array<string, mixed> hours, overtimeHours, entryCount, projectId, costCenter, billable, projectHours, nonProjectHours.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 * @spec openspec/specs/time-hours-and-overtime-to-payroll/spec.md#REQ-HTP-002
 	 * @spec openspec/changes/humaniq-hours-process-redesign/specs/time-entry-capture/spec.md#Requirement:-A-time-entry's-parent-timesheet-aggregates-its-entries-(REQ-TEC-004)
 	 */
@@ -213,7 +213,7 @@ class TimesheetAggregationService implements TimesheetAggregationServiceInterfac
 	 *
 	 * @return float The absence hours.
 	 *
-	 * @spec openspec/changes/time-non-project-activities/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
+	 * @spec openspec/specs/time-activities/spec.md#requirement-leave-and-sickness-shall-show-on-the-weekly-timesheet-from-their-own-records-req-tac-002
 	 */
 	private function absenceHoursOf(array $timesheet, array $entries): float {
 		try {
