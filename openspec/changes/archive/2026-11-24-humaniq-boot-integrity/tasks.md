@@ -117,9 +117,10 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
 - [x] 4.1 `specs/multi-administratie/spec.md` — REQ-MULTI-004 corrected in place: "Delivered"
   reframed as conditional on the `boot-integrity` guards passing, with the live-false measurement
   documented (done as part of this change's specs artifact)
-- [ ] 4.2 At archive time, add this change to `openspec/specs/multi-administratie/spec.md`'s
+- [x] 4.2 At archive time, add this change to `openspec/specs/multi-administratie/spec.md`'s
   `**OpenSpec changes**` list per the standard spec-maintenance step (tracked here so it is not
   missed; the multi-administratie main spec already exists, unlike `boot-integrity` — see Task 4.3)
+  Done at archive (2026-11-24): the entry in `openspec/specs/multi-administratie/spec.md` now links the archived change; REQ-MULTI-004 replaced by this change's MODIFIED block; `openspec/specs/boot-integrity/spec.md` created from the delta (3 of 3 requirements).
 - [x] 4.3 Do NOT pre-create `openspec/specs/boot-integrity/spec.md` before this change is applied
   and archived — this repo's own convention (verified: `absence-rate-partial-recovery` is active,
   landed, and unarchived, and its `absence-rate` capability has no main spec file yet) is that a
@@ -151,7 +152,8 @@ app was missing (ConductionNL/nextcloud-vue#704; fixed app-side in hrmq#111).
 
   Asserting only "the literal token is gone" is satisfied by all three outcomes, including the
   unscoped one. Assert the resolved value and the count.
-- [ ] 5.5b Then verify the drop branch separately, as its own case: with the session's active
+- [x] 5.5b Then verify the drop branch separately, as its own case: with the session's active
+      Written, runs in nightly: `tests/e2e/spec-coverage/boot-integrity-drop-branch.spec.ts` opens Employees as a freshly provisioned `humaniq-hr` user who never chose an administratie, asserts the request carries no `administrationId` key and no unresolved token, and that it answers every employee in the register (the count is the seed's today, not the 16 of 2026-08); it records that as the known unscoped exposure, not as a pass. Not run in the cloud sandbox.
   administratie cleared, the request carries NO `administrationId` key at all and returns
   `total: 16`. Record this as the known unscoped exposure (see the multi-administratie delta), not
   as a pass.
