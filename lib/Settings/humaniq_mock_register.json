@@ -10974,6 +10974,46 @@
               ]
             }
           },
+          "pensionBase": {
+            "title": "Pension base",
+            "type": "number",
+            "description": "The period's pension base: the pensionable wage times the participation factor, capped at the scheme's maximum, minus the franchise times the part-time factor (payroll-engine-port-from-shillinq D1). 0 without a participation.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
+          "pensionEmployer": {
+            "title": "Employer pension premium",
+            "type": "number",
+            "description": "Employer pension premium for the period, an employer charge (payroll-engine-port-from-shillinq D1). 0 without a participation.",
+            "authorization": {
+              "read": [
+                "humaniq-hr",
+                "humaniq-payroll",
+                {
+                  "group": "authenticated",
+                  "match": {
+                    "userId": "$userId"
+                  }
+                }
+              ],
+              "update": [
+                "humaniq-payroll"
+              ]
+            }
+          },
           "statementProvided": {
             "title": "Statement provided",
             "type": "boolean",

@@ -2,7 +2,7 @@
   "id": "nl-2026",
   "jurisdiction": "NL",
   "taxYear": 2026,
-  "packVersion": "1.2.0",
+  "packVersion": "1.3.0",
   "dslVersion": "1.0",
   "tables": "nl-2026",
   "currency": "EUR",
@@ -89,6 +89,18 @@
     "rvuFinalLevyRate": {
       "type": "percent",
       "default": 0
+    },
+    "pensionBase": {
+      "type": "cents",
+      "default": 0
+    },
+    "pensionEmployeePercentage": {
+      "type": "percent",
+      "default": 0
+    },
+    "pensionEmployerPercentage": {
+      "type": "percent",
+      "default": 0
     }
   },
   "bindings": [
@@ -127,12 +139,45 @@
       }
     },
     {
-      "id": "belastbaarLoon",
-      "_note": "The TAXABLE wage after the 30%-ruling exemption. Every step below that used to read @binding.tvl as its tax/premium/vakantiegeld base now reads THIS instead. grossRef stays @binding.tvl (unreduced) -- the exempted cash never leaves net pay, only the tax base. 30-procent-regeling D2.",
+      "id": "loonNaVrijstelling",
+      "_note": "The wage after the 30%-ruling exemption and before the employee pension premium: the base of the holiday and end-of-year reserves, which a pension premium does not lower. 30-procent-regeling D2, payroll-engine-port-from-shillinq D1.",
       "op": "derive",
       "using": {
         "op": "expr",
         "expression": "max(0, @binding.tvl - @binding.thirtyPercentExemption)"
+      }
+    },
+    {
+      "id": "pensionBase",
+      "_note": "payroll-engine-port-from-shillinq D1/O1: the period's pension base, computed by the run with PensionBase from the participation and the fund's PensionScheme (min(wage x participationFactor, cap) - franchise x partTimeFactor, never below 0), so the payslip and the pension filing share one base. Defaults to 0: no participation, no premium.",
+      "op": "derive",
+      "using": {
+        "op": "clamp",
+        "value": "@input.pensionBase",
+        "min": 0
+      }
+    },
+    {
+      "id": "pensionEmployeePremium",
+      "_note": "payroll-engine-port-from-shillinq D1: the employee pension premium, the scheme's employee percentage of the pension base, rounded per cent. A binding so the taxable wage below can deduct it.",
+      "op": "derive",
+      "using": {
+        "op": "rate",
+        "base": "@binding.pensionBase",
+        "rate": "@input.pensionEmployeePercentage"
+      },
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "belastbaarLoon",
+      "_note": "The TAXABLE wage after the 30%-ruling exemption and the employee pension premium. Every tax and premium step below reads THIS. grossRef stays @binding.tvl (unreduced) -- the exempted cash never leaves net pay, only the tax base. The employee pension premium is deducted before wage tax and the premiums (payroll-engine-port-from-shillinq D1); it reduces net through its own step. 30-procent-regeling D2.",
+      "op": "derive",
+      "using": {
+        "op": "expr",
+        "expression": "max(0, @binding.loonNaVrijstelling - @binding.pensionEmployeePremium)"
       }
     },
     {
@@ -393,7 +438,7 @@
       "_note": "Vakantiegeldreservering — 8% of the gross wage. RESERVE: neither cash to the employee this period nor an employer charge this period. Folding it into either would misstate one of them.",
       "op": "rate",
       "incidence": "reserve",
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.loonNaVrijstelling",
       "rate": "@binding.vakantiegeldRate",
       "round": {
         "mode": "nearest",
@@ -410,7 +455,7 @@
         "left": "@input.endOfYearRate",
         "right": 0
       },
-      "base": "@binding.belastbaarLoon",
+      "base": "@binding.loonNaVrijstelling",
       "rate": "@input.endOfYearRate",
       "round": {
         "mode": "nearest",
@@ -691,6 +736,36 @@
       }
     },
     {
+      "id": "pensioengrondslag",
+      "_note": "payroll-engine-port-from-shillinq D1: the pension base on the payslip. Informative: the premiums below are what move money.",
+      "op": "expr",
+      "incidence": "informative",
+      "expression": "@binding.pensionBase"
+    },
+    {
+      "id": "pensionEmployee",
+      "_note": "payroll-engine-port-from-shillinq D1: the employee pension premium. REDUCES-NET; it was deducted from the taxable wage before the wage tax and the premiums.",
+      "op": "expr",
+      "incidence": "reduces-net",
+      "expression": "@binding.pensionEmployeePremium",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
+      "id": "pensionEmployer",
+      "_note": "payroll-engine-port-from-shillinq D1: the employer pension premium, the scheme's employer percentage of the pension base. EMPLOYER-COST, so net is unchanged.",
+      "op": "rate",
+      "incidence": "employer-cost",
+      "base": "@binding.pensionBase",
+      "rate": "@input.pensionEmployerPercentage",
+      "round": {
+        "mode": "nearest",
+        "unit": "cent"
+      }
+    },
+    {
       "id": "werknemersverzekeringen",
       "_note": "An informative roll-up of the four employer premium lines. It must NOT declare employer-cost: its components already did, and the interpreter's fold would double-count it.",
       "op": "expr",
@@ -716,7 +791,7 @@
     }
   ],
   "selfTest": {
-    "_note": "REQUIRED (REQ-JP-006). NL's regular golden vectors ARE the existing fixtures under tests/fixtures/payroll-2026/ — referenced, never copied, edited or re-derived. The machinery that gates a third-party pack is therefore the exact machinery that proves the NL migration was behaviour-identical: one mechanism, two jobs. The `$fixture` vector form is bundled-only; an uploaded pack must carry inline {input, expected} vectors and is rejected if it names a fixture. The three inline vectors after them cover the special-rate path and the end-of-year reserve (payroll-reservation-payouts); their special-rate figures follow the unverified 2026 bijzondereBeloningen bands and move when those are transcribed.",
+    "_note": "REQUIRED (REQ-JP-006). NL's regular golden vectors ARE the existing fixtures under tests/fixtures/payroll-2026/ — referenced, never copied, edited or re-derived. The machinery that gates a third-party pack is therefore the exact machinery that proves the NL migration was behaviour-identical: one mechanism, two jobs. The `$fixture` vector form is bundled-only; an uploaded pack must carry inline {input, expected} vectors and is rejected if it names a fixture. The three inline vectors after them cover the special-rate path and the end-of-year reserve (payroll-reservation-payouts), and the last three the pension premium scenarios of REQ-PPP-001: a full-time participant (base 2,500.00 = 4,000.00 - 18,000 / 12, 7.5% and 15%), a salary below the franchise and no participation (payroll-engine-port-from-shillinq 2.1); their special-rate figures follow the unverified 2026 bijzondereBeloningen bands and move when those are transcribed.",
     "fixtureMap": {
       "loonheffing": "@step.loonheffing",
       "arbeidskorting": "@step.arbeidskorting",
@@ -800,6 +875,62 @@
           "@step.eindejaarsuitkering": 24990,
           "@step.loonheffingBijzonder": 0,
           "@net": 261317
+        }
+      },
+      {
+        "period": "2026-04",
+        "input": {
+          "gross": 400000,
+          "taxTableColor": "wit",
+          "dateOfBirth": "1990-04-12",
+          "whkPercentage": 1.52,
+          "pensionBase": 250000,
+          "pensionEmployeePercentage": 7.5,
+          "pensionEmployerPercentage": 15
+        },
+        "expected": {
+          "@step.pensioengrondslag": 250000,
+          "@step.pensionEmployee": 18750,
+          "@step.pensionEmployer": 37500,
+          "@step.loonheffing": 72550,
+          "@step.vakantiegeld": 32000,
+          "@employerCharges": 102807,
+          "@net": 308700
+        }
+      },
+      {
+        "period": "2026-04",
+        "input": {
+          "gross": 120000,
+          "taxTableColor": "wit",
+          "dateOfBirth": "1990-04-12",
+          "whkPercentage": 1.52,
+          "pensionBase": 0,
+          "pensionEmployeePercentage": 7.5,
+          "pensionEmployerPercentage": 15
+        },
+        "expected": {
+          "@step.pensioengrondslag": 0,
+          "@step.pensionEmployee": 0,
+          "@step.pensionEmployer": 0,
+          "@net": 117667
+        }
+      },
+      {
+        "period": "2026-04",
+        "input": {
+          "gross": 400000,
+          "taxTableColor": "wit",
+          "dateOfBirth": "1990-04-12",
+          "whkPercentage": 1.52
+        },
+        "expected": {
+          "@step.pensioengrondslag": 0,
+          "@step.pensionEmployee": 0,
+          "@step.pensionEmployer": 0,
+          "@step.loonheffing": 81867,
+          "@employerCharges": 68520,
+          "@net": 318133
         }
       }
     ]

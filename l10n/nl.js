@@ -1182,6 +1182,8 @@ OC.L10N.register(
         "Pending": "In afwachting",
         "Pending expenses": "Openstaande declaraties",
         "Pension contribution": "Pensioenpremie",
+        "Pension base": "Pensioengrondslag",
+        "Employer pension premium": "Pensioenpremie werkgever",
         "Pension filing": "Pensioenaangifte",
         "Pension filings": "Pensioenaangiftes",
         "People": "Personeel",

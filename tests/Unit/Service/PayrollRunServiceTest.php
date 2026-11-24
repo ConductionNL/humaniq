@@ -490,6 +490,50 @@ class PayrollRunServiceTest extends TestCase {
 	}//end testACalculationMakesNoSingleObjectReadsThatWouldBeAudited()
 
 	/**
+	 * payroll-engine-port-from-shillinq REQ-PPP-001 through the real run: a
+	 * full-time participant earning 4,000.00 in a scheme with a franchise of
+	 * 18,000 at 7.5% and 15% gets a base of 2,500.00, withholds 187.50 and
+	 * records 375.00 as an employer charge; an employee without a
+	 * participation in the same run keeps zero premiums.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 */
+	public function testAParticipantsPayslipWithholdsThePensionPremium(): void {
+		[$service, $fake] = $this->service(
+			[
+				'Employee' => [$this->employee(['grossMonthlySalary' => 4000.00]), $this->employee(['id' => 'emp-2', 'employeeNumber' => 'EMP-NL-0002', 'grossMonthlySalary' => 4000.00])],
+				// Full time: the pension filing's 40-hour week, so the franchise is whole.
+				'EmploymentContract' => [$this->contract(['hoursPerWeek' => 40.0]), $this->contract(['id' => 'ct-2', 'employeeId' => 'emp-2', 'hoursPerWeek' => 40.0])],
+				'PayrollRun' => [],
+				'Payslip' => [],
+				'PensionParticipation' => [['id' => 'pp-1', 'employeeId' => 'emp-1', 'fund' => 'pfab', 'startDate' => '2026-01-01', 'participationFactor' => 1]],
+				'PensionScheme' => [
+					['id' => 'ps-1', 'administrationId' => 'ADM-001', 'fund' => 'pfab', 'franchise' => 18000, 'maxPensionableSalary' => 137800, 'employeePercentage' => 7.5, 'employerPercentage' => 15, 'validFrom' => '2026-01-01'],
+					['id' => 'ps-9', 'administrationId' => 'ADM-009', 'fund' => 'pfab', 'franchise' => 0, 'maxPensionableSalary' => 137800, 'employeePercentage' => 50, 'employerPercentage' => 50, 'validFrom' => '2026-01-01'],
+				],
+			]
+		);
+
+		$service->runFor('2026-04');
+
+		$payslips = $this->savedFor($fake, 'Payslip');
+		$this->assertCount(2, $payslips);
+		[$participant, $other] = $payslips;
+		$this->assertSame(2500.00, $participant['pensionBase']);
+		$this->assertSame(187.50, $participant['pensionContribution']);
+		$this->assertSame(375.00, $participant['pensionEmployer']);
+		$this->assertSame(3087.00, $participant['nettoPay']);
+		$this->assertSame(250000, $participant['engineInputSnapshot']['pensionBaseCents']);
+		$this->assertSame(0.0, $other['pensionContribution']);
+		$this->assertArrayNotHasKey('pensionEmployer', $other);
+		$this->assertSame(3181.33, $other['nettoPay']);
+		$this->assertArrayNotHasKey('pensionBaseCents', $other['engineInputSnapshot']);
+	}//end testAParticipantsPayslipWithholdsThePensionPremium()
+
+	/**
 	 * @return void
 	 */
 	public function testCreatesDraftRunAndAnchorPayslip(): void {
@@ -543,7 +587,7 @@ class PayrollRunServiceTest extends TestCase {
 		// PACK that computed the run, `{packId}@{packVersion}`, rather than the
 		// bare tables id. Strictly more information — it names the chain as well
 		// as the parameter set. Every cents-exact total above is unchanged.
-		$this->assertSame('nl-2026@1.2.0', $final['engineVersion']);
+		$this->assertSame('nl-2026@1.3.0', $final['engineVersion']);
 		$this->assertNotSame('', trim((string)$final['calculatedAt']));
 		$this->assertArrayNotHasKey('glExpensePosted', $final);
 

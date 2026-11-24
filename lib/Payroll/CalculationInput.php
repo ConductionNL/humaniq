@@ -49,6 +49,8 @@ use InvalidArgumentException;
 
 /**
  * Immutable input to one gross-to-net calculation.
+ *
+ * @SuppressWarnings(PHPMD.TooManyFields) The fields stay flat by design: the pack mapper, toArray() and the stamped engineInputSnapshot read them by name, and each optional part (the special payment, the pension) is one value object.
  */
 final class CalculationInput {
 
@@ -159,20 +161,30 @@ final class CalculationInput {
 	public readonly SpecialPayment $special;
 
 	/**
+	 * The pension base and premium percentages (payroll-engine-port-from-shillinq
+	 * D1); empty for an employee without a participation in the period.
+	 *
+	 * @var PensionPremium
+	 */
+	public readonly PensionPremium $pension;
+
+	/**
 	 * The fields stay flat and in this order: the pack mapper, toArray() and
 	 * the stamped engineInputSnapshot read them by name.
 	 *
 	 * @param CalculationWage $wage The gross salary, date of birth, period and jurisdiction.
 	 * @param CalculationLevies $levies The wage tax election and the insurance tariffs.
 	 * @param SpecialPayment|null $special The special payment and end-of-year rate, none by default.
+	 * @param PensionPremium|null $pension The pension base and premium percentages, none by default.
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-001
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
-	public function __construct(CalculationWage $wage, CalculationLevies $levies, ?SpecialPayment $special = null) {
+	public function __construct(CalculationWage $wage, CalculationLevies $levies, ?SpecialPayment $special = null, ?PensionPremium $pension = null) {
 		$this->grossMonthlySalaryCents = $wage->grossMonthlySalaryCents;
 		$this->taxTableColor = $levies->wageTax->taxTableColor;
 		$this->loonheffingskortingToegepast = $levies->wageTax->loonheffingskortingToegepast;
@@ -185,6 +197,7 @@ final class CalculationInput {
 		$this->jurisdiction = $wage->jurisdiction;
 		$this->thirtyPercentRulingRate = $levies->wageTax->thirtyPercentRulingRate;
 		$this->special = ($special ?? new SpecialPayment());
+		$this->pension = ($pension ?? new PensionPremium());
 		$this->zvwMode = ($levies->insurance->zvwMode === 'inhouding' ? 'inhouding' : 'werkgeversheffing');
 		$this->rvuThresholdCents = max(0, $levies->rvuThresholdCents);
 		$this->rvuFinalLevyRate = $levies->rvuFinalLevyRate;
@@ -196,13 +209,15 @@ final class CalculationInput {
 	 * plus the special-payment keys only when the input carries one
 	 * (payroll-reservation-payouts REQ-RSP-001) and `zvwMode`,
 	 * `rvuThresholdCents` and `rvuFinalLevyRate` only when the wage carries
-	 * them (payroll-special-regimes D3 and D4), so the snapshot of every
-	 * ordinary payslip stays byte-identical.
+	 * them (payroll-special-regimes D3 and D4), and the pension keys only
+	 * when the employee participates (payroll-engine-port-from-shillinq D1),
+	 * so the snapshot of every ordinary payslip stays byte-identical.
 	 *
 	 * @return array<string, mixed>
 	 *
 	 * @spec openspec/specs/audit-trail-payroll/spec.md#REQ-AUDP-001
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function toArray(): array {
 		$data = [
@@ -231,6 +246,12 @@ final class CalculationInput {
 		if ($this->rvuThresholdCents > 0) {
 			$data['rvuThresholdCents'] = $this->rvuThresholdCents;
 			$data['rvuFinalLevyRate'] = $this->rvuFinalLevyRate;
+		}
+
+		if ($this->pension->isEmpty() === false) {
+			$data['pensionBaseCents'] = $this->pension->pensionBaseCents;
+			$data['pensionEmployeePercentage'] = $this->pension->employeePercentage;
+			$data['pensionEmployerPercentage'] = $this->pension->employerPercentage;
 		}
 
 		return $data;
@@ -328,6 +349,11 @@ final class CalculationInput {
 				specialPaymentCents: max(0, (int)($decoded['specialPaymentCents'] ?? 0)),
 				annualWageReferenceCents: max(0, (int)($decoded['annualWageReferenceCents'] ?? 0)),
 				endOfYearRate: max(0.0, (float)($decoded['endOfYearRate'] ?? 0.0))
+			),
+			pension: new PensionPremium(
+				pensionBaseCents: max(0, (int)($decoded['pensionBaseCents'] ?? 0)),
+				employeePercentage: max(0.0, (float)($decoded['pensionEmployeePercentage'] ?? 0.0)),
+				employerPercentage: max(0.0, (float)($decoded['pensionEmployerPercentage'] ?? 0.0))
 			)
 		);
 

@@ -182,6 +182,8 @@ use OCA\Humaniq\Payroll\SickPayInput;
 use OCA\Humaniq\Payroll\SickPayResult;
 use OCA\Humaniq\Payroll\SickPayTiming;
 use OCA\Humaniq\Payroll\SickPayWage;
+use OCA\Humaniq\Payroll\Pension\PensionPremiumLookup;
+use OCA\Humaniq\Payroll\PensionPremium;
 use OCA\Humaniq\Payroll\SpecialPayment;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Payroll\WageTaxElection;
@@ -592,6 +594,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		$state['vehicleAssets'] = $this->vehicleAssetsById();
 		$state['hours'] = $this->hoursInputs(period: $period);
 		$state['expenseInputs'] = $this->expenses?->inputs(norm: $this->expenses->normFrom($state['tables']));
+		$state['pensionInputs'] = $this->pensionLookup()->inputs(rows: ['participations' => $this->loadAll('PensionParticipation'), 'schemes' => $this->loadAll('PensionScheme')], administrationId: $state['administrationId']);
 		$state['reservationInputs'] = $this->reservations?->inputs(run: ['period' => $period, 'administrationId' => $state['administrationId'], 'runId' => $state['runId'], 'tables' => $state['tables']]);
 
 		return array_merge($state, self::EMPTY_TALLY);
@@ -940,6 +943,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 * @param array<string, mixed> $slip  The folded slip.
 	 *
 	 * @return CalculationInput
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	private function calculationInput(array $state, array $slip): CalculationInput {
 		$employee = $slip['employee'];
@@ -951,9 +956,53 @@ class PayrollRunService implements PayrollRunServiceInterface {
 				wageTax: new WageTaxElection(taxTableColor: $taxTableColor, loonheffingskortingToegepast: (($employee['loonheffingskortingToegepast'] ?? true) === true), thirtyPercentRulingRate: ((($employee['thirtyPercentRulingGranted'] ?? false) === true) ? (float)($employee['thirtyPercentRulingRate'] ?? 0.0) : 0.0)),
 				insurance: new InsuranceTariffs(awfTariff: $slip['awf']['tariff'], aofTariff: $state['aofTariff'], whkPercentage: $state['whkPercentage'], verzekeringsplichtig: $insured, zvwMode: $zvwMode)
 			),
-			special: self::specialPaymentOf(fold: $slip['reservations'])
+			special: self::specialPaymentOf(fold: $slip['reservations']),
+			pension: $this->pensionPremiumOf(state: $state, slip: $slip)
 		);
 	}//end calculationInput()
+
+	/**
+	 * The pension base and percentages of one calculation: the participation
+	 * in force on the last day of the period and its fund's scheme
+	 * (payroll-engine-port-from-shillinq D1/D2). None without a
+	 * participation, so such a payslip stays as it was.
+	 *
+	 * @param array<string, mixed> $state The run state.
+	 * @param array<string, mixed> $slip  The folded slip.
+	 *
+	 * @return PensionPremium|null
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 */
+	private function pensionPremiumOf(array $state, array $slip): ?PensionPremium {
+		if (isset($state['pensionInputs']) === false) {
+			return null;
+		}
+
+		return $this->pensionLookup()->premiumFor(
+			inputs: $state['pensionInputs'],
+			slip: [
+				'employeeId' => (string)$slip['employeeId'],
+				'contract' => ($slip['contract'] ?? null),
+				'grossCents' => (int)$slip['grossCents'],
+				'lastDay' => $this->lastDayOf(period: $state['period'])->format('Y-m-d'),
+				'periodsPerYear' => $this->periodsPerYearOf(period: $state['period']),
+			]
+		);
+	}//end pensionPremiumOf()
+
+	/**
+	 * The pension lookup, with the full-time week the pension filing uses,
+	 * so the payslip's base is the filing's base.
+	 *
+	 * @return PensionPremiumLookup
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 */
+	private function pensionLookup(): PensionPremiumLookup {
+		return new PensionPremiumLookup(fullTimeHoursWeek: AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK);
+	}//end pensionLookup()
 
 	/**
 	 * The special part of the input from the reservation fold, or none.
@@ -1746,6 +1795,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-005
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	private function payslipPayload(array $state, array $slip): array {
 		['employee' => $employee, 'contract' => $contract, 'result' => $result] = $slip;
@@ -1775,7 +1825,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			'wkrUsed' => 0.0,
 			'wkrVrijeRuimteRemaining' => 0.0,
 			'wkrExcess' => 0.0,
-			'pensionContribution' => 0.0,
+			'pensionContribution' => $this->euros($result->pensionEmployeeCents),
 			'statementProvided' => true,
 			'showsGrossWage' => true,
 			'showsDeductionBasis' => true,
@@ -1795,6 +1845,13 @@ class PayrollRunService implements PayrollRunServiceInterface {
 		if ($periodsPerYear !== 12) {
 			// The factor monthly figures were scaled by; absent on a monthly payslip.
 			$payload['tijdvakFactor'] = $periodsPerYear;
+		}
+
+		if (isset($slip['input']) === true && $slip['input']->pension->isEmpty() === false) {
+			// payroll-engine-port-from-shillinq D1: a participant's base and
+			// employer premium; absent otherwise, so that payslip stays as it was.
+			$payload['pensionBase'] = $this->euros($result->pensionBaseCents);
+			$payload['pensionEmployer'] = $this->euros($result->pensionEmployerCents);
 		}
 
 		if (isset($slip['week53']) === true) {

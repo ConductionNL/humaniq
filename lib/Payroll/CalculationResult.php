@@ -217,6 +217,27 @@ final class CalculationResult {
 	public readonly int $rvuFinalLevyCents;
 
 	/**
+	 * The pension base this period (payroll-engine-port-from-shillinq D1); 0 without a participation.
+	 *
+	 * @var integer
+	 */
+	public readonly int $pensionBaseCents;
+
+	/**
+	 * The employee pension premium withheld from net pay; 0 without a participation.
+	 *
+	 * @var integer
+	 */
+	public readonly int $pensionEmployeeCents;
+
+	/**
+	 * The employer pension premium, an employer charge; 0 without a participation.
+	 *
+	 * @var integer
+	 */
+	public readonly int $pensionEmployerCents;
+
+	/**
 	 * Read every figure off one pack run. `nettoPayCents` and
 	 * `employerChargesCents` are the interpreter's incidence folds: read, not
 	 * computed here (REQ-JP-003). The fields stay flat and in this order.
@@ -226,8 +247,10 @@ final class CalculationResult {
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function __construct(PackRunResult|array $out) {
+		[$this->pensionBaseCents, $this->pensionEmployeeCents, $this->pensionEmployerCents] = self::pensionOf(out: $out);
 		if (is_array($out) === true) {
 			$this->grossPayCents = (int)$out['grossPayCents'];
 			$this->loonheffingCents = (int)$out['loonheffingCents'];
@@ -289,6 +312,29 @@ final class CalculationResult {
 	}//end __construct()
 
 	/**
+	 * The pension base and premiums (payroll-engine-port-from-shillinq D1):
+	 * off the pack's steps, or off the fields of two summed results; zero
+	 * for a pack without them.
+	 *
+	 * @param PackRunResult|array<string, mixed> $out The pack run's output, or summed fields.
+	 *
+	 * @return array{0: int, 1: int, 2: int} The base, the employee and the employer premium.
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 */
+	private static function pensionOf(PackRunResult|array $out): array {
+		if (is_array($out) === true) {
+			return [(int)($out['pensionBaseCents'] ?? 0), (int)($out['pensionEmployeeCents'] ?? 0), (int)($out['pensionEmployerCents'] ?? 0)];
+		}
+
+		return [
+			self::optionalStepCents(out: $out, id: 'pensioengrondslag'),
+			self::optionalStepCents(out: $out, id: 'pensionEmployee'),
+			self::optionalStepCents(out: $out, id: 'pensionEmployer'),
+		];
+	}//end pensionOf()
+
+	/**
 	 * Two calculations of one payslip as one: the four weeks of an extended
 	 * period 13 and its week 53, each taxed with its own tijdvak
 	 * (payroll-period-edge-cases D3). Amounts and wages add up; the mode and
@@ -304,7 +350,7 @@ final class CalculationResult {
 	 */
 	public static function combined(self $fourWeeks, self $week53): self {
 		$sum = [];
-		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'specialPaymentCents', 'specialLoonheffingCents', 'eindejaarsuitkeringReservedCents', 'rvuFinalLevyCents'] as $field) {
+		foreach (['grossPayCents', 'loonheffingCents', 'arbeidskortingCents', 'volksverzekeringenCents', 'zvwCents', 'nettoPayCents', 'vakantiegeldReservedCents', 'awfCents', 'aofCents', 'wkoCents', 'whkCents', 'werknemersverzekeringenCents', 'employerChargesCents', 'taxableWageCents', 'premiumWageCents', 'specialPaymentCents', 'specialLoonheffingCents', 'eindejaarsuitkeringReservedCents', 'rvuFinalLevyCents', 'pensionBaseCents', 'pensionEmployeeCents', 'pensionEmployerCents'] as $field) {
 			$sum[$field] = ($fourWeeks->$field + $week53->$field);
 		}
 
