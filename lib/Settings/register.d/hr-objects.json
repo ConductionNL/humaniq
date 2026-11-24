@@ -128,7 +128,7 @@
                 "slug": "Payslip",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "ReceiptTextOutline",
-                "version": "0.20.0",
+                "version": "0.21.0",
                 "configuration": {
                     "exportable": true,
                     "x-openregister-notifications": {
@@ -204,6 +204,7 @@
                     "wkrEindheffingRate": {"title": "WKR eindheffing rate", "type": "number", "nullable": true, "description": "The 80% final levy rate applied to anything over the work-related costs budget.", "x-notes": "NL: 80% eindheffing rate applied to WKR excess (nl-wkr-eindheffing-80).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "wkrExcess": {"title": "WKR excess", "type": "number", "description": "Allowances above the work-related costs budget, which attract the 80% final levy.", "x-notes": "NL: WKR allowances exceeding the vrije ruimte that attract the 80% eindheffing (nl-wkr-eindheffing-80).", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "pensionContribution": {"title": "Pension contribution", "type": "number", "description": "Employee pension contribution withheld for the period.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
+                    "pensionEmployer": {"title": "Employer pension premium", "type": "number", "description": "The employer's pension premium for the period, an employer charge.", "x-notes": "payroll-engine-port-from-shillinq D1 (REQ-PPP-001): the pack's pensionEmployer step, the scheme's employer percentage of the pension base. Written only on a payslip with a participation in force.", "authorization": {"read": ["humaniq-hr", "humaniq-payroll", {"group": "authenticated", "match": {"userId": "$userId"}}], "update": ["humaniq-payroll"]}},
                     "statementProvided": {"title": "Statement provided", "type": "boolean", "description": "Whether a written/electronic payslip was provided to the employee."},
                     "showsGrossWage": {"title": "Shows gross wage", "type": "boolean", "description": "The payslip states the gross wage, as the law requires.", "x-notes": "NL/FR: whether the payslip states the gross wage (nl-loonstrook-inhoud / fr-bulletin-de-paie-mentions)."},
                     "showsDeductionBasis": {"title": "Shows deduction basis", "type": "boolean", "description": "The payslip states the amount and the basis of every deduction, as the law requires.", "x-notes": "NL: whether the payslip states the amount and basis of each deduction (nl-loonstrook-inhoud)."},

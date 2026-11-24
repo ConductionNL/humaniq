@@ -4281,7 +4281,9 @@
         "The payroll administration this participation belongs to.": "The payroll administration this participation belongs to.",
         "The pension fund whose scheme the employee takes part in.": "The pension fund whose scheme the employee takes part in.",
         "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.": "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.",
-        "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.": "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force."
+        "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.": "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.",
+        "Employer pension premium": "Employer pension premium",
+        "The employer's pension premium for the period, an employer charge.": "The employer's pension premium for the period, an employer charge."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
