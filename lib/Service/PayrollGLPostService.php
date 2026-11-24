@@ -348,6 +348,7 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-002
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	public function buildLines(array $run, array $allocations = [], int $vatCents = 0): array {
 		$totals = new PayrollJournalTotals($run);
@@ -377,7 +378,12 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 			));
 		}
 
-		$netLiabilityCents = ($netCents + $remainderCents);
+		$pension = $this->pensionLiability(totals: $totals, remainderCents: $remainderCents);
+		if ($pension['error'] !== null) {
+			return $this->buildFailure($pension['error']);
+		}
+
+		$netLiabilityCents = ($netCents + $remainderCents - $pension['cents']);
 
 		$runId = (string)($run['id'] ?? $run['@self']['id'] ?? '');
 		$candidates = array_merge(
@@ -387,6 +393,7 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 		$liabilities = [
 			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountWageTaxLiability(), 'amount' => $loonheffingCents, 'description' => 'Loonheffing-schuld'],
 			['side' => 'credit', 'accountNumber' => $this->bookkeeping->getGlPostAccountNetWagesLiability(), 'amount' => $netLiabilityCents, 'description' => 'Netto-loonschuld'],
+			['side' => 'credit', 'accountNumber' => $pension['account'], 'amount' => $pension['cents'], 'description' => 'Pensioenpremie te betalen'],
 		];
 		if ($reimbursementCents > 0) {
 			$vatCents = min(max(0, $vatCents), $reimbursementCents);
@@ -416,6 +423,40 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 		];
 
 	}//end buildLines()
+
+	/**
+	 * The pension payable credit of a run (payroll-engine-port-from-shillinq
+	 * D4): the employee and the employer premiums together. The employer
+	 * premium is already debited inside the employer charges and the
+	 * employee premium is already out of net, so both sit in the balancing
+	 * remainder; this credit takes them out of the net wages liability.
+	 * A run with premiums and no pension payable account is refused, so no
+	 * entry is written and the GL post records why.
+	 *
+	 * @param PayrollJournalTotals $totals         The run totals.
+	 * @param int                  $remainderCents Debits minus wage tax and net, in cents.
+	 *
+	 * @return array{cents: int, account: string, error: string|null}
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 */
+	private function pensionLiability(PayrollJournalTotals $totals, int $remainderCents): array {
+		$cents = (max(0, $totals->cents('totalPensionEmployee')) + max(0, $totals->cents('totalPensionEmployer')));
+		if ($cents === 0) {
+			return ['cents' => 0, 'account' => '', 'error' => null];
+		}
+
+		$account = $this->bookkeeping->getGlPostAccountPensionPayable();
+		if ($account === '') {
+			return ['cents' => $cents, 'account' => '', 'error' => sprintf('Geen rekening voor te betalen pensioenpremie ingesteld (glpost_account_pension_payable); de run heeft %.2f pensioenpremie en wordt niet geboekt.', ($cents / 100))];
+		}
+
+		if ($cents > $remainderCents) {
+			return ['cents' => $cents, 'account' => $account, 'error' => sprintf('Inconsistente runtotalen: pensioenpremie (%.2f) overschrijdt wat bruto + werkgeverslasten na loonheffing en netto overlaten (%.2f).', ($cents / 100), ($remainderCents / 100))];
+		}
+
+		return ['cents' => $cents, 'account' => $account, 'error' => null];
+	}//end pensionLiability()
 
 	/**
 	 * The debit lines of one cost total, per cost centre and project of the

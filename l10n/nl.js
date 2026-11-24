@@ -1184,6 +1184,8 @@ OC.L10N.register(
         "Pension contribution": "Pensioenpremie",
         "Pension base": "Pensioengrondslag",
         "Employer pension premium": "Pensioenpremie werkgever",
+        "Total employee pension premium": "Totaal werknemersdeel pensioenpremie",
+        "Total employer pension premium": "Totaal werkgeversdeel pensioenpremie",
         "Pension filing": "Pensioenaangifte",
         "Pension filings": "Pensioenaangiftes",
         "People": "Personeel",

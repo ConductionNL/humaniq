@@ -112,6 +112,21 @@ final class PayrollBookkeepingSettings {
 	}//end getGlPostAccountVat()
 
 	/**
+	 * The GL account both pension premiums are credited to (pensioenpremie
+	 * te betalen), app config key `glpost_account_pension_payable`. Unlike
+	 * the other accounts it has no placeholder default: an empty string
+	 * means it is not set, and a run with pension premiums is then not
+	 * posted (REQ-PPP-003).
+	 *
+	 * @return string The account number, or '' when unset.
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 */
+	public function getGlPostAccountPensionPayable(): string {
+		return trim($this->appConfig->getAppValueString('glpost_account_pension_payable', ''));
+	}//end getGlPostAccountPensionPayable()
+
+	/**
 	 * Read a `glpost_account_*` config key, falling back to its placeholder
 	 * default when unset or blank.
 	 *

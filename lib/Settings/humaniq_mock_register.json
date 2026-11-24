@@ -10088,6 +10088,20 @@
             "description": "Expense claims and untaxed allowances this run paid on top of net pay. The payroll journal books them on the reimbursement account.",
             "x-notes": "payroll-expenses-and-allowances D6."
           },
+          "totalPensionEmployee": {
+            "title": "Total employee pension premium",
+            "type": "number",
+            "nullable": true,
+            "description": "Employee pension premiums withheld in this run. The payroll journal credits them, with the employer premiums, on the pension payable account.",
+            "x-notes": "payroll-engine-port-from-shillinq D4, REQ-PPP-003."
+          },
+          "totalPensionEmployer": {
+            "title": "Total employer pension premium",
+            "type": "number",
+            "nullable": true,
+            "description": "Employer pension premiums of this run, part of the total employer charges.",
+            "x-notes": "payroll-engine-port-from-shillinq D4, REQ-PPP-003."
+          },
           "checkedAt": {
             "title": "Checked at",
             "type": "string",

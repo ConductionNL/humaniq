@@ -45,9 +45,15 @@
       day of the period), `PensionPremium` on `CalculationInput`, `pensionEmployer` and
       `pensionBase` on `Payslip` (stamped for participants only). `PensionPremiumServiceTest`,
       `PayrollRunServiceTest::testAParticipantsPayslipWithholdsThePensionPremium`.
-- [ ] 2.3 Add pension lines to `PayrollGLPostService::buildLines()` and the setting
+- [x] 2.3 Add pension lines to `PayrollGLPostService::buildLines()` and the setting
       `gl_account_pension_payable` (D4, REQ-PPP-003). Verify: unit tests that the entry
       balances and that a missing account writes nothing and logs why.
+      Built: the run stores `totalPensionEmployee` and `totalPensionEmployer`; the journal
+      credits both on the app config key `glpost_account_pension_payable` (named like the other
+      `glpost_account_*` keys, no default) and takes them out of the net wages credit; the
+      employer premium stays debited inside the employer charges, per cost centre. A run with
+      premiums and no account is not posted (GL post `failed` with the reason).
+      `PayrollGLPostServiceTest` (the five pension tests).
 
 ## 3. Partial period
 

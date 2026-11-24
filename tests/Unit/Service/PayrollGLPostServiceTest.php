@@ -212,10 +212,12 @@ class PayrollGLPostServiceTest extends TestCase {
 	 * @param array<string, array<int, array<string, mixed>>> $rowsBySchema Seed rows keyed by schema.
 	 * @param bool $shillinqThrows Whether JournalEntry access throws.
 	 * @param bool $shillinqInstalled Whether IAppManager::isInstalled('shillinq') returns true.
+	 * @param ConnectionReporter|null $connections The connection reporter, if any.
+	 * @param array<string, string> $appValues App config values by key (unset keys answer their default).
 	 *
 	 * @return array{0: PayrollGLPostService, 1: object}
 	 */
-	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true, ?ConnectionReporter $connections = null): array {
+	private function service(array $rowsBySchema = [], bool $shillinqThrows = false, bool $shillinqInstalled = true, ?ConnectionReporter $connections = null, array $appValues = []): array {
 		$fake = $this->fakeObjectService($rowsBySchema, $shillinqThrows);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -237,7 +239,10 @@ class PayrollGLPostServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return [new PayrollGLPostService($container, $appManager, $settings, new PayrollBookkeepingSettings($this->createMock(IAppConfig::class)), $logger, $connections), $fake];
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getAppValueString')->willReturnCallback(static fn (string $key, string $default = ''): string => ($appValues[$key] ?? $default));
+
+		return [new PayrollGLPostService($container, $appManager, $settings, new PayrollBookkeepingSettings($appConfig), $logger, $connections), $fake];
 	}//end service()
 
 	/**
@@ -962,4 +967,132 @@ class PayrollGLPostServiceTest extends TestCase {
 
 		$this->assertSame('failed', $service->postRun($this->payrollRun(['id' => '']))['status']);
 	}//end testARunHumaniqRefusesReportsNothing()
+	/**
+	 * A run whose payslips hold 187.50 employee and 375.00 employer pension
+	 * premium: gross 4,000.00, employer charges 649.80 + 375.00, net
+	 * 4,000.00 - 1,102.00 - 187.50.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function pensionRun(): array {
+		return $this->payrollRun(
+			[
+				'totalGross' => 4000.00,
+				'totalEmployerCharges' => 1024.80,
+				'totalLoonheffing' => 1102.00,
+				'totalNet' => 2710.50,
+				'totalPensionEmployee' => 187.50,
+				'totalPensionEmployer' => 375.00,
+			]
+		);
+
+	}//end pensionRun()
+
+	/**
+	 * REQ-PPP-003 "The journal splits the pension payable": both premiums
+	 * on the pension payable account, the net wages credit without them,
+	 * and the entry balanced.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 */
+	public function testTheJournalSplitsThePensionPayable(): void {
+		[$service] = $this->service(appValues: ['glpost_account_pension_payable' => '1730']);
+		$built = $service->buildLines($this->pensionRun());
+
+		$this->assertNull($built['error']);
+		$byAccount = [];
+		foreach ($built['lines'] as $line) {
+			$byAccount[$line['accountNumber']] = $line;
+		}
+
+		$this->assertSame('credit', $byAccount['1730']['side']);
+		$this->assertSame('Pensioenpremie te betalen', $byAccount['1730']['description']);
+		$this->assertEqualsWithDelta(562.50, $byAccount['1730']['amount'], 0.001);
+		$this->assertEqualsWithDelta(1024.80, $byAccount['4002']['amount'], 0.001);
+		$this->assertEqualsWithDelta(3360.30, $byAccount['1702']['amount'], 0.001);
+
+		$debit = array_sum(array_map(static fn (array $l): float => ($l['side'] === 'debit' ? $l['amount'] : 0.0), $built['lines']));
+		$credit = array_sum(array_map(static fn (array $l): float => ($l['side'] === 'credit' ? $l['amount'] : 0.0), $built['lines']));
+		$this->assertEqualsWithDelta(5024.80, $debit, 0.001);
+		$this->assertEqualsWithDelta($debit, $credit, 0.001);
+
+	}//end testTheJournalSplitsThePensionPayable()
+
+	/**
+	 * A run without pension premiums needs no pension payable account and
+	 * books no pension line.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 */
+	public function testARunWithoutPremiumsBooksNoPensionLine(): void {
+		[$service] = $this->service();
+		$built = $service->buildLines($this->payrollRun(['totalPensionEmployee' => 0.0, 'totalPensionEmployer' => 0.0]));
+
+		$this->assertNull($built['error']);
+		$this->assertCount(4, $built['lines']);
+
+	}//end testARunWithoutPremiumsBooksNoPensionLine()
+
+	/**
+	 * REQ-PPP-003 "No pension payable account is set": no entry is written
+	 * and the GL post records that the account is missing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 */
+	public function testAMissingPensionPayableAccountWritesNoEntry(): void {
+		[$service, $fake] = $this->service();
+
+		$result = $service->postRun($this->pensionRun());
+
+		$this->assertSame('failed', $result['status']);
+		$this->assertCount(0, $this->savedFor($fake, 'JournalEntry'));
+		$glPosts = $this->savedFor($fake, 'PayrollGLPost');
+		$this->assertCount(1, $glPosts);
+		$this->assertSame('failed', $glPosts[0]['status']);
+		$this->assertStringContainsString('glpost_account_pension_payable', $glPosts[0]['errorMessage']);
+
+	}//end testAMissingPensionPayableAccountWritesNoEntry()
+
+	/**
+	 * Premiums larger than what the debits leave after wage tax and net
+	 * cannot balance; the journal is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 */
+	public function testPremiumsBeyondTheRemainderAreRefused(): void {
+		[$service] = $this->service(appValues: ['glpost_account_pension_payable' => '1730']);
+		$built = $service->buildLines($this->payrollRun(['totalPensionEmployee' => 2000.00]));
+
+		$this->assertSame([], $built['lines']);
+		$this->assertStringContainsString('pensioenpremie (2000.00)', (string)$built['error']);
+
+	}//end testPremiumsBeyondTheRemainderAreRefused()
+
+	/**
+	 * With a pension payable account the run posts and the journal entry
+	 * carries the pension line.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 */
+	public function testARunWithPremiumsPostsThePensionLine(): void {
+		[$service, $fake] = $this->service(appValues: ['glpost_account_pension_payable' => '1730']);
+
+		$result = $service->postRun($this->pensionRun());
+
+		$this->assertSame('posted', $result['status']);
+		$entries = $this->savedFor($fake, 'JournalEntry');
+		$this->assertCount(1, $entries);
+		$this->assertContains('1730', array_column($entries[0]['lines'], 'accountNumber'));
+
+	}//end testARunWithPremiumsPostsThePensionLine()
 }//end class
