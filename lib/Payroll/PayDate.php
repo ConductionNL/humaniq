@@ -50,7 +50,7 @@ final class PayDate {
 	 *
 	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
 	 */
-	public static function forPeriod(string $period, mixed $dayOfMonth): ?string {
+	public function forPeriod(string $period, mixed $dayOfMonth): ?string {
 		if (preg_match('/^(\d{4})-(0[1-9]|1[0-2])$/', trim($period), $match) !== 1) {
 			return null;
 		}

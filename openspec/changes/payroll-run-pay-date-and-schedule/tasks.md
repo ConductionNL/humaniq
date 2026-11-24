@@ -3,7 +3,7 @@
 - [ ] 1.1 Land a pay-date field (`paymentDayOfMonth`) on the administration surface, then an
       `openregister.wait` (or run-scoped FlowTimer) between approve and glpost in the Loonrun
       flow. (Was `payroll-run-as-a-flow` 7.1.)
-      Progress: \`hrAdministration.paymentDayOfMonth\` (schema 1.9.0, en/nl), \`PayDate::forPeriod()\` and \`payroll.payDate\` on the calculate node's outcome are in (\`PayDateTest\`, \`PayrollCalculateNodeTest\`). Left: the \`openregister.wait\` step with \`until: "{{ payroll.payDate }}"\` between approve and glpost, which needs ConductionNL/openregister#11043 (a wait that renders a field of the item); until then OpenRegister refuses the placeholder when the flow is saved.
+      Progress: `hrAdministration.paymentDayOfMonth` (schema 1.9.0, en/nl), `PayDate::forPeriod()` and `payroll.payDate` on the calculate node's outcome are in (`PayDateTest`, `PayrollCalculateNodeTest`). Left: the `openregister.wait` step with `until: "{{ payroll.payDate }}"` between approve and glpost, which needs ConductionNL/openregister#11043 (a wait that renders a field of the item); until then OpenRegister refuses the placeholder when the flow is saved.
 
 ## 2. Schedule adoption
 

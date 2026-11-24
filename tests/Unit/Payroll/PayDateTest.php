@@ -29,8 +29,8 @@ class PayDateTest extends TestCase {
 	 * @return void
 	 */
 	public function testAMonthIsPaidOnThePayDay(): void {
-		$this->assertSame('2026-11-25', PayDate::forPeriod('2026-11', 25));
-		$this->assertSame('2026-11-05', PayDate::forPeriod('2026-11', '5'));
+		$this->assertSame('2026-11-25', (new PayDate())->forPeriod('2026-11', 25));
+		$this->assertSame('2026-11-05', (new PayDate())->forPeriod('2026-11', '5'));
 	}//end testAMonthIsPaidOnThePayDay()
 
 	/**
@@ -39,9 +39,9 @@ class PayDateTest extends TestCase {
 	 * @return void
 	 */
 	public function testAShorterMonthPaysOnItsLastDay(): void {
-		$this->assertSame('2026-02-28', PayDate::forPeriod('2026-02', 31));
-		$this->assertSame('2028-02-29', PayDate::forPeriod('2028-02', 30));
-		$this->assertSame('2026-04-30', PayDate::forPeriod('2026-04', 31));
+		$this->assertSame('2026-02-28', (new PayDate())->forPeriod('2026-02', 31));
+		$this->assertSame('2028-02-29', (new PayDate())->forPeriod('2028-02', 30));
+		$this->assertSame('2026-04-30', (new PayDate())->forPeriod('2026-04', 31));
 	}//end testAShorterMonthPaysOnItsLastDay()
 
 	/**
@@ -51,7 +51,7 @@ class PayDateTest extends TestCase {
 	 */
 	public function testWithoutAUsablePayDayThereIsNoPayDate(): void {
 		foreach ([null, '', 0, 32, -1, '25.5', 25.5, 'vijf', true] as $day) {
-			$this->assertNull(PayDate::forPeriod('2026-11', $day), var_export($day, true));
+			$this->assertNull((new PayDate())->forPeriod('2026-11', $day), var_export($day, true));
 		}
 	}//end testWithoutAUsablePayDayThereIsNoPayDate()
 
@@ -62,7 +62,7 @@ class PayDateTest extends TestCase {
 	 */
 	public function testOnlyACalendarMonthHasAPayDate(): void {
 		foreach (['2026-P13', '2026-W53', '2026-13', '2026-00', '26-11', ''] as $period) {
-			$this->assertNull(PayDate::forPeriod($period, 25), $period);
+			$this->assertNull((new PayDate())->forPeriod($period, 25), $period);
 		}
 	}//end testOnlyACalendarMonthHasAPayDate()
 

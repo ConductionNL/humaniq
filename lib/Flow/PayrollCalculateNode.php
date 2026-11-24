@@ -201,7 +201,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 			$outcome,
 			new ExpectedStatus(['calculated', 'exists'], 'Loonrun berekenen voor ' . $period . ' is geweigerd')
 		);
-		$outcome['payDate'] = PayDate::forPeriod(
+		$outcome['payDate'] = (new PayDate())->forPeriod(
 			(string)($outcome['period'] ?? $period),
 			$this->payDayOf((string)($outcome['administrationId'] ?? $administrationId))
 		);
