@@ -19,7 +19,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
  *
- * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-004
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCP\IUserSession;
 /**
  * Read CV.
  *
- * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+ * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-004
  */
 class ApplicationCvController extends Controller {
 
@@ -67,7 +67,7 @@ class ApplicationCvController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/hiring-cv-profile-extraction/specs/candidate-assessment/spec.md#REQ-CAS-004
+	 * @spec openspec/specs/candidate-assessment/spec.md#REQ-CAS-004
 	 */
 	#[NoAdminRequired]
 	public function readCv(string $id): JSONResponse {
