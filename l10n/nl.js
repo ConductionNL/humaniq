@@ -4260,7 +4260,9 @@ OC.L10N.register(
         "An administration with a known payroll tax number is reused, never added twice.": "Een administratie met een bekend loonheffingennummer wordt hergebruikt, nooit dubbel toegevoegd.",
         "You can change it later per administration under Configuration, Administrations.": "Je kunt het later per administratie wijzigen onder Configuratie, Administraties.",
         "Employees who picked their own language keep it.": "Medewerkers die zelf een taal kozen, houden die.",
-        "The Marketplace offers the same sets later.": "De Marketplace biedt dezelfde sets later aan."
+        "The Marketplace offers the same sets later.": "De Marketplace biedt dezelfde sets later aan.",
+        "Pay day": "Betaaldag",
+        "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once.": "De dag van de maand waarop het loon wordt betaald; in een kortere maand de laatste dag. Leeg: een goedgekeurde loonrun wordt meteen geboekt."
     },
     "nplurals=2; plural=(n != 1);"
 )

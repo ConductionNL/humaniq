@@ -38,6 +38,7 @@ namespace OCA\Humaniq\Flow;
 
 use OCA\Humaniq\Kernel\Contracts\PayrollRunServiceInterface;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\Humaniq\Payroll\PayDate;
 use OCA\Humaniq\Payroll\PayPeriod;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -179,6 +180,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
 	 *
 	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
 	 */
 	private function calculateFor(array $json, array $config): array {
 		$period = $this->render((string)($config['period'] ?? ''), $json);
@@ -195,10 +197,48 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 			$recalculate
 		);
 
-		return $this->requireStatus(
+		$outcome = $this->requireStatus(
 			$outcome,
 			new ExpectedStatus(['calculated', 'exists'], 'Loonrun berekenen voor ' . $period . ' is geweigerd')
 		);
+		$outcome['payDate'] = PayDate::forPeriod(
+			(string)($outcome['period'] ?? $period),
+			$this->payDayOf((string)($outcome['administrationId'] ?? $administrationId))
+		);
+
+		return $outcome;
 	}//end calculateFor()
+
+	/**
+	 * The administration's pay day of the month, or null when it has none or
+	 * cannot be read. A pay date is a reason to wait, never a reason to fail
+	 * the run: without one the flow posts on approval, as before.
+	 *
+	 * @param string $administrationId The administration key.
+	 *
+	 * @return mixed The paymentDayOfMonth as stored, or null.
+	 *
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+	 */
+	private function payDayOf(string $administrationId): mixed {
+		if ($administrationId === '') {
+			return null;
+		}
+
+		try {
+			$rows = $this->objectService()->setRegister($this->register())->setSchema('hrAdministration')->findAll(['limit' => self::LIMIT]);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		foreach ((is_array($rows) === true ? $rows : []) as $row) {
+			$administration = $this->toArray($row);
+			if ((string)($administration['administrationId'] ?? '') === $administrationId) {
+				return ($administration['paymentDayOfMonth'] ?? null);
+			}
+		}
+
+		return null;
+	}//end payDayOf()
 
 }//end class

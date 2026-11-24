@@ -4260,7 +4260,9 @@ OC.L10N.register(
         "An administration with a known payroll tax number is reused, never added twice.": "An administration with a known payroll tax number is reused, never added twice.",
         "You can change it later per administration under Configuration, Administrations.": "You can change it later per administration under Configuration, Administrations.",
         "Employees who picked their own language keep it.": "Employees who picked their own language keep it.",
-        "The Marketplace offers the same sets later.": "The Marketplace offers the same sets later."
+        "The Marketplace offers the same sets later.": "The Marketplace offers the same sets later.",
+        "Pay day": "Pay day",
+        "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once.": "The day of the month salaries are paid; in a shorter month the last day. Empty: an approved payroll run is posted at once."
     },
     "nplurals=2; plural=(n != 1);"
 )
