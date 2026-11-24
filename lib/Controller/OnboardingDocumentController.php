@@ -19,7 +19,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
  *
- * @spec openspec/changes/hiring-document-to-employee/specs/hire-to-employee/spec.md#REQ-HTE-003
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-003
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCP\IUserSession;
 /**
  * Documents read for a new hire.
  *
- * @spec openspec/changes/hiring-document-to-employee/specs/hire-to-employee/spec.md#REQ-HTE-003
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-003
  */
 class OnboardingDocumentController extends Controller {
 
@@ -74,7 +74,7 @@ class OnboardingDocumentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/hiring-document-to-employee/specs/hire-to-employee/spec.md#REQ-HTE-003
+	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-003
 	 */
 	#[NoAdminRequired]
 	public function readDocument(string $id): JSONResponse {
@@ -93,7 +93,7 @@ class OnboardingDocumentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/hiring-document-to-employee/specs/hire-to-employee/spec.md#REQ-HTE-003
+	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-003
 	 */
 	#[NoAdminRequired]
 	public function contractFromDocument(string $id): JSONResponse {

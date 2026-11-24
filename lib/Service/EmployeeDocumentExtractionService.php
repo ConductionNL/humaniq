@@ -21,7 +21,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
  *
- * @spec openspec/changes/hiring-document-to-employee/specs/hire-to-employee/spec.md#REQ-HTE-003
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-003
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Throwable;
 /**
  * Reads a new hire's documents into their record.
  *
- * @spec openspec/changes/hiring-document-to-employee/specs/hire-to-employee/spec.md#REQ-HTE-003
+ * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-003
  */
 class EmployeeDocumentExtractionService {
 
@@ -83,7 +83,7 @@ class EmployeeDocumentExtractionService {
 	 *
 	 * @return array{status: string, message: string, documents: list<array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/hiring-document-to-employee/specs/hire-to-employee/spec.md#REQ-HTE-003
+	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-003
 	 */
 	public function read(array $onboarding, string $userId): array {
 		if ($this->roles->isHr($userId) === false) {
@@ -116,7 +116,7 @@ class EmployeeDocumentExtractionService {
 	 *
 	 * @return array{status: string, message: string, contractId: string|null}
 	 *
-	 * @spec openspec/changes/hiring-document-to-employee/specs/hire-to-employee/spec.md#REQ-HTE-003
+	 * @spec openspec/specs/hire-to-employee/spec.md#REQ-HTE-003
 	 */
 	public function contractFrom(array $onboarding, string $userId): array {
 		if ($this->roles->isHr($userId) === false) {

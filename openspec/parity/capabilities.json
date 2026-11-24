@@ -497,8 +497,7 @@
    "specs": [
     "hire-to-employee",
     "onboarding-wizard",
-    "portal-audiences",
-    "hiring-document-to-employee"
+    "portal-audiences"
    ]
   },
   {
@@ -10613,12 +10612,12 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'resume.?pars|cv.?pars|\\bocr\\b' src/plugins src/client/src: no match; attachments (src/plugins/orangehrmPimPlugin/Api/EmployeeAttachmentAPI.php) are stored, not read"
    },
    "built": {
-    "requirement": "openspec/changes/hiring-document-to-employee/specs/hire-to-employee :: A supplied document SHALL fill the new employee's empty fields for HR to check (REQ-HTE-003)",
-    "state": "building",
-    "evidence": "Create employee fills the new employee from the hired application (lib/Service/HireService.php, change 2026-09-30-hiring-hire-to-employee). Reading a supplied contract or ID into the record is not built: filinq has no contract or identity-document extraction (financial extractors only, no MRZ reader), so it moved to the change hiring-document-to-employee.",
-    "reachedOn": "nothing reads a supplied document yet",
+    "requirement": "openspec/specs/hire-to-employee :: A supplied document SHALL fill the new employee's empty fields for HR to check (REQ-HTE-003)",
+    "state": "built",
+    "evidence": "Create employee fills the new employee from the hired application (lib/Service/HireService.php, change 2026-09-30-hiring-hire-to-employee). Read document on OnboardingDetail (lib/Service/EmployeeDocumentExtractionService.php, lib/Controller/OnboardingDocumentController.php) sends each document added to the case's Documents read list to filinq's EmployeeDocumentExtractionService (filinq#2323: the identity document's machine-readable zone, the contract's terms, a confidence per value), records the values on EmployeeDocumentExtraction, fills only empty employee fields, and Create contract from document makes at most one EmploymentContract per document. Tests: tests/Unit/Service/EmployeeDocumentExtractionServiceTest.php, tests/Unit/Controller/OnboardingDocumentControllerTest.php.",
+    "reachedOn": "Onboarding > a case: Documents read, Read document, Create contract from document",
     "owner": "ConductionNL/humaniq",
-    "change": "hiring-document-to-employee",
+    "change": "2026-11-24-hiring-document-to-employee",
     "readOn": "2026-09-30"
    },
    "provider": "humaniq",
