@@ -783,7 +783,7 @@
 				{
 					"id": "PensionParticipations",
 					"label": "Pension participations",
-					"icon": "AccountCash",
+					"icon": "AccountClockOutline",
 					"route": "PensionParticipations"
 				},
 				{

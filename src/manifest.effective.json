@@ -990,7 +990,7 @@
 					"route": "PensionSchemes"
 				},
 				{
-					"icon": "AccountCash",
+					"icon": "AccountClockOutline",
 					"id": "PensionParticipations",
 					"label": "Pension participations",
 					"route": "PensionParticipations"
@@ -8280,7 +8280,7 @@
 							},
 							"viewAllRoute": "PensionParticipations"
 						},
-						"icon": "AccountCash",
+						"icon": "AccountClockOutline",
 						"id": "pension-participations",
 						"title": "Pension",
 						"type": "object-list"
@@ -19970,7 +19970,7 @@
 							],
 							"title": "Pension participation"
 						},
-						"icon": "AccountCash",
+						"icon": "AccountClockOutline",
 						"id": "data",
 						"title": "Pension participation",
 						"type": "data"

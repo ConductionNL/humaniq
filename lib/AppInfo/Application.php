@@ -659,19 +659,6 @@ class Application extends App implements IBootstrap {
 			);
 		}
 
-		// payroll-engine-port-from-shillinq REQ-PPP-002: refuse a
-		// PensionParticipation whose dates overlap one the same employee
-		// already has, so the run never picks a scheme by query order.
-		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			$this->registerFilteredObjectListener(
-				dispatcher: $dispatcher,
-				event: $event,
-				listener: PensionParticipationOverlapListener::class,
-				registers: null,
-				schemas: [PensionParticipationOverlapListener::PENSIONPARTICIPATION_SLUG]
-			);
-		}
-
 		// agenda-rostering-and-resource-booking REQ-AGD-004: refuse a
 		// ResourceBooking that would take a resource past its quantity over an
 		// overlapping period, or that books a resource out of service. In the
@@ -1056,6 +1043,8 @@ class Application extends App implements IBootstrap {
 	 * allowed-expense-categories: a claim in a switched-off category is refused. The expense
 	 * approver stamp and then the payout fields come last of every Expense pre-save listener,
 	 * so the modified data they merge into is complete and a decided claim's amounts win.
+	 * payroll-engine-port-from-shillinq REQ-PPP-002: a pension participation that overlaps
+	 * another of the same employee is refused.
 	 *
 	 * @param IEventDispatcher $dispatcher The live event dispatcher.
 	 *
@@ -1063,7 +1052,7 @@ class Application extends App implements IBootstrap {
 	 */
 	private function registerExpensePayrollListeners(IEventDispatcher $dispatcher): void {
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG, ExpenseCategoryGuardListener::class => ExpenseCategoryGuardListener::SLUG, ExpenseManagerStampListener::class => ExpenseManagerStampListener::SLUG, ExpensePayoutFieldsListener::class => ExpensePayoutFieldsListener::SLUG, DeploymentPlanTotalsListener::class => DeploymentPlanTotalsListener::SLUG] as $listener => $slug) {
+			foreach ([ExpenseRouteListener::class => ExpenseRouteListener::SLUG, RecurringAllowanceStampListener::class => RecurringAllowanceStampListener::SLUG, PayrollRunFindingStampListener::class => PayrollRunFindingStampListener::SLUG, CaoComponentOverrideListener::class => CaoComponentOverrideListener::SLUG, CostAllocationGuardListener::class => CostAllocationGuardListener::COSTALLOCATION_SLUG, ExpenseCategoryGuardListener::class => ExpenseCategoryGuardListener::SLUG, ExpenseManagerStampListener::class => ExpenseManagerStampListener::SLUG, ExpensePayoutFieldsListener::class => ExpensePayoutFieldsListener::SLUG, DeploymentPlanTotalsListener::class => DeploymentPlanTotalsListener::SLUG, PensionParticipationOverlapListener::class => PensionParticipationOverlapListener::SLUG] as $listener => $slug) {
 				$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: $listener, registers: null, schemas: [$slug]);
 			}
 		}

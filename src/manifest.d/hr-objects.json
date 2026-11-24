@@ -1001,7 +1001,7 @@
 						"id": "pension-participations",
 						"type": "object-list",
 						"title": "Pension",
-						"icon": "AccountCash",
+						"icon": "AccountClockOutline",
 						"content": {
 							"register": "humaniq",
 							"schema": "PensionParticipation",

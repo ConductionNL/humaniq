@@ -56,6 +56,11 @@ class PensionParticipationDeclarationTest extends TestCase {
 		return $this->json('lib/Settings/register.d/hr-pension.json')['components']['schemas'];
 	}
 
+	/**
+	 * The scheme the run reads holds the franchise, the cap and both percentages.
+	 *
+	 * @return void
+	 */
 	public function testTheSchemeTheRunReadsCarriesFranchiseCapAndPercentages(): void {
 		$properties = $this->schemas()['PensionScheme']['properties'];
 
@@ -64,6 +69,11 @@ class PensionParticipationDeclarationTest extends TestCase {
 		}
 	}
 
+	/**
+	 * A participation keys an employee to a fund the scheme knows, for a date range.
+	 *
+	 * @return void
+	 */
 	public function testTheParticipationLinksAnEmployeeToAFundForADateRange(): void {
 		$schemas       = $this->schemas();
 		$participation = $schemas['PensionParticipation'];
@@ -80,12 +90,22 @@ class PensionParticipationDeclarationTest extends TestCase {
 		$this->assertNotContains('authenticated', $participation['authorization']['create']);
 	}
 
+	/**
+	 * The register lists the participation schema.
+	 *
+	 * @return void
+	 */
 	public function testTheRegisterCarriesTheParticipation(): void {
 		$schemas = $this->json('lib/Settings/humaniq_register.json')['components']['registers']['humaniq']['schemas'];
 
 		$this->assertContains('PensionParticipation', $schemas);
 	}
 
+	/**
+	 * The seed holds two participations, each in a seeded fund.
+	 *
+	 * @return void
+	 */
 	public function testTheSeedHoldsTwoParticipationsInASeededScheme(): void {
 		$funds = [];
 		$participations = [];
@@ -103,6 +123,11 @@ class PensionParticipationDeclarationTest extends TestCase {
 		}
 	}
 
+	/**
+	 * Payroll has the index and detail pages, the employee page a Pension list.
+	 *
+	 * @return void
+	 */
 	public function testPayrollHasPagesAndTheEmployeeATab(): void {
 		$ids = [];
 		foreach ($this->json('src/manifest.d/hr-pension.json')['pageInstances'] as $page) {

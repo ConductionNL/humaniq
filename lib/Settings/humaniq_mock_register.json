@@ -25970,6 +25970,48 @@
         "vakantiegeldPaid": 3.0,
         "pensionContribution": 3.0,
         "importedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PensionParticipation",
+          "slug": "pensionparticipation-pensionparticipation-1-1"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000000",
+        "fund": "abp",
+        "startDate": "2026-03-01",
+        "userId": "Voorbeeld Userid 1",
+        "endDate": "2026-03-01",
+        "participationFactor": 1,
+        "administrationId": "Voorbeeld Administrationid 1"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PensionParticipation",
+          "slug": "pensionparticipation-pensionparticipation-2-2"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000001",
+        "fund": "spw",
+        "startDate": "2026-03-02",
+        "userId": "Voorbeeld Userid 2",
+        "endDate": "2026-03-02",
+        "participationFactor": 1,
+        "administrationId": "Voorbeeld Administrationid 2"
+      },
+      {
+        "@self": {
+          "register": "humaniq",
+          "schema": "PensionParticipation",
+          "slug": "pensionparticipation-pensionparticipation-3-3"
+        },
+        "employeeId": "00000000-0000-4000-8000-000000000002",
+        "fund": "bpf-bouw",
+        "startDate": "2026-03-03",
+        "userId": "Voorbeeld Userid 3",
+        "endDate": "2026-03-03",
+        "participationFactor": 1,
+        "administrationId": "Voorbeeld Administrationid 3"
       }
     ]
   }

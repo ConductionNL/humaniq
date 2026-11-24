@@ -344,7 +344,7 @@
                         "humaniq-payroll"
                     ]
                 },
-                "icon": "AccountCash",
+                "icon": "AccountClockOutline",
                 "version": "0.1.0",
                 "title": "Pension participation",
                 "description": "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.",
