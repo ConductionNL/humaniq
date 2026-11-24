@@ -29,6 +29,7 @@ namespace OCA\Humaniq\Service;
 use OCA\Humaniq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Fills an empty candidate profile from the CV.
@@ -94,7 +95,7 @@ class CvProfileReader {
 		$request[(ctype_digit($reference) === true ? 'fileId' : 'documentUri')] = $reference;
 		try {
 			$read = (array)$filinq->extractProfile($request, $userId);
-		} catch (\Throwable $e) {
+		} catch (Throwable $e) {
 			$this->logger->warning('CvProfileReader: filinq could not read the CV: ' . $e->getMessage());
 			return self::answer(status: 'failed', message: 'The CV could not be read. Type the profile instead.');
 		}
