@@ -861,6 +861,54 @@
                 }
             }
         },
+        "/applications/{id}/read-cv": {
+            "post": {
+                "operationId": "application-cv-read-cv",
+                "summary": "Read CV: fill an empty profile from the application's CV through filinq",
+                "description": "Read CV: fill an empty profile from the application's CV through filinq. 200 when the profile was filled; 422 with the reason when it was left unchanged (filled by HR, no CV, no filinq, unreadable). Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "application-cv"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The application id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "description": "The profile was left unchanged; the body says why."
+                    }
+                }
+            }
+        },
         "/applications/{id}/hire": {
             "post": {
                 "operationId": "hire-hire",

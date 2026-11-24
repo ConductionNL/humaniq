@@ -1256,6 +1256,15 @@
                         "title": "Years of experience",
                         "description": "Years of relevant experience, as HR read them from the CV."
                     },
+                    "profileSource": {
+                        "type": "string",
+                        "nullable": true,
+                        "enum": ["hand", "cv"],
+                        "x-enum-labels": {"hand": "Typed by HR", "cv": "Read from the CV"},
+                        "title": "Profile source",
+                        "description": "Whether the education level, years and competences were typed by HR or read from the CV. A profile read from the CV is checked by HR before candidates are compared.",
+                        "x-notes": "hiring-cv-profile-extraction REQ-CAS-004: Read CV sets cv; it never overwrites a profile HR filled."
+                    },
                     "competenceCodes": {
                         "type": "array",
                         "title": "Competences",

@@ -4005,6 +4005,21 @@
 						"url": "/api/offer/request-signature"
 					},
 					{
+						"confirm": false,
+						"icon": "FileAccountOutline",
+						"id": "read-cv",
+						"label": "Read CV",
+						"method": "POST",
+						"params": {},
+						"successMessage": "The profile was read from the CV. Check it before you compare candidates.",
+						"type": "api-call",
+						"url": "/api/applications/@objectId/read-cv",
+						"visibleWhen": {
+							"field": "cvFile",
+							"op": "notEmpty"
+						}
+					},
+					{
 						"icon": "StarOutline",
 						"id": "score-candidate",
 						"label": "Score this candidate",

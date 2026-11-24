@@ -309,6 +309,21 @@
 						"errorMessage": "Requesting the offer letter/e-signature failed."
 					},
 					{
+						"id": "read-cv",
+						"label": "Read CV",
+						"type": "api-call",
+						"icon": "FileAccountOutline",
+						"url": "/api/applications/@objectId/read-cv",
+						"method": "POST",
+						"params": {},
+						"confirm": false,
+						"successMessage": "The profile was read from the CV. Check it before you compare candidates.",
+						"visibleWhen": {
+							"field": "cvFile",
+							"op": "notEmpty"
+						}
+					},
+					{
 						"id": "score-candidate",
 						"label": "Score this candidate",
 						"type": "open-form",
