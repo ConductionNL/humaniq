@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCA\Humaniq\Support\ResolvesObjectService;
 /**
  * Writes one draft shillinq APTransaction per confirmed wage tax return.
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 class WageTaxRemittanceService implements WageTaxRemittanceServiceInterface {
 
@@ -100,7 +100,7 @@ class WageTaxRemittanceService implements WageTaxRemittanceServiceInterface {
 	 *
 	 * @return list<array<string, mixed>> One outcome per run.
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
 	 */
 	public function processPayableRuns(?string $period=null): array {
 		$outcomes = [];
@@ -126,9 +126,9 @@ class WageTaxRemittanceService implements WageTaxRemittanceServiceInterface {
 	 *
 	 * @return array<string, mixed> Outcome: runId, status, message, recordId, payableId.
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-002
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-004
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-002
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-003
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-004
 	 */
 	public function processRun(array $run): array {
 		$runId = $this->payables->idOf(row: $run);

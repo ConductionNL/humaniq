@@ -33,7 +33,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * occ command for the wage tax remittance hand-off.
  *
- * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+ * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
  */
 class WageTaxRemitCommand extends Command {
 
@@ -69,7 +69,7 @@ class WageTaxRemitCommand extends Command {
 	 *
 	 * @return int 1 when any hand-off failed, else 0.
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$option = $input->getOption('period');

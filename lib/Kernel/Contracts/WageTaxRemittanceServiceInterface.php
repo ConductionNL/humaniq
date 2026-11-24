@@ -45,7 +45,7 @@ interface WageTaxRemittanceServiceInterface {
 	 *
 	 * @return list<array<string, mixed>> One outcome per run.
 	 *
-	 * @spec openspec/changes/payroll-wage-tax-remittance-shillinq/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
+	 * @spec openspec/specs/payroll-wage-tax-remittance-shillinq/spec.md#REQ-PWR-001
 	 */
 	public function processPayableRuns(?string $period=null): array;
 }//end interface
