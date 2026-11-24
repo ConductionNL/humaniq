@@ -41,6 +41,7 @@ namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlStagiairChecks;
 use OCA\Humaniq\Standards\RuleEngine;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -69,8 +70,10 @@ class NlStagiairChecksTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		RuleEngine::reset();
-		$this->stagiairChecks = NlStagiairChecks::checks()['Stagiair'];
-		$this->contractChecks = NlStagiairChecks::checks()['EmploymentContract'];
+		// The engine's table path: derive, then the shared Dmn evaluator.
+		$registered = TableCheckRegistry::checks([NlStagiairChecks::class]);
+		$this->stagiairChecks = array_map(static fn (callable $predicate): callable => static fn (array $o): bool => $predicate($o, ['jurisdiction' => 'NL']), $registered['Stagiair']);
+		$this->contractChecks = array_map(static fn (callable $predicate): callable => static fn (array $o): bool => $predicate($o, ['jurisdiction' => 'NL']), $registered['EmploymentContract']);
 
 	}//end setUp()
 
