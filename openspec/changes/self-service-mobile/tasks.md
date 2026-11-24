@@ -19,7 +19,7 @@
       image/*,application/pdf`, `capture: environment`) in `register.d/hr-expense.json` and the
       mock register, so nextcloud-vue's form renders it as `CnFileField` with the rear camera on
       a phone. Receipt OCR reads the stored file id, the rendered file object, or a Files path
-      from before through `ReceiptFileReference` (`ReceiptFileReferenceTest`, 12 cases, and a
+      from before through `ReceiptExtractionRepository::receiptReference()` (12 cases, and a
       rendered-object case in `ReceiptExtractionServiceTest`). The app version moved so instances
       import the changed register. `check:manifest` and `check:schema-l10n` exit 0.
 - [x] 2.3 Add the opt-in notification setting on `Mijn HR` calling openregister's web-push

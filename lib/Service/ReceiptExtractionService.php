@@ -260,7 +260,7 @@ class ReceiptExtractionService implements ReceiptExtractionServiceInterface {
 			return $this->outcome($attempt->expenseId, 'failed', 'Expense niet gevonden: ' . $attempt->expenseId);
 		}
 
-		$attempt->receiptFile = ReceiptFileReference::of($attempt->expense['receiptFile'] ?? null);
+		$attempt->receiptFile = $this->repository->receiptReference($attempt->expense['receiptFile'] ?? null);
 		if ($attempt->receiptFile === '') {
 			return $this->outcome($attempt->expenseId, 'failed', 'Expense heeft geen receiptFile; extractie is geweigerd.');
 		}

@@ -134,6 +134,51 @@ class ReceiptExtractionRepository {
 	}//end activeExtractionFor()
 
 	/**
+	 * The receipt reference a `receiptFile` value holds: the file id as a
+	 * string of digits, a Files path, or '' when it holds no receipt.
+	 *
+	 * `receiptFile` is a file property: OpenRegister stores the photo or PDF
+	 * as a file id and renders it as the file object (`id`, `path`, ...). A
+	 * Files path string saved before that change is kept as sent.
+	 *
+	 * @param mixed $value The value: null, an int id, a string, or a rendered file object.
+	 *
+	 * @return string The trimmed reference, or '' for none.
+	 *
+	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+	 */
+	public function receiptReference(mixed $value): string {
+		if (is_array($value) === true) {
+			$value = $this->fileObjectReference($value);
+		}
+
+		if (is_int($value) === true) {
+			return $value > 0 ? (string)$value : '';
+		}
+
+		return is_string($value) === true ? trim($value) : '';
+	}//end receiptReference()
+
+	/**
+	 * The id of a rendered file object, else its path, else null.
+	 *
+	 * @param array<mixed> $file The rendered file object.
+	 *
+	 * @return int|string|null The id or path.
+	 *
+	 * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
+	 */
+	private function fileObjectReference(array $file): int|string|null {
+		$fileId = $file['id'] ?? $file['fileId'] ?? null;
+		if (is_int($fileId) === true || (is_string($fileId) === true && ctype_digit(trim($fileId)) === true)) {
+			return $fileId;
+		}
+
+		$path = $file['path'] ?? null;
+		return is_string($path) === true ? $path : null;
+	}//end fileObjectReference()
+
+	/**
 	 * Every Expense with a non-empty `receiptFile` and no active
 	 * (`pending`/`extracted`) `ReceiptExtraction` (design.md D7). Does NOT
 	 * pre-filter already-extracted Expenses -- `extractForExpense()`'s own
@@ -147,7 +192,7 @@ class ReceiptExtractionRepository {
 	public function eligibleBacklogExpenses(): array {
 		$out = [];
 		foreach ($this->loadAll(self::EXPENSE_SCHEMA) as $expense) {
-			$receiptFile = ReceiptFileReference::of($expense['receiptFile'] ?? null);
+			$receiptFile = $this->receiptReference($expense['receiptFile'] ?? null);
 			if ($receiptFile === '') {
 				continue;
 			}

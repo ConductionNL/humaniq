@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for ReceiptFileReference.
+ * Unit tests for ReceiptExtractionRepository::receiptReference().
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Service
@@ -22,15 +22,18 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Service;
 
-use OCA\Humaniq\Service\ReceiptFileReference;
+use OCA\Humaniq\Service\ReceiptExtractionRepository;
+use OCA\Humaniq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
- * Tests for ReceiptFileReference.
+ * Tests for ReceiptExtractionRepository::receiptReference().
  *
  * @spec openspec/changes/self-service-mobile/tasks.md#task-2.2
  */
-class ReceiptFileReferenceTest extends TestCase {
+class ReceiptExtractionRepositoryReferenceTest extends TestCase {
 
 	/**
 	 * Every shape `receiptFile` can hold reads to one reference.
@@ -55,14 +58,21 @@ class ReceiptFileReferenceTest extends TestCase {
 	}//end values()
 
 	/**
-	 * @dataProvider values
+	 * Each value reads to its reference.
 	 *
 	 * @param mixed  $value    The receiptFile value.
 	 * @param string $expected The reference.
 	 *
 	 * @return void
+	 *
+	 * @dataProvider values
 	 */
 	public function testReadsTheReference(mixed $value, string $expected): void {
-		$this->assertSame($expected, ReceiptFileReference::of($value));
+		$repository = new ReceiptExtractionRepository(
+			$this->createMock(ContainerInterface::class),
+			$this->createMock(SettingsService::class),
+			$this->createMock(LoggerInterface::class)
+		);
+		$this->assertSame($expected, $repository->receiptReference($value));
 	}//end testReadsTheReference()
 }//end class
