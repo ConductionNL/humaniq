@@ -79,8 +79,12 @@
 
 ## 5. Hand-over
 
-- [ ] 5.1 `@spec` tags on every changed method and an e2e test or a reason-bearing
+- [x] 5.1 `@spec` tags on every changed method and an e2e test or a reason-bearing
       `@e2e exclude` per scenario (gates 19 and 46).
+      Done: `@spec` on every method #1265, #1267, #1268 and #1269 changed; a reason-bearing
+      `@e2e exclude` naming the unit test under each server-side scenario; the two scenarios
+      with a page step in `tests/e2e/spec-coverage/payroll-engine-port-from-shillinq.spec.ts`
+      (written, runs in nightly).
 - [ ] 5.2 Live check on the dev instance: one run with a participant and a starter; note the
       payslips in the PR body.
 - [ ] 5.3 Tell the shillinq lane that humaniq covers the engine, so shillinq can run the
