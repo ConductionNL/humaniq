@@ -25,6 +25,7 @@
 <template>
 	<CnAppRoot
 		:aiCompanion="true"
+		:aiDefaultAgent="aiDefaultAgent"
 		:manifest="effectiveManifest"
 		:registry="registry"
 		:pageTypes="pageTypes"
@@ -37,6 +38,7 @@ import { CnAppRoot } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as ncT } from '@nextcloud/l10n'
 import { provide, ref } from 'vue'
+import { defaultAgentFor } from './services/hrAssistantAgent.js'
 
 export default {
 	name: 'App',
@@ -83,6 +85,19 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The agent the AI companion starts on: the HR question assistant on
+		 * Mijn HR routes (self-service-policy-assistant design D3), else ''
+		 * so the library keeps its page-relevance default. An agent the user
+		 * picked stays picked.
+		 *
+		 * @spec openspec/changes/self-service-policy-assistant/tasks.md#task-2.2
+		 * @return {string} The agent name, or ''.
+		 */
+		aiDefaultAgent() {
+			return defaultAgentFor(this.$route)
+		},
+
 		/**
 		 * The manifest handed to CnAppRoot with `runtime.user.administrationMode`
 		 * merged in from the `activeAdministrationMode` initial state
