@@ -1655,6 +1655,24 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	}//end periodCents()
 
 	/**
+	 * A participant's pension base and employer premium (payroll-engine-port-from-shillinq
+	 * D1); none without a participation, so that payslip stays as it was.
+	 *
+	 * @param array<string, mixed> $slip The calculated slip, with `input` and `result`.
+	 *
+	 * @return array<string, float>
+	 *
+	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 */
+	private function pensionFields(array $slip): array {
+		if (isset($slip['input']) === false || $slip['input']->pension->isEmpty() === true) {
+			return [];
+		}
+
+		return ['pensionBase' => $this->euros($slip['result']->pensionBaseCents), 'pensionEmployer' => $this->euros($slip['result']->pensionEmployerCents)];
+	}//end pensionFields()
+
+	/**
 	 * Why a starter's or leaver's salary is lower (payroll-engine-port-from-shillinq
 	 * D3): the factor and the days it counts. None for a whole period or an
 	 * hourly employee, so that payslip stays as it was.
@@ -1914,14 +1932,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 			$payload['tijdvakFactor'] = $periodsPerYear;
 		}
 
-		$payload = array_merge($payload, $this->periodFactorFields(slip: $slip));
-
-		if (isset($slip['input']) === true && $slip['input']->pension->isEmpty() === false) {
-			// payroll-engine-port-from-shillinq D1: a participant's base and
-			// employer premium; absent otherwise, so that payslip stays as it was.
-			$payload['pensionBase'] = $this->euros($result->pensionBaseCents);
-			$payload['pensionEmployer'] = $this->euros($result->pensionEmployerCents);
-		}
+		$payload = array_merge($payload, $this->periodFactorFields(slip: $slip), $this->pensionFields(slip: $slip));
 
 		if (isset($slip['week53']) === true) {
 			// Extended period 13 (D3): the amounts above are the sum of these two.
