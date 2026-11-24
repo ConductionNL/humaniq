@@ -9919,9 +9919,9 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'payroll|year.?to.?date|ytd' src/plugins src/client/src: no match; the open source edition has no payroll module"
    },
    "built": {
-    "requirement": "openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases :: Opening balances SHALL carry a previous package's year-to-date figures into annual totals (REQ-PPE-003)",
+    "requirement": "openspec/specs/payroll-period-edge-cases :: Opening balances SHALL carry a previous package's year-to-date figures into annual totals (REQ-PPE-003)",
     "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-period-edge-cases on 2026-09-27. Traced for that change: each month is computed on its own and the annual statement and the WKR assessment sum only humaniq payslips; nothing carries over year-to-date figures from a previous package. Before: not settled: grep -rniE 'openingBalance|priorYtd|beginsaldo|cumulat' lib/Service lib/Payroll: no hits for carried-over year to date figures, but the payroll engine's cumulative handling was not traced end to end",
+    "evidence": "Specified in openspec/changes/archive/2026-11-24-payroll-period-edge-cases on 2026-09-27. Traced for that change: each month is computed on its own and the annual statement and the WKR assessment sum only humaniq payslips; nothing carries over year-to-date figures from a previous package. Before: not settled: grep -rniE 'openingBalance|priorYtd|beginsaldo|cumulat' lib/Service lib/Payroll: no hits for carried-over year to date figures, but the payroll engine's cumulative handling was not traced end to end",
     "reachedOn": "not traced",
     "owner": "ConductionNL/humaniq",
     "change": "payroll-period-edge-cases"
@@ -10428,9 +10428,9 @@
     "orangehrm": "orangehrm@v5.9 grep -riE 'payroll|week.?53' src/plugins src/client/src: no match in any pay logic; no payroll module"
    },
    "built": {
-    "requirement": ["openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases :: An administration SHALL run payroll monthly, four-weekly or weekly (REQ-PPE-001)", "openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases :: The 53rd week SHALL be paid and taxed as a one-week tijdvak (REQ-PPE-002)"],
+    "requirement": ["openspec/specs/payroll-period-edge-cases :: An administration SHALL run payroll monthly, four-weekly or weekly (REQ-PPE-001)", "openspec/specs/payroll-period-edge-cases :: The 53rd week SHALL be paid and taxed as a one-week tijdvak (REQ-PPE-002)"],
     "state": "specified",
-    "evidence": "Specified in openspec/changes/payroll-period-edge-cases on 2026-09-27. Traced for that change: lib/Service/PayrollRunService.php:255 accepts only YYYY-MM periods (as do the flow calculate node, the pro-forma and the retro service) and the pack divides by the monthly tijdvak factor, so humaniq pays monthly only and cannot pay a weekly or four-weekly week 53. Before: not settled: lib/Settings/register.d/hr-objects.json:114 Payslip.period allows four-weekly YYYY-Pnn, but whether a year with a 53rd week or a 14th period is handled was not traced in the payroll engine",
+    "evidence": "Specified in openspec/changes/archive/2026-11-24-payroll-period-edge-cases on 2026-09-27. Traced for that change: lib/Service/PayrollRunService.php:255 accepts only YYYY-MM periods (as do the flow calculate node, the pro-forma and the retro service) and the pack divides by the monthly tijdvak factor, so humaniq pays monthly only and cannot pay a weekly or four-weekly week 53. Before: not settled: lib/Settings/register.d/hr-objects.json:114 Payslip.period allows four-weekly YYYY-Pnn, but whether a year with a 53rd week or a 14th period is handled was not traced in the payroll engine",
     "reachedOn": "not traced",
     "owner": "ConductionNL/humaniq",
     "change": "payroll-period-edge-cases"
@@ -11010,8 +11010,8 @@
     "owner": "ConductionNL/humaniq",
     "change": "time-entry-approval-state",
     "requirement": [
-     "openspec/changes/time-entry-approval-state/specs/time-entry-approval-state :: A time entry SHALL carry the approval state of its timesheet (REQ-TAS-001)",
-     "openspec/changes/time-entry-approval-state/specs/time-entry-approval-state :: Approved billable hours SHALL be readable per project and period in one query (REQ-TAS-002)"
+     "openspec/specs/time-entry-approval-state :: A time entry SHALL carry the approval state of its timesheet (REQ-TAS-001)",
+     "openspec/specs/time-entry-approval-state :: Approved billable hours SHALL be readable per project and period in one query (REQ-TAS-002)"
     ]
    },
    "provider": "humaniq",

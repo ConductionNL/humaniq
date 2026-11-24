@@ -10,6 +10,7 @@
 
 ## 3. Verification
 
-- [ ] 3.1 Live: approve a seeded timesheet and read `TimeEntry?billable=true&approvalState=approved&projectId=...` through the objects API; the two billable entries come back. Record the call in the PR body.
+- [x] 3.1 Live: approve a seeded timesheet and read `TimeEntry?billable=true&approvalState=approved&projectId=...` through the objects API; the two billable entries come back. Record the call in the PR body.
+      Written, runs in nightly: `tests/e2e/spec-coverage/time-entry-approval-state.spec.ts` approves a seeded September timesheet through its lifecycle and reads `TimeEntry?projectId=…&billable=true&approvalState=approved&date[gte]=2026-09-01&date[lte]=2026-09-30` (two entries, 12.5 hours); not run in the cloud sandbox.
 - [x] 3.2 e2e or reason-bearing `@e2e exclude` per scenario (gate 19), `@spec` tags (gate 16), `openspec validate time-entry-approval-state --strict`, `composer check:strict` once before push.
       Written, runs in nightly: every scenario is covered or carries a reason-bearing `@e2e exclude` (gate 19 green); `composer check:strict` ran in the PR that ticked this.

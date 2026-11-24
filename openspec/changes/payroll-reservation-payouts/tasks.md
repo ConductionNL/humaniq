@@ -46,3 +46,4 @@
       on every new method (gate 16).
 - [ ] 5.2 One live check on a dev instance: calculate a May run with a holiday allowance payout
       and read the special-rate line; record screenshots in the PR.
+      Written: `tests/e2e/spec-coverage/payroll-reservation-payouts.spec.ts` calculates ADM-001's 2026-05 run and reads the special-rate line. It skips, naming the reason, while nl-2026's `bijzondereBeloningen` table is `verified: false` (the run then holds the payout); stays open until a maintainer verifies that table and the check passes.

@@ -1,6 +1,9 @@
-# time-entry-approval-state
+# time-entry-approval-state Specification
 
-## ADDED Requirements
+## Purpose
+Shillinq bills approved, billable hours to a customer. Its open change `sales-time-and-expense-billing` (ConductionNL/shillinq, from shillinq matrix rows on invoicing time and expenses) reads hours through one interface, `BillableHoursSource::unbilled(projectId, from, to)`, returning "approved, billable hours for a project", each with person, date, hours and description. Hours are humaniq's under hydra ADR-107 decision 6, so shillinq's `hours-to-humaniq` supplies that read. The cross-project line of `sales-time-and-expense-billing`, verbatim:
+
+## Requirements
 
 ### Requirement: A time entry SHALL carry the approval state of its timesheet (REQ-TAS-001)
 
@@ -40,4 +43,4 @@ one project in a date range that are billable and approved by filtering
 - **GIVEN** approved entries of 8 and 4.5 billable hours and 2 non-billable hours on project "Renovatie Kade 12" in September 2026
 - **WHEN** shillinq's hours source asks for the approved billable hours of that project for September
 - **THEN** it receives the two billable entries, 12.5 hours, with person, date and description
-- @e2e exclude a data read between apps with no humaniq screen; covered by the live check in tasks.md 3.1
+- @e2e tests/e2e/spec-coverage/time-entry-approval-state.spec.ts

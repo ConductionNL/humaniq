@@ -730,7 +730,7 @@ class RetroAdjustmentService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 */
 	private static function isMonth(string $period): bool {
 		try {

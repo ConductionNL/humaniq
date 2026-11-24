@@ -31,7 +31,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+ * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Psr\Log\LoggerInterface;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+ * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
  */
 class TimesheetEntryStateListener implements IEventListener {
 
@@ -83,7 +83,7 @@ class TimesheetEntryStateListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/time-entry-approval-state/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
+	 * @spec openspec/specs/time-entry-approval-state/spec.md#Requirement:-A-time-entry-SHALL-carry-the-approval-state-of-its-timesheet-(REQ-TAS-001)
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false) {

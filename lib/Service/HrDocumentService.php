@@ -1006,7 +1006,7 @@ class HrDocumentService implements HrDocumentServiceInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function withOpeningBalance(array $fields, ?array $opening): array {
 		if ($opening === null) {
@@ -1032,7 +1032,7 @@ class HrDocumentService implements HrDocumentServiceInterface {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-003
 	 */
 	private function openingBalanceOf(string $employeeId, int $year): ?array {
 		foreach ($this->loadAll('PayrollOpeningBalance') as $balance) {

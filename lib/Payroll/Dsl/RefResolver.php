@@ -207,7 +207,7 @@ final class RefResolver {
 	 *
 	 * @throws DslException When the field is unknown or the period is unparseable.
 	 *
-	 * @spec openspec/changes/payroll-period-edge-cases/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
+	 * @spec openspec/specs/payroll-period-edge-cases/spec.md#REQ-PPE-001
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) PayPeriod::parse is the pure value-object factory every period reader uses.
 	 */
