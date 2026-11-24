@@ -34,7 +34,17 @@
  *
  * @link https://conduction.nl
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): both rules are declared as OpenRegister decision
+ * tables via the ProvidesTables capability, so the contract-type, fase and
+ * presence gates are matched by the shared Dmn\DecisionTableEvaluator and only
+ * the derivations (strict flag, numeric wage, trimmed reference) stay here.
+ * The closure predicates remain available as legacyChecks() -- the parity
+ * oracle, NOT registered in the engine -- until staged retirement
+ * (REQ-RULE-009).
+ *
  * @spec openspec/specs/uitzend-flexpool/spec.md
+ * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -44,7 +54,7 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * Agency-worker (uitzendkracht) executable checks -- both agency-scoped.
  */
-final class NlUitzendChecks implements CheckProvider {
+final class NlUitzendChecks implements CheckProvider, ProvidesTables {
 
 	/**
 	 * The EmploymentContract.type value both checks are exclusively scoped to.
@@ -56,11 +66,135 @@ final class NlUitzendChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: every check this provider owns is table-declared (see tables()).
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Both agency-scoped EmploymentContract rules as derivation + FIRST-hit
+	 * decision table; a non-agency contract falls to the catch-all row and
+	 * passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/uitzend-flexpool/spec.md
+	 */
+	public static function tables(): array {
+		$agency = '"' . self::AGENCY_TYPE . '"';
+
+		return [
+			'EmploymentContract' => [
+				// BW art. 7:691 lid 2 -- the uitzendbeding only holds in fase A.
+				'nl-uitzendbeding-alleen-fase-a' => [
+					'derive' => self::faseInputs(...),
+					'table' => self::satisfiedTable(
+						[['name' => 'contractType', 'type' => 'string'], ['name' => 'bedingApplies', 'type' => 'boolean'], ['name' => 'inFaseA', 'type' => 'boolean']],
+						[
+							['id' => 'beding-in-fase-a', 'inputEntries' => [$agency, 'true', 'true'], 'outputEntries' => [true]],
+							['id' => 'beding-outside-fase-a', 'inputEntries' => [$agency, 'true', '-'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				// WAADI art. 8 -- an agency wage needs an inlenersbeloning reference.
+				'nl-inlenersbeloning-onderbouwing-vereist' => [
+					'derive' => self::inlenersbeloningInputs(...),
+					'table' => self::satisfiedTable(
+						[['name' => 'contractType', 'type' => 'string'], ['name' => 'wageSet', 'type' => 'boolean'], ['name' => 'referenceRecorded', 'type' => 'boolean']],
+						[
+							['id' => 'wage-without-reference', 'inputEntries' => [$agency, 'true', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * A FIRST-hit table with a boolean `satisfied` output: the given rows,
+	 * then a catch-all satisfied row so every derivable input row decides.
+	 *
+	 * @param array<int, array<string, string>> $inputs The declared inputs.
+	 * @param array<int, array<string, mixed>>  $rules  The deciding rows, before the catch-all.
+	 *
+	 * @return array<string, mixed> The decision table.
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function satisfiedTable(array $inputs, array $rules): array {
+		$rules[] = ['id' => 'out-of-scope', 'inputEntries' => array_fill(0, count($inputs), '-'), 'outputEntries' => [true]];
+
+		return [
+			'hitPolicy' => 'FIRST',
+			'inputs' => $inputs,
+			'outputs' => [
+				['name' => 'satisfied', 'type' => 'boolean'],
+			],
+			'rules' => $rules,
+		];
+
+	}//end satisfiedTable()
+
+	/**
+	 * Inputs of the fase-A rule: the contract type, whether the beding is
+	 * strictly on, and whether the contract is in fase A.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 *
+	 * @return array{contractType: string, bedingApplies: bool, inFaseA: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function faseInputs(array $contract): array {
+		return [
+			'contractType' => (string)($contract['type'] ?? ''),
+			'bedingApplies' => (($contract['uitzendbedingVanToepassing'] ?? null) === true),
+			'inFaseA' => ((string)($contract['uitzendFase'] ?? '') === 'A'),
+		];
+
+	}//end faseInputs()
+
+	/**
+	 * Inputs of the inlenersbeloning rule: the contract type, whether a
+	 * numeric hourly wage is set, and whether a non-blank reference is recorded.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 *
+	 * @return array{contractType: string, wageSet: bool, referenceRecorded: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function inlenersbeloningInputs(array $contract): array {
+		return [
+			'contractType' => (string)($contract['type'] ?? ''),
+			'wageSet' => is_numeric($contract['hourlyWage'] ?? null),
+			'referenceRecorded' => (trim((string)($contract['inlenersbeloningReferentie'] ?? '')) !== ''),
+		];
+
+	}//end inlenersbeloningInputs()
+
+	/**
+	 * The pre-conversion closure predicates, kept as the PARITY ORACLE only:
+	 * not registered in the engine (checks() is empty), consumed by the
+	 * table/legacy parity test, retired with the other converted rules after
+	 * the table form is proven on an OpenRegister-backed audit run
+	 * (REQ-RULE-009, tasks section 6).
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
 	 * @spec openspec/specs/uitzend-flexpool/spec.md
 	 */
-	public static function checks(): array {
+	public static function legacyChecks(): array {
 		return [
 			'EmploymentContract' => [
 				// BW art. 7:691 lid 2 -- the uitzendbeding only holds in fase A.
@@ -70,7 +204,7 @@ final class NlUitzendChecks implements CheckProvider {
 			],
 		];
 
-	}//end checks()
+	}//end legacyChecks()
 
 	/**
 	 * {@inheritDoc}
