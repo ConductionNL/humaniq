@@ -40,13 +40,14 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 	/**
 	 * Build the node around a PayrollRunService double.
 	 *
-	 * @param PayrollRunService $service The service double.
+	 * @param PayrollRunService $service       The service double.
+	 * @param object|null       $objectService The fake ObjectService, when the test reads administrations.
 	 *
 	 * @return PayrollCalculateNode
 	 */
-	private function node(PayrollRunService $service): PayrollCalculateNode {
+	private function node(PayrollRunService $service, ?object $objectService = null): PayrollCalculateNode {
 		return new PayrollCalculateNode(
-			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container(), $this->settings()),
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container($objectService), $this->settings()),
 			$this->logger(),
 			$service
 		);
@@ -235,5 +236,49 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 
 		$this->addToAssertionCount(1);
 	}//end testValidateConfigAcceptsTemplateAndAbsent()
+
+	/**
+	 * The run's pay date travels on the item as `payroll.payDate`, from the
+	 * administration's pay day in the run's month, for the flow to wait on.
+	 *
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+	 *
+	 * @return void
+	 */
+	public function testThePayDateOfTheRunsAdministrationTravelsOnTheItem(): void {
+		$service = $this->createMock(PayrollRunService::class);
+		$service->method('runFor')->willReturn($this->outcome('calculated'));
+		$objects = $this->fakeObjectService([
+			'hrAdministration' => [
+				['id' => 'a-2', 'administrationId' => 'ADM-002', 'paymentDayOfMonth' => 15],
+				['id' => 'a-1', 'administrationId' => 'ADM-001', 'paymentDayOfMonth' => 25],
+			],
+		]);
+
+		$out = $this->node($service, $objects)->execute(new FlowNodeCall(items: [$this->item([])], config: ['period' => '2026-05'], context: []));
+
+		$this->assertSame('2026-05-25', $out[0]['json']['payroll']['payDate']);
+	}//end testThePayDateOfTheRunsAdministrationTravelsOnTheItem()
+
+	/**
+	 * Without a pay day, or when administrations cannot be read, the run has
+	 * no pay date and still calculates: the flow then posts on approval.
+	 *
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+	 *
+	 * @return void
+	 */
+	public function testWithoutAPayDayTheRunHasNoPayDateAndStillCalculates(): void {
+		$service = $this->createMock(PayrollRunService::class);
+		$service->method('runFor')->willReturn($this->outcome('calculated'));
+		$objects = $this->fakeObjectService(['hrAdministration' => [['id' => 'a-1', 'administrationId' => 'ADM-001']]]);
+
+		$out = $this->node($service, $objects)->execute(new FlowNodeCall(items: [$this->item([])], config: ['period' => '2026-05'], context: []));
+		$this->assertNull($out[0]['json']['payroll']['payDate']);
+		$this->assertSame('calculated', $out[0]['json']['payroll']['status']);
+
+		$unreadable = $this->node($service)->execute(new FlowNodeCall(items: [$this->item([])], config: ['period' => '2026-05'], context: []));
+		$this->assertNull($unreadable[0]['json']['payroll']['payDate']);
+	}//end testWithoutAPayDayTheRunHasNoPayDateAndStillCalculates()
 
 }//end class

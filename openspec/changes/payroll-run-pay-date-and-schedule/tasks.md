@@ -3,12 +3,14 @@
 - [ ] 1.1 Land a pay-date field (`paymentDayOfMonth`) on the administration surface, then an
       `openregister.wait` (or run-scoped FlowTimer) between approve and glpost in the Loonrun
       flow. (Was `payroll-run-as-a-flow` 7.1.)
+      Progress: `hrAdministration.paymentDayOfMonth` (schema 1.9.0, en/nl), `PayDate::forPeriod()` and `payroll.payDate` on the calculate node's outcome are in (`PayDateTest`, `PayrollCalculateNodeTest`). Left: the `openregister.wait` step with `until: "{{ payroll.payDate }}"` between approve and glpost, which needs ConductionNL/openregister#11043 (a wait that renders a field of the item); until then OpenRegister refuses the placeholder when the flow is saved.
 
 ## 2. Schedule adoption
 
-- [ ] 2.1 Schedule adoption recipe on the admin/docs surface (`openregister.trigger-schedule`
+- [x] 2.1 Schedule adoption recipe on the admin/docs surface (`openregister.trigger-schedule`
       + explicit `runAs`), plus oversight registration if the scheduled flow qualifies.
       (Was `payroll-run-as-a-flow` 7.2.)
+      Done: `docs/payroll/loonrun-flow.md` gives the adoption steps and the schedule recipe (`openregister.trigger-schedule`, cron, explicit `runAs` service account). Decision on oversight: a scheduled Loonrun still stops at its human review task before anything is approved, posted or paid, so it is not autonomous work and is not registered; the page says to register it if the review step is removed.
 
 ## 3. The flow as the only approver
 
