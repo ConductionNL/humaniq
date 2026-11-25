@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlHr21Checks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -59,7 +60,7 @@ class NlHr21SchaalMappingTest extends TestCase {
 	 * @return void
 	 */
 	public function testAVerifiedNormfunctieWithoutAScaleIsVacuous(): void {
-		$check = NlHr21Checks::checks()['EmploymentContract']['nl-hr21-schaal-consistentie'];
+		$check = TableCheckRegistry::checks([NlHr21Checks::class])['EmploymentContract']['nl-hr21-schaal-consistentie'];
 		$contract = ['normfunctieId' => 'HR21-002', 'caoSchaal' => '8'];
 
 		self::assertFalse($check($contract, $this->context('10')), 'Sanity: a mismatch against a mapped scale is a violation.');

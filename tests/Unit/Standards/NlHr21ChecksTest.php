@@ -111,7 +111,7 @@ class NlHr21ChecksTest extends TestCase {
 	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-HR21-003
 	 */
 	public function testSchaalConsistentieCheckIsReachableFromTheEngine(): void {
-		$this->assertArrayHasKey('nl-hr21-schaal-consistentie', (NlHr21Checks::checks()['EmploymentContract'] ?? []));
+		$this->assertArrayHasKey('nl-hr21-schaal-consistentie', (NlHr21Checks::tables()['EmploymentContract'] ?? []));
 		$this->assertContains('nl-hr21-schaal-consistentie', RuleEngine::checkedRuleIds());
 
 	}//end testSchaalConsistentieCheckIsReachableFromTheEngine()

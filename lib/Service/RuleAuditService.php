@@ -297,8 +297,8 @@ class RuleAuditService implements RuleAuditServiceInterface {
 		$context['comp'] = $this->buildCompContext();
 
 		// functiehuis-hr21: a Normfunctie-by-id index (caoSchaal +
-		// caoSchaalVerified) so NlHr21Checks::checks()['EmploymentContract']
-		// ['nl-hr21-schaal-consistentie'] can resolve a contract's assigned
+		// caoSchaalVerified) so NlHr21Checks' table-declared
+		// nl-hr21-schaal-consistentie can resolve a contract's assigned
 		// normfunctie's mapped schaal without re-querying the register — the
 		// `buildCompContext()` salaryBandsById precedent, mirrored onto
 		// Normfunctie.
@@ -765,7 +765,7 @@ class RuleAuditService implements RuleAuditServiceInterface {
 
 	/**
 	 * Build the Normfunctie-by-id index consumed by
-	 * `NlHr21Checks::checks()['EmploymentContract']['nl-hr21-schaal-consistentie']`
+	 * NlHr21Checks' table-declared `nl-hr21-schaal-consistentie`
 	 * (functiehuis-hr21) — the `buildCompContext()` salaryBandsById precedent,
 	 * mirrored onto Normfunctie.
 	 *

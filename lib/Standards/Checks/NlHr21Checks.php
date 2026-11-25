@@ -30,6 +30,13 @@
  * (tasks.md #11) — its `caoSchaalSource` says so explicitly, so this single
  * exception is never mistaken for an actual VNG/HR21 confirmation.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): each of the two HR21 contract rules is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -51,31 +58,68 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * HR21 normfunctie-to-schaal consistency check, plus the illustrative
  * Normfunctie reference-row seed.
+ *
+ * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-HR21-003
  */
-final class NlHr21Checks implements CheckProvider, SeedsObjects {
+final class NlHr21Checks implements CheckProvider, SeedsObjects, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			'EmploymentContract' => [
-				'nl-hr21-schaal-consistentie' => static fn (array $contract, array $context): bool => self::schaalConsistentieSatisfied($contract, $context),
-				// people-job-framework-maintenance D4: a live contract on a retired function.
-				'nl-hr21-vervallen-functie' => static fn (array $contract, array $context): bool => self::vervallenFunctieSatisfied($contract, $context),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Both EmploymentContract rules as derivation + FIRST-hit decision
+	 * tables. A contract without a normfunctie, or whose normfunctie does not
+	 * resolve, derives null for the scale rule and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public static function tables(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-hr21-schaal-consistentie' => [
+					'derive' => static fn (array $contract, array $context): ?array => self::schaalInputs($contract, $context),
+					'table' => self::satisfiedTable(
+						[['name' => 'verifiedMapping', 'type' => 'boolean'], ['name' => 'schaalMatches', 'type' => 'boolean']],
+						[['id' => 'scale-differs-from-verified-mapping', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+				// people-job-framework-maintenance D4: a live contract on a retired function.
+				'nl-hr21-vervallen-functie' => [
+					'derive' => static fn (array $contract, array $context): array => self::vervallenInputs($contract, $context),
+					'table' => self::satisfiedTable(
+						[['name' => 'functionRetired', 'type' => 'boolean'], ['name' => 'contractLive', 'type' => 'boolean']],
+						[['id' => 'live-contract-on-retired-function', 'inputEntries' => ['true', 'true'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-HR21-003
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -201,5 +245,79 @@ final class NlHr21Checks implements CheckProvider, SeedsObjects {
 		$contractSchaal = trim((string)($contract['caoSchaal'] ?? ''));
 		return $contractSchaal === $mappedSchaal;
 	}//end schaalConsistentieSatisfied()
+
+	/**
+	 * The scale table's inputs: whether the normfunctie carries a verified,
+	 * non-empty scale, and whether the contract's scale equals it. Null when
+	 * the contract names no normfunctie or it does not resolve.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param array<string, mixed> $context  Evaluation context; reads `hr21.normfunctiesById`.
+	 *
+	 * @return array{verifiedMapping: bool, schaalMatches: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function schaalInputs(array $contract, array $context): ?array {
+		$normfunctieId = trim((string)($contract['normfunctieId'] ?? ''));
+		$normfunctie = ($normfunctieId === '') ? null : ($context['hr21']['normfunctiesById'][$normfunctieId] ?? null);
+		if (is_array($normfunctie) === false) {
+			return null;
+		}
+
+		$mappedSchaal = trim((string)($normfunctie['caoSchaal'] ?? ''));
+
+		return [
+			'verifiedMapping' => (($normfunctie['caoSchaalVerified'] ?? false) === true && $mappedSchaal !== ''),
+			'schaalMatches' => (trim((string)($contract['caoSchaal'] ?? '')) === $mappedSchaal),
+		];
+
+	}//end schaalInputs()
+
+	/**
+	 * The retired-function table's inputs: whether the contract's normfunctie
+	 * is retired (`vervallen`), and whether the contract runs today (started,
+	 * not ended).
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param array<string, mixed> $context  Evaluation context; reads `hr21.normfunctiesById`.
+	 *
+	 * @return array{functionRetired: bool, contractLive: bool}
+	 *
+	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-JFM-002
+	 */
+	private static function vervallenInputs(array $contract, array $context): array {
+		$normfunctieId = trim((string)($contract['normfunctieId'] ?? ''));
+		$today = date('Y-m-d');
+		$start = substr((string)($contract['startDate'] ?? ''), 0, 10);
+		$end = substr((string)($contract['endDate'] ?? ''), 0, 10);
+
+		return [
+			'functionRetired' => ($normfunctieId !== '' && ($context['hr21']['normfunctiesById'][$normfunctieId]['status'] ?? null) === 'vervallen'),
+			'contractLive' => (($start === '' || $start <= $today) && ($end === '' || $end >= $today)),
+		];
+
+	}//end vervallenInputs()
+
+	/**
+	 * The two HR21 closures from before the tables: the oracle that
+	 * NlHr21TableParityTest compares tables() with. Not registered; dropped
+	 * after the OpenRegister audit run confirms the tables.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/functiehuis-hr21/spec.md#REQ-HR21-003
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-hr21-schaal-consistentie' => static fn (array $contract, array $context): bool => self::schaalConsistentieSatisfied($contract, $context),
+				// people-job-framework-maintenance D4: a live contract on a retired function.
+				'nl-hr21-vervallen-functie' => static fn (array $contract, array $context): bool => self::vervallenFunctieSatisfied($contract, $context),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
