@@ -151,4 +151,25 @@ class NlSignalTableParityTest extends TestCase {
 
 	}//end testTableAndLegacyVerdictsAgreeOnEveryFixture()
 
+	/**
+	 * The shared window includes today and its last day, excludes yesterday
+	 * and the day after, and treats an unreadable date as out of scope, on
+	 * both the table path and the oracle.
+	 *
+	 * @return void
+	 */
+	public function testTheWindowIncludesBothEnds(): void {
+		$spec = NlSignalChecks::tables()['EmploymentContract']['nl-signaal-proeftijd-eindigt'];
+		$legacy = NlSignalChecks::legacyChecks()['EmploymentContract']['nl-signaal-proeftijd-eindigt'];
+		foreach (['today' => [false, ['withinWindow' => true]], '+14 days' => [false, ['withinWindow' => true]], '+15 days' => [true, ['withinWindow' => false]], '-1 day' => [true, ['withinWindow' => false]]] as $offset => [$satisfied, $inputs]) {
+			$object = ['proeftijdEndDate' => self::day($offset)];
+			$this->assertSame($inputs, ($spec['derive'])($object, []), $offset);
+			$this->assertSame($satisfied, $legacy($object), $offset);
+		}
+
+		$this->assertNull(($spec['derive'])(['proeftijdEndDate' => 'binnenkort'], []));
+		$this->assertTrue($legacy(['proeftijdEndDate' => 'binnenkort']));
+
+	}//end testTheWindowIncludesBothEnds()
+
 }//end class

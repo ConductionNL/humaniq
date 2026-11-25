@@ -71,6 +71,7 @@ use DateTimeImmutable;
 final class NlSignalChecks implements CheckProvider, ProvidesTables {
 
 	use BuildsSatisfiedTables;
+	use ReadsDateWindows;
 
 	/**
 	 * `nl-signaal-contract-verloopt` window, days (parameters.windowDays in
@@ -189,14 +190,9 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function windowInputs(string $date, int $days): ?array {
-		$at = strtotime($date);
-		if ($at === false) {
-			return null;
-		}
+		$within = self::insideWindow($date, $days);
 
-		$today = (new DateTimeImmutable('today'))->getTimestamp();
-
-		return ['withinWindow' => ($at >= $today && $at <= strtotime('+' . $days . ' days', $today))];
+		return $within === null ? null : ['withinWindow' => $within];
 
 	}//end windowInputs()
 
@@ -278,15 +274,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 * @spec openspec/specs/hr-signals/spec.md#REQ-SIG-007
 	 */
 	private static function proeftijdEindigtSatisfied(array $o): bool {
-		$endDate = strtotime((string)($o['proeftijdEndDate'] ?? ''));
-		if ($endDate === false) {
-			return true;
-		}
-
-		$today = (new DateTimeImmutable('today'))->getTimestamp();
-		$windowEnd = strtotime('+' . self::PROBATION_WINDOW_DAYS . ' days', $today);
-
-		return ($endDate >= $today && $endDate <= $windowEnd) === false;
+		return self::insideWindow((string)($o['proeftijdEndDate'] ?? ''), self::PROBATION_WINDOW_DAYS) !== true;
 	}//end proeftijdEindigtSatisfied()
 
 	/**
@@ -495,15 +483,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 * @return bool
 	 */
 	private static function bhvCertificaatVerloeptSatisfied(array $o): bool {
-		$geldigTot = strtotime((string)($o['certificaatGeldigTot'] ?? ''));
-		if ($geldigTot === false) {
-			return true;
-		}
-
-		$today = (new DateTimeImmutable('today'))->getTimestamp();
-		$windowEnd = strtotime('+' . self::BHV_WINDOW_DAYS . ' days', $today);
-
-		return ($geldigTot >= $today && $geldigTot <= $windowEnd) === false;
+		return self::insideWindow((string)($o['certificaatGeldigTot'] ?? ''), self::BHV_WINDOW_DAYS) !== true;
 	}//end bhvCertificaatVerloeptSatisfied()
 
 	/**
