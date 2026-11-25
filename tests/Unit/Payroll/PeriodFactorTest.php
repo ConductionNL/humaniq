@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+ * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
  */
 
 declare(strict_types=1);

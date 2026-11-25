@@ -166,7 +166,7 @@ class RepublishLoonrunFlowTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+	 * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
 	 */
 	public function testTheShippedFlowsAreReportedAfterTheLoonrunRepair(): void {
 		$appManager = $this->createMock(IAppManager::class);

@@ -765,7 +765,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return array<string, mixed> The slip with `grossCents` and its folds.
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	private function foldGross(array $state, array $slip): array {
 		$employee = $slip['employee'];
@@ -957,7 +957,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return CalculationInput
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	private function calculationInput(array $state, array $slip): CalculationInput {
 		$employee = $slip['employee'];
@@ -985,8 +985,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return PensionPremium|null
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	private function pensionPremiumOf(array $state, array $slip): ?PensionPremium {
 		if (isset($state['pensionInputs']) === false) {
@@ -1011,7 +1011,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return PensionPremiumLookup
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	private function pensionLookup(): PensionPremiumLookup {
 		return new PensionPremiumLookup(fullTimeHoursWeek: AbsenceRateService::DEFAULT_FULL_TIME_HOURS_PER_WEEK);
@@ -1201,7 +1201,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	private function tallySlip(array &$state, array $slip): void {
 		$result = $slip['result'];
@@ -1289,7 +1289,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The failed outcome when the run cannot be saved.
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	private function saveRunTotals(array $state): ?array {
 		$runUpdate = array_merge(
@@ -1690,7 +1690,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return array<string, float>
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	private function pensionFields(array $slip): array {
 		if (isset($slip['input']) === false || $slip['input']->pension->isEmpty() === true) {
@@ -1709,7 +1709,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return array<string, float|string>
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	private function periodFactorFields(array $slip): array {
 		$factor = ($slip['periodFactor'] ?? null);
@@ -1730,7 +1730,7 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @return PeriodFactor
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) PeriodFactor::forEmployment is the pure value-object factory.
 	 */
@@ -1907,8 +1907,8 @@ class PayrollRunService implements PayrollRunServiceInterface {
 	 *
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-005
 	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-001
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	private function payslipPayload(array $state, array $slip): array {
 		['employee' => $employee, 'contract' => $contract, 'result' => $result] = $slip;

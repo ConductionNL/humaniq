@@ -87,7 +87,7 @@ final class NlCaoChecks implements CheckProvider, ProvidesTables, SeedsObjects, 
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -105,7 +105,7 @@ final class NlCaoChecks implements CheckProvider, ProvidesTables, SeedsObjects, 
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
 	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-004
 	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-002
@@ -152,7 +152,7 @@ final class NlCaoChecks implements CheckProvider, ProvidesTables, SeedsObjects, 
 	 *
 	 * @return array{shortfallCents: int}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function scaleInputs(array $o, array $context): ?array {
 		$caoId = trim((string)($o['cao'] ?? ''));
@@ -180,7 +180,7 @@ final class NlCaoChecks implements CheckProvider, ProvidesTables, SeedsObjects, 
 	 *
 	 * @return array{undeclaredComponents: int}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function componentInputs(array $o): array {
 		$named = array_filter(array_map('strval', (array)($o['caoComponents'] ?? [])), static fn (string $key): bool => trim($key) !== '');
@@ -203,7 +203,7 @@ final class NlCaoChecks implements CheckProvider, ProvidesTables, SeedsObjects, 
 	 *
 	 * @return array{shortfallHours: float}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function leaveInputs(array $o, array $context): ?array {
 		$caoId = trim((string)($context['cao']['caoByEmployeeId'][trim((string)($o['employeeId'] ?? ''))] ?? ''));
@@ -452,7 +452,7 @@ final class NlCaoChecks implements CheckProvider, ProvidesTables, SeedsObjects, 
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
 	 */
 	public static function legacyChecks(): array {

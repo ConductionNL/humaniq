@@ -104,7 +104,7 @@ final class NlFleetChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-001
 	 */
 	public static function tables(): array {
@@ -302,7 +302,7 @@ final class NlFleetChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function fieldRecorded(array $o, string $field): bool {
 		return array_key_exists($field, $o) === true && $o[$field] !== null && trim((string)$o[$field]) !== '';
@@ -316,7 +316,7 @@ final class NlFleetChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-001
 	 */
 	public static function legacyChecks(): array {

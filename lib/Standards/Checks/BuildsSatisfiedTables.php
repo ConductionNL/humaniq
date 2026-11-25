@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ namespace OCA\Humaniq\Standards\Checks;
  * Builder for FIRST-hit `satisfied` decision tables, mixed into the
  * table-declaring providers.
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 trait BuildsSatisfiedTables {
 
@@ -45,7 +45,7 @@ trait BuildsSatisfiedTables {
 	 *
 	 * @return array<string, mixed> The decision table.
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function satisfiedTable(array $inputs, array $rules): array {
 		$rules[] = ['id' => 'satisfied', 'inputEntries' => array_fill(0, count($inputs), '-'), 'outputEntries' => [true]];

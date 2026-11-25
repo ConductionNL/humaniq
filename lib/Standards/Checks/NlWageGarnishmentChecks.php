@@ -69,7 +69,7 @@ final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects, Prov
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -86,7 +86,7 @@ final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects, Prov
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
 	 */
 	public static function tables(): array {
@@ -302,7 +302,7 @@ final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects, Prov
 	 *
 	 * @return array{marginCents: int}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function floorInputs(array $o, array $context): ?array {
 		$loonbeslagId = trim((string)($o['loonbeslagId'] ?? ''));
@@ -323,7 +323,7 @@ final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects, Prov
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function overlappingActiveCount(array $o, array $context): int {
 		$selfId = trim((string)($o['id'] ?? $o['@self']['id'] ?? ''));
@@ -345,7 +345,7 @@ final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects, Prov
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
 	 */
 	public static function legacyChecks(): array {

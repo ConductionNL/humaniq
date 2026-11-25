@@ -60,7 +60,7 @@ final class CalculationInputMapper {
 	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-003
 	 * @spec openspec/changes/payroll-reservation-payouts/specs/payroll-reservation-payouts/spec.md#requirement-the-engine-shall-tax-a-special-payment-at-the-special-rate-req-rsp-001
 	 * @spec openspec/changes/payroll-special-regimes
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function toPackInputs(CalculationInput $input): array {
 		$inputs = [

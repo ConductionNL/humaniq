@@ -93,7 +93,7 @@ final class NlPensionFilingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [
@@ -114,7 +114,7 @@ final class NlPensionFilingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/pension-filing-upa-mvp/spec.md
 	 */
 	public static function tables(): array {
@@ -241,7 +241,7 @@ final class NlPensionFilingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function referencedRunStatus(array $o, array $c): string {
 		$run = (self::relatedPayrollRunsById($c)[trim((string)($o['payrollRunId'] ?? ''))] ?? null);
@@ -258,7 +258,7 @@ final class NlPensionFilingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{nl: bool, status: string, periodFiled: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function completenessInputs(array $o, array $c): ?array {
 		$period = (string)($o['period'] ?? '');
@@ -282,7 +282,7 @@ final class NlPensionFilingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/pension-filing-upa-mvp/spec.md
 	 */
 	public static function legacyChecks(): array {

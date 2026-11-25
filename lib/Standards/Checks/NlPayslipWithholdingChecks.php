@@ -29,7 +29,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * The payslip withholding rules, as decision tables.
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 final class NlPayslipWithholdingChecks implements CheckProvider, ProvidesTables {
 
@@ -51,7 +51,7 @@ final class NlPayslipWithholdingChecks implements CheckProvider, ProvidesTables 
 	 *
 	 * The Payslip sample these rules read is NlPayrollChecks' own.
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 *
 	 * @return array<string, array<string, mixed>>
 	 */
@@ -69,7 +69,7 @@ final class NlPayslipWithholdingChecks implements CheckProvider, ProvidesTables 
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function tables(): array {
 		return [
@@ -111,7 +111,7 @@ final class NlPayslipWithholdingChecks implements CheckProvider, ProvidesTables 
 	 *
 	 * @return array{derive: callable, table: array<string, mixed>}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function nonNegativeAmount(string $field): array {
 		return [
@@ -136,7 +136,7 @@ final class NlPayslipWithholdingChecks implements CheckProvider, ProvidesTables 
 	 *
 	 * @return array{derive: callable, table: array<string, mixed>}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function zvwAtRate(string $mode, float $rate): array {
 		return [
@@ -161,7 +161,7 @@ final class NlPayslipWithholdingChecks implements CheckProvider, ProvidesTables 
 	 *
 	 * Nothing registers as a closure: tables() declares all five.
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 *
 	 * @return array<string, array<string, callable>>
 	 */
@@ -241,7 +241,7 @@ final class NlPayslipWithholdingChecks implements CheckProvider, ProvidesTables 
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 */
 	public static function legacyChecks(): array {
 		return [

@@ -457,7 +457,6 @@
     "document-dossier-avg",
     "humaniq-docudesk-documents",
     "dossier-completeness",
-    "documents-employer-statement-from-the-contract",
     "hr-document-signing"
    ]
   },
@@ -641,7 +640,8 @@
     "payroll-core-engine",
     "payroll-reservation-payouts",
     "30-procent-regeling",
-    "payroll-engine-port-from-shillinq",
+    "payroll-pension-premium",
+    "payroll-partial-period",
     "payroll-period-edge-cases",
     "proforma-payslip",
     "jurisdiction-packs",
@@ -869,7 +869,7 @@
     "hris-api-public",
     "platform-integrations-catalogue",
     "hr-lifecycle-events",
-    "platform-hr-workflows",
+    "hr-workflows",
     "humaniq-notifications"
    ]
   },
@@ -2442,13 +2442,13 @@
     "afas": "https://help.afas.nl/help/NL/SE/App_Script_Empl_Config.htm: a draaiboek indienst/uitdienst generates workflows for internal tasks such as preparing a laptop or issuing an access pass when the onboarding workflow is registered."
    },
    "built": {
-    "requirement": ["openspec/specs/onboarding-wizard :: A new `hr-onboarding` fragment SHALL define the `Onboarding` schema (REQ-OBW-001)", "openspec/specs/onboarding-wizard :: New onboarding pages SHALL surface the case, its checklist, and the lifecycle under the `Onboarding & ATS` menu group (REQ-OBW-005)", "openspec/changes/platform-hr-workflows/specs/hr-workflows :: humaniq SHALL ship adoptable onboarding and offboarding flows (REQ-HWF-001)"],
-    "state": "specified",
-    "evidence": "Not built: no checklist step is the manager's, and no step is handed to its owner as a task (REQ-HWF-001, platform-hr-workflows task 1.1a); the HR and IT checks are built. (12 Nov, decision 389) Was: lib/Settings/register.d/hr-onboarding.json Onboarding schema (employeeId, startDate, proeftijdEndDate, status, contractSigned, widCheckDone, widCheckDate, bsnValidated, ibanVerified, itProvisioned, pensioenAangemeld, notes) spans HR (contract/WID/BSN/IBAN checks), IT (itProvisioned) and benefits (pensioenAangemeld); src/manifest.d/hr-onboarding.json:11 OnboardingDetail 'Checklist' widget groups the six gate booleans, audit-enforced by lib/Standards/Checks/NlOnboardingChecks.php; lifecycleActions contract_bevestigen/gegevens_valideren/gereed_melden/starten/afronden/annuleren",
+    "requirement": ["openspec/specs/onboarding-wizard :: A new `hr-onboarding` fragment SHALL define the `Onboarding` schema (REQ-OBW-001)", "openspec/specs/onboarding-wizard :: New onboarding pages SHALL surface the case, its checklist, and the lifecycle under the `Onboarding & ATS` menu group (REQ-OBW-005)", "openspec/specs/hr-workflows :: humaniq SHALL ship adoptable onboarding and offboarding flows (REQ-HWF-001)"],
+    "state": "built",
+    "evidence": "lib/Settings/register.d/hr-onboarding.json declares the flows Indiensttreding (Onboarding) and Uitdiensttreding (Offboarding), lib/Settings/register.d/hr-leave.json declares Verlofaanvraag blijft liggen (LeaveRequest); lib/Service/ShippedFlowPublisher.php and lib/Repair/RepublishLoonrunFlow.php publish every declared humaniq flow into OpenRegister's flow engine. Tests: tests/Unit/Flow/HrWorkflowsDeclarationTest.php, tests/Unit/Service/ShippedFlowPublisherTest.php, tests/Unit/Repair/RepublishLoonrunFlowTest.php; live run of the three flows recorded in openspec/changes/archive/2026-11-25-platform-hr-workflows/tasks.md 2.1.",
     "reachedOn": "Onboardings /onboardings (menu Personeel), OnboardingDetail /onboardings/:id",
     "owner": "ConductionNL/humaniq",
     "change": "2026-07-13-onboarding-wizard-mvp",
-    "plan": "openspec/changes/platform-hr-workflows"
+    "plan": "openspec/changes/archive/2026-11-25-platform-hr-workflows"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -3593,7 +3593,7 @@
    "feature": "project-hours",
    "featureConfidence": "high",
    "source": "own",
-   "note": "openspec/changes/hours-leaf-loads-on-a-consuming-page documents this leaf as previously dark on every host page (no leaves webpack entry existed, so OpenRegister's LeafScriptListener silently skipped humaniq). The entry and src/leaves.js now exist and dossiq's CaseDetail already places and tests the leaf, even though that change's own tasks.md is still all unchecked: code and consumer are both confirmed live, the tasks file is just stale.",
+   "note": "openspec/changes/archive/2026-11-25-hours-leaf-loads-on-a-consuming-page documents this leaf as previously dark on every host page (no leaves webpack entry existed, so OpenRegister's LeafScriptListener silently skipped humaniq). The entry and src/leaves.js now exist and dossiq's CaseDetail already places and tests the leaf, even though that change's own tasks.md is still all unchecked: code and consumer are both confirmed live, the tasks file is just stale.",
    "screen": {
     "canvas": "design-system",
     "board": "HuUrenstaat"
@@ -6350,12 +6350,12 @@
     "personio": "https://support.personio.de/hc/en-us/articles/115002763969-Create-Document-Templates-Placeholders: document templates filled with employee data such as hire date, position and contract end date can produce employer letters; no ready-made employer statement for mortgage or rental applications is described."
    },
    "built": {
-    "requirement": "openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents :: HR SHALL make an employer statement from the contract page (REQ-HDD-011)",
-    "state": "specified",
-    "evidence": "lib/Command/DocumentsGenerateCommand.php:59,92 lists 'werkgeversverklaring' as a supported --type, rendered through filinq's (FleetAppId-resolved docudesk/filinq) template engine per lib/Service/HrDocumentService.php; grep -n 'documentType' src/manifest.d/*.json shows page-level generate actions only for loonstrook (Payslip) and arbeidsovereenkomst (EmploymentContract), none for werkgeversverklaring. Specified in ConductionNL/filinq openspec/changes/templates-employer-statement (filinq lane, OpenSpec pass 2026-09-27).",
-    "reachedOn": "occ humaniq:documents:generate --type werkgeversverklaring only, no page can trigger a new one; once generated it is viewable/downloadable via GeneratedDocuments /documents -> GeneratedDocumentDetail's Files tab",
+    "requirement": "openspec/specs/humaniq-docudesk-documents :: HR SHALL make an employer statement from the contract page (REQ-HDD-011)",
+    "state": "built",
+    "evidence": "Make employer statement (id generate-werkgeversverklaring) on EmploymentContractDetail (src/manifest.d/hr-objects.json) posts to /apps/humaniq/api/documents/generate; lib/Controller/DocumentController.php reads the contract under the caller's own access (404 and no filinq call when unreadable) and lib/Service/HrDocumentService.php renders filinq's werkgeversverklaring template as a new document each time. Tests: tests/Unit/Controller/DocumentControllerTest.php, tests/js/apiCallUrlsNameTheApp.test.mjs; live check recorded in openspec/changes/archive/2026-11-25-documents-employer-statement-from-the-contract/tasks.md 3.2.",
+    "reachedOn": "EmploymentContractDetail: Make employer statement; the result under GeneratedDocuments /documents",
     "owner": "ConductionNL/filinq",
-    "change": "documents-employer-statement-from-the-contract"
+    "change": "2026-11-25-documents-employer-statement-from-the-contract"
    },
    "provider": "docudesk",
    "providerHow": "read-from-code",
@@ -8284,12 +8284,12 @@
     "orangehrm": "orangehrm@v5.9 src/plugins/orangehrmCorePlugin/entity/WorkflowStateMachine.php:86 leave, timesheet, attendance, recruitment, review and claim workflows are state tables seeded by the installer; no UI to configure them"
    },
    "built": {
-    "requirement": ["openspec/changes/platform-hr-workflows/specs/hr-workflows :: humaniq SHALL ship adoptable onboarding and offboarding flows (REQ-HWF-001)", "openspec/changes/platform-hr-workflows/specs/hr-workflows :: An undecided leave request SHALL escalate to HR (REQ-HWF-002)"],
+    "requirement": ["openspec/specs/hr-workflows :: humaniq SHALL ship adoptable onboarding and offboarding flows (REQ-HWF-001)", "openspec/specs/hr-workflows :: An undecided leave request SHALL escalate to HR (REQ-HWF-002)"],
     "state": "specified",
-    "evidence": "Specified in openspec/changes/platform-hr-workflows on 2026-09-27 for the missing half: HR processes beyond payroll as shipped, adoptable flows; the Loonrun flow is built. Before: lib/Settings/register.d/hr-objects.json:193 x-openregister-flows declares the 'Loonrun' flow with real custom nodes: humaniq.payroll-calculate (lib/Flow/PayrollCalculateNode.php), an openregister.user-task review/approval gate, humaniq.payroll-approve (lib/Flow/PayrollApproveNode.php), then glpost/netpay; the description at line 197 states 'The flow arrives disabled per the engine's adoption contract: enable it deliberately'",
+    "evidence": "Specified in openspec/changes/archive/2026-11-25-platform-hr-workflows on 2026-09-27 for the missing half: HR processes beyond payroll as shipped, adoptable flows; the Loonrun flow is built. Before: lib/Settings/register.d/hr-objects.json:193 x-openregister-flows declares the 'Loonrun' flow with real custom nodes: humaniq.payroll-calculate (lib/Flow/PayrollCalculateNode.php), an openregister.user-task review/approval gate, humaniq.payroll-approve (lib/Flow/PayrollApproveNode.php), then glpost/netpay; the description at line 197 states 'The flow arrives disabled per the engine's adoption contract: enable it deliberately'",
     "reachedOn": "OpenRegister's own Flow admin UI is where the Loonrun flow is enabled and configured; no humaniq page authors, lists, or edits workflows itself",
     "owner": "ConductionNL/humaniq",
-    "change": "platform-hr-workflows"
+    "change": "2026-11-25-platform-hr-workflows"
    },
    "provider": "humaniq",
    "providerHow": "read-from-code",
@@ -10526,10 +10526,10 @@
    "personio": "unknown",
    "orangehrm": "unknown",
    "built": {
-    "requirement": "openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium :: The payroll SHALL withhold the employee pension premium and record the employer premium (REQ-PPP-001)",
-    "state": "specified",
-    "evidence": "lib/Service/PayrollRunService.php:1063 writes pensionContribution 0.0 on every payslip; no pack step computes a pension premium. Specified in openspec/changes/payroll-engine-port-from-shillinq (DECISIONS 65 b, comparison for-ruben/payroll-engine-move-comparison.md).",
-    "change": "payroll-engine-port-from-shillinq",
+    "requirement": "openspec/specs/payroll-pension-premium :: The payroll SHALL withhold the employee pension premium and record the employer premium (REQ-PPP-001)",
+    "state": "built",
+    "evidence": "lib/Service/PayrollRunService.php pensionPremiumOf()/pensionFields() withhold the employee pension premium and record the employer premium from the PensionParticipation in force and the scheme's pensioen block (lib/Settings/register.d/hr-pension.json); PayrollGLPostService writes them on their own journal lines. Tests: tests/Unit/Payroll/PensionPremiumCalculationTest.php, tests/Unit/Payroll/PensionPremiumLookupTest.php, tests/Unit/Service/PayrollRunServiceTest.php; live run recorded in openspec/changes/archive/2026-11-25-payroll-engine-port-from-shillinq/tasks.md 5.2.",
+    "change": "2026-11-25-payroll-engine-port-from-shillinq",
     "owner": "ConductionNL/humaniq"
    },
    "feature": "payroll-engine",
@@ -10552,10 +10552,10 @@
    "personio": "unknown",
    "orangehrm": "unknown",
    "built": {
-    "requirement": "openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period :: An employee employed for part of a period SHALL be paid pro rata (REQ-PPR-001)",
-    "state": "specified",
-    "evidence": "lib/Service/PayrollRunService.php coversPeriod() includes or excludes a whole employee per period; nothing scales the gross for a partial month. Specified in openspec/changes/payroll-engine-port-from-shillinq.",
-    "change": "payroll-engine-port-from-shillinq",
+    "requirement": "openspec/specs/payroll-partial-period :: An employee employed for part of a period SHALL be paid pro rata (REQ-PPR-001)",
+    "state": "built",
+    "evidence": "lib/Service/PayrollRunService.php periodFactorFor()/periodFactorFields() scale the gross of a starter or leaver by the employed part of the period and store the factor and its dates on the Payslip, shown on PayslipDetail when below 1 (REQ-PPR-002). Tests: tests/Unit/Payroll/PeriodFactorTest.php, tests/Unit/Service/PayrollRunServiceTest.php; live run recorded in openspec/changes/archive/2026-11-25-payroll-engine-port-from-shillinq/tasks.md 5.2.",
+    "change": "2026-11-25-payroll-engine-port-from-shillinq",
     "owner": "ConductionNL/humaniq"
    },
    "feature": "payroll-engine",

@@ -77,7 +77,7 @@ final class NlFlexContractChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -94,7 +94,7 @@ final class NlFlexContractChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
 	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-003
 	 */
@@ -227,7 +227,7 @@ final class NlFlexContractChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{live: bool, position: int, permanentWithinWindow: bool}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function chainInputs(array $contract, array $context): array {
 		$today = (new DateTimeImmutable('today'))->getTimestamp();
@@ -281,7 +281,7 @@ final class NlFlexContractChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{onCall: bool, ended: bool, offerDue: bool, offerRecorded: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function onCallOfferInputs(array $contract): ?array {
 		$inputs = ['onCall' => ((string)($contract['type'] ?? '') === 'oproep'), 'ended' => false, 'offerDue' => false, 'offerRecorded' => false];
@@ -323,7 +323,7 @@ final class NlFlexContractChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
 	 */
 	public static function legacyChecks(): array {

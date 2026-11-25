@@ -88,7 +88,7 @@ final class PensionBase {
 	 *
 	 * @return float
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public static function amount(array $scheme, string $key): float {
 		$value = ($scheme[$key] ?? null);

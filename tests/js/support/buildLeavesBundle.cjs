@@ -12,7 +12,7 @@
  *
  * Usage: node buildLeavesBundle.cjs <repo> <outDir>
  *
- * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-humaniq-ships-a-leaves-bundle-req-hld-001
+ * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-humaniq-ships-a-leaves-bundle-req-hld-001
  */
 const fs = require('fs')
 const path = require('path')

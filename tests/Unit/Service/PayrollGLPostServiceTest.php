@@ -995,7 +995,7 @@ class PayrollGLPostServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	public function testTheJournalSplitsThePensionPayable(): void {
 		[$service] = $this->service(appValues: ['glpost_account_pension_payable' => '1730']);
@@ -1026,7 +1026,7 @@ class PayrollGLPostServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	public function testARunWithoutPremiumsBooksNoPensionLine(): void {
 		[$service] = $this->service();
@@ -1043,7 +1043,7 @@ class PayrollGLPostServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	public function testAMissingPensionPayableAccountWritesNoEntry(): void {
 		[$service, $fake] = $this->service();
@@ -1065,7 +1065,7 @@ class PayrollGLPostServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	public function testPremiumsBeyondTheRemainderAreRefused(): void {
 		[$service] = $this->service(appValues: ['glpost_account_pension_payable' => '1730']);
@@ -1082,7 +1082,7 @@ class PayrollGLPostServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	public function testARunWithPremiumsPostsThePensionLine(): void {
 		[$service, $fake] = $this->service(appValues: ['glpost_account_pension_payable' => '1730']);

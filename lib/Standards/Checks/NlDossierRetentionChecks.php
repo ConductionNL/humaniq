@@ -92,7 +92,7 @@ final class NlDossierRetentionChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -110,7 +110,7 @@ final class NlDossierRetentionChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
 	 */
 	public static function tables(): array {
@@ -289,7 +289,7 @@ final class NlDossierRetentionChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{destroyed: bool, ceilingPassed: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function ceilingInputs(array $object): ?array {
 		$retention = (array)(((array)($object['@self'] ?? []))['retention'] ?? []);
@@ -336,7 +336,7 @@ final class NlDossierRetentionChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
 	 */
 	public static function legacyChecks(): array {

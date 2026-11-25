@@ -23,7 +23,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The table-declared leave checks give the pinned verdict on every fixture.
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
  */
 class NlLeaveTableBehaviourTest extends TestCase {
 

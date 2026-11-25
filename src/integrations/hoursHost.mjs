@@ -10,7 +10,7 @@
  *
  * Plain module, no Vue, so `node --test` runs it.
  *
- * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
+ * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
  */
 
 /** The props a host must pass, in the order a reader would name them. */
@@ -22,7 +22,7 @@ export const HOST_PROPS = ['register', 'schema', 'objectId']
  * @param {{register?: unknown, schema?: unknown, objectId?: unknown}} host The props the host passed.
  * @return {Array<string>} The missing prop names, in HOST_PROPS order.
  *
- * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
+ * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
  */
 export function missingHostProps(host) {
 	return HOST_PROPS.filter((name) => {
@@ -37,7 +37,7 @@ export function missingHostProps(host) {
  * @param {{register?: unknown, schema?: unknown, objectId?: unknown}} host The props the host passed.
  * @return {boolean} True when all three host props are present.
  *
- * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
+ * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
  */
 export function isResolvableHost(host) {
 	return missingHostProps(host).length === 0

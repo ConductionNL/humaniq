@@ -82,7 +82,7 @@ final class NlOffboardingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -97,7 +97,7 @@ final class NlOffboardingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/offboarding-wizard/spec.md
 	 */
 	public static function tables(): array {
@@ -303,7 +303,7 @@ final class NlOffboardingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return float
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function openBalanceHours(array $o, array $c): float {
 		$rows = (self::relatedLeaveBalancesByEmployeeId($c)[(string)($o['employeeId'] ?? '')] ?? null);
@@ -329,7 +329,7 @@ final class NlOffboardingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{afgerond: bool, employeeResolves: bool, endDateMatches: bool}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function einddatumInputs(array $o, array $c): array {
 		$employee = (self::relatedEmployeesById($c)[(string)($o['employeeId'] ?? '')] ?? null);
@@ -350,7 +350,7 @@ final class NlOffboardingChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/offboarding-wizard/spec.md
 	 */
 	public static function legacyChecks(): array {

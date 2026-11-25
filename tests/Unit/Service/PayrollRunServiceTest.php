@@ -498,8 +498,8 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public function testAParticipantsPayslipWithholdsThePensionPremium(): void {
 		[$service, $fake] = $this->service(
@@ -539,7 +539,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	public function testAStarterIsPaidTheCalendarDayShare(): void {
 		[$service, $fake] = $this->service(
@@ -566,7 +566,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	public function testALeaverIsPaidUpToTheLastDay(): void {
 		[$service, $fake] = $this->service(
@@ -594,7 +594,7 @@ class PayrollRunServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	public function testAFullMonthCarriesNoPeriodFactor(): void {
 		[$service, $fake] = $this->service(

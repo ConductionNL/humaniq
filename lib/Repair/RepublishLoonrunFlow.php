@@ -37,7 +37,7 @@
  * @link https://conduction.nl
  *
  * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
- * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+ * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
  */
 
 declare(strict_types=1);
@@ -116,7 +116,7 @@ class RepublishLoonrunFlow implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+	 * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
 	 */
 	private function publishShippedFlows(IOutput $output): void {
 		if ($this->publisher === null) {

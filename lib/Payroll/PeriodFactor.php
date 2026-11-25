@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+ * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use DateTimeImmutable;
 /**
  * Days employed in a period over the days in the period.
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+ * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
  */
 final class PeriodFactor {
 
@@ -70,7 +70,7 @@ final class PeriodFactor {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	public static function forEmployment(string $startDate, string $endDate, DateTimeImmutable $periodStart, DateTimeImmutable $periodEnd): self {
 		$periodStart = $periodStart->setTime(0, 0);
@@ -97,7 +97,7 @@ final class PeriodFactor {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	public function isPartial(): bool {
 		return $this->daysEmployed < $this->daysInPeriod;
@@ -111,7 +111,7 @@ final class PeriodFactor {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-partial-period/spec.md#REQ-PPR-001
+	 * @spec openspec/specs/payroll-partial-period/spec.md#REQ-PPR-001
 	 */
 	public function scale(int $cents): int {
 		if ($this->isPartial() === false) {

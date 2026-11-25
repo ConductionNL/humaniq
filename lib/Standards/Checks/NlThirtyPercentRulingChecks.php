@@ -29,7 +29,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * NL Thirty Percent Ruling rules, as decision tables.
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables {
 
@@ -84,7 +84,7 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function tables(): array {
 		return [
@@ -138,7 +138,7 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 	 *
 	 * No closures: the four ruling rules are decision tables, see tables().
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 *
 	 * @return array<string, array<string, callable>>
 	 */
@@ -152,7 +152,7 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 	 * No generated seed: NlPayrollChecks::seedObjects() carries the sample
 	 * Employee these rules read.
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 *
 	 * @return array<string, array<string, mixed>>
 	 */
@@ -181,7 +181,7 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 	 *
 	 * @return array{endReadable: bool, beyondMaximumTerm: bool, ended: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function thirtyPercentTermInputs(array $employee): ?array {
 		$start = strtotime((string)($employee['thirtyPercentRulingStartDate'] ?? ''));
@@ -209,7 +209,7 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 	 *
 	 * @return array{shortfallCents: int}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function thirtyPercentSalaryInputs(array $employee): ?array {
 		if (self::thirtyPercentGranted($employee) === false || self::numeric($employee, 'grossMonthlySalary') === false) {
@@ -328,7 +328,7 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 */
 	public static function legacyChecks(): array {
 		return [

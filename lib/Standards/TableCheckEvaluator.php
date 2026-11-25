@@ -32,7 +32,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -87,7 +87,7 @@ final class TableCheckEvaluator {
 	 * @throws \RuntimeException When OpenRegister's evaluator is not resolvable (fail closed).
 	 * @throws \Throwable OpenRegister's DecisionEvaluationException propagates unchanged.
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function satisfied(array $table, array $inputs): bool {
 		$result = self::evaluator()->evaluate($table, $inputs);
@@ -103,7 +103,7 @@ final class TableCheckEvaluator {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function reset(): void {
 		self::$evaluator = null;
@@ -119,7 +119,7 @@ final class TableCheckEvaluator {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function overrideEvaluatorClass(?string $class): void {
 		self::$classOverride = $class;

@@ -35,7 +35,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+ * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
 /**
  * Publishes every humaniq-declared flow whose shipped graph is not yet published.
  *
- * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+ * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
  */
 class ShippedFlowPublisher implements ShippedFlowPublisherInterface {
 
@@ -70,7 +70,7 @@ class ShippedFlowPublisher implements ShippedFlowPublisherInterface {
 	 * @param LoggerInterface          $logger       The logger.
 	 * @param string|null              $fragmentDir  Where the register fragments live; the shipped directory when null.
 	 *
-	 * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+	 * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
 	 */
 	public function __construct(
 		private readonly OpenRegisterAvailability $openRegister,
@@ -88,7 +88,7 @@ class ShippedFlowPublisher implements ShippedFlowPublisherInterface {
 	 * @return array<int, array{flow: string, status: string, detail: string}> One report per declared flow,
 	 *                                                                          or one `skipped` report without OpenRegister.
 	 *
-	 * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+	 * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
 	 */
 	public function publishAll(): array {
 		if ($this->openRegister->isAvailable() === false) {
@@ -110,7 +110,7 @@ class ShippedFlowPublisher implements ShippedFlowPublisherInterface {
 	 *
 	 * @return array<int, array{schema: string, declaration: array<string, mixed>}> The declarations, in file order.
 	 *
-	 * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+	 * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
 	 */
 	public function declaredFlows(): array {
 		$dir   = ($this->fragmentDir ?? (__DIR__ . '/../Settings/register.d'));

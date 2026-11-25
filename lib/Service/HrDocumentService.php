@@ -201,7 +201,7 @@ class HrDocumentService implements HrDocumentServiceInterface {
 	 *
 	 * @var string[]
 	 *
-	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
+	 * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
 	 */
 	private const NEVER_DEDUPLICATED = ['werkgeversverklaring'];
 
@@ -574,7 +574,7 @@ class HrDocumentService implements HrDocumentServiceInterface {
 	 *
 	 * @return array{status: string, message: string, document: array<string, mixed>|null}
 	 *
-	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
+	 * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
 	 */
 	private function runGeneration(HrDocumentRequest $request): array {
 		if ($request->subject->employeeId === '') {

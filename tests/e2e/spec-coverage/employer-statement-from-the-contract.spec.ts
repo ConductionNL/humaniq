@@ -8,7 +8,7 @@
  * Every scenario of the change's spec delta is referenced here by its
  * verbatim name:
  *
- * openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md
+ * openspec/specs/humaniq-docudesk-documents/spec.md
  *   Scenario: HR makes a statement for a mortgage
  *   Scenario: A user without access to the contract gets nothing
  *   Scenario: Without the template the outcome says so

@@ -178,7 +178,7 @@ class DocumentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
+	 * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
 	 */
 	public function testAnEmployerStatementIsMadeForTheContractsEmployee(): void {
 		$controller = $this->controller(row: ['id' => 'contract-3', 'employeeId' => 'emp-3']);
@@ -198,7 +198,7 @@ class DocumentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
+	 * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
 	 */
 	public function testAnUnreadableContractGivesNoEmployerStatement(): void {
 		$controller = $this->controller(row: null);

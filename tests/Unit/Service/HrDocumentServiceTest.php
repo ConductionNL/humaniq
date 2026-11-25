@@ -858,7 +858,7 @@ class HrDocumentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
+	 * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
 	 */
 	public function testEachEmployerStatementIsANewDocument(): void {
 		$rows = [
@@ -891,7 +891,7 @@ class HrDocumentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
+	 * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-012
 	 */
 	public function testAnEmploymentContractIsStillMadeOnceBesideAStatement(): void {
 		[$service, , $fileService] = $this->service(['Employee' => [$this->employee()]], configuredTemplateId: 'T1');

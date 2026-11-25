@@ -43,7 +43,7 @@ interface ShippedFlowPublisherInterface {
 	 * @return array<int, array{flow: string, status: string, detail: string}> One report per declared flow,
 	 *                                                                          or one `skipped` report without OpenRegister.
 	 *
-	 * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
+	 * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
 	 */
 	public function publishAll(): array;
 }//end interface

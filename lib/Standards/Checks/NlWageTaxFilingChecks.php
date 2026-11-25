@@ -106,7 +106,7 @@ final class NlWageTaxFilingChecks implements CheckProvider, ProvidesTables, Seed
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function tables(): array {
 		return [
@@ -153,7 +153,7 @@ final class NlWageTaxFilingChecks implements CheckProvider, ProvidesTables, Seed
 	 *
 	 * @return array{nlLoonaangifte: bool, codeRecorded: bool, concept: bool, codeAsExpected: bool}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function tijdvakcodeInputs(array $o): array {
 		$tijdvakcode = trim((string)($o['tijdvakcode'] ?? ''));
@@ -456,7 +456,7 @@ final class NlWageTaxFilingChecks implements CheckProvider, ProvidesTables, Seed
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 */
 	public static function legacyChecks(): array {
 		return [
