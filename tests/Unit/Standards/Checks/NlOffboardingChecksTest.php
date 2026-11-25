@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlOffboardingChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -53,7 +54,12 @@ class NlOffboardingChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlOffboardingChecks::checks()['Offboarding'];
+		// The engine's table path; the context is optional here, as it was for
+		// the object-local closures.
+		$this->checks = array_map(
+			static fn (callable $predicate): callable => static fn (array $o, array $c = []): bool => $predicate($o, $c),
+			TableCheckRegistry::checks([NlOffboardingChecks::class])['Offboarding']
+		);
 
 	}//end setUp()
 
