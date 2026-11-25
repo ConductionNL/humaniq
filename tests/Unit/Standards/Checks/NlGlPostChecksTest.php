@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlGlPostChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -48,7 +49,7 @@ class NlGlPostChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlGlPostChecks::checks()['PayrollGLPost'];
+		$this->checks = TableCheckRegistry::checks([NlGlPostChecks::class])['PayrollGLPost'];
 
 	}//end setUp()
 

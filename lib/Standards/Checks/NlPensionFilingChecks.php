@@ -25,6 +25,14 @@
  * PayrollRun + PensionFiling seed data instead lives in
  * lib/Settings/register.d/hr-seed.json (ADR-001).
  *
+ * Converted in part to the table-backed check form (rules-onto-or-decision-
+ * tables, next conversion wave): `nl-upa-payrollrun-approved` and
+ * `nl-upa-monthly-completeness` are OpenRegister decision tables via the
+ * ProvidesTables capability, their closures kept as legacyChecks() -- the
+ * parity oracle, NOT registered -- until staged retirement (REQ-RULE-009).
+ * `nl-upa-deadline-alert` stays a closure: it is a date window over the
+ * shared filing-deadline arithmetic, not a table shape.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -47,8 +55,9 @@ use OCA\Humaniq\Support\ChecksFilingDeadlines;
 /**
  * Dutch sector-pension (UPA) filing executable checks.
  */
-final class NlPensionFilingChecks implements CheckProvider {
+final class NlPensionFilingChecks implements CheckProvider, ProvidesTables {
 
+	use BuildsSatisfiedTables;
 	use ChecksFilingDeadlines;
 
 	/**
@@ -58,6 +67,13 @@ final class NlPensionFilingChecks implements CheckProvider {
 	 * @var string[]
 	 */
 	private const APPROVED_OR_LATER = ['approved', 'posted', 'paid'];
+
+	/**
+	 * APPROVED_OR_LATER as a decision-table input entry.
+	 *
+	 * @var string
+	 */
+	private const APPROVED_OR_LATER_TEST = 'in ("approved","posted","paid")';
 
 	/**
 	 * Number of days before (and including) the deadline that an unsent
@@ -70,17 +86,52 @@ final class NlPensionFilingChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Only the deadline alert: the other two UPA rules are table-declared
+	 * (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [
 			'PensionFiling' => [
-				// UPA-specificatie (SIVI) / fund delivery terms — the delivery reports
-				// approved salary data, so its PayrollRun must be approved or later.
-				'nl-upa-payrollrun-approved' => static fn (array $o, array $c): bool => self::payrollRunApproved($o, $c),
 				// Fund aanleverschema / uitvoeringsreglement — an unsent delivery does not
 				// sit within 14 days of, or past, its deadline.
 				'nl-upa-deadline-alert' => static fn (array $o, array $c): bool => self::deadlineNotAlerting($o),
+			],
+		];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * The run-approval and monthly-completeness rules as derivation +
+	 * FIRST-hit decision table.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/pension-filing-upa-mvp/spec.md
+	 */
+	public static function tables(): array {
+		return [
+			'PensionFiling' => [
+				// UPA-specificatie (SIVI) / fund delivery terms — the delivery reports
+				// approved salary data, so its PayrollRun must be approved or later.
+				'nl-upa-payrollrun-approved' => [
+					'derive' => static fn (array $o, array $c): array => ['runStatus' => self::referencedRunStatus($o, $c)],
+					'table' => [
+						'hitPolicy' => 'FIRST',
+						'inputs' => [['name' => 'runStatus', 'type' => 'string']],
+						'outputs' => [['name' => 'satisfied', 'type' => 'boolean']],
+						'rules' => [
+							['id' => 'run-approved-or-later', 'inputEntries' => [self::APPROVED_OR_LATER_TEST], 'outputEntries' => [true]],
+							['id' => 'run-missing-or-not-approved', 'inputEntries' => ['-'], 'outputEntries' => [false]],
+						],
+					],
+				],
 			],
 			// Additive on PayrollRun: NlPayrollChecks already registers
 			// xc-payroll-gl-reconciliation / xc-withholding-liability-clearing here;
@@ -88,11 +139,17 @@ final class NlPensionFilingChecks implements CheckProvider {
 			'PayrollRun' => [
 				// APG aanleververplichting (UPA, monthly delivery) — every period with an
 				// approved-or-later NL run must have at least one PensionFiling.
-				'nl-upa-monthly-completeness' => static fn (array $o, array $c): bool => self::monthlyCompletenessSatisfied($o, $c),
+				'nl-upa-monthly-completeness' => [
+					'derive' => static fn (array $o, array $c): ?array => self::completenessInputs($o, $c),
+					'table' => self::satisfiedTable(
+						[['name' => 'nl', 'type' => 'boolean'], ['name' => 'status', 'type' => 'string'], ['name' => 'periodFiled', 'type' => 'boolean']],
+						[['id' => 'approved-run-without-filing', 'inputEntries' => ['true', self::APPROVED_OR_LATER_TEST, 'false'], 'outputEntries' => [false]]]
+					),
+				],
 			],
 		];
 
-	}//end checks()
+	}//end tables()
 
 	/**
 	 * {@inheritDoc}
@@ -170,4 +227,70 @@ final class NlPensionFilingChecks implements CheckProvider {
 		$byId = ($c['related']['PayrollRun']['byId'] ?? []);
 		return is_array($byId) === true ? $byId : [];
 	}//end relatedPayrollRunsById()
+
+	/**
+	 * The status of the PayrollRun a filing references, or '' when the
+	 * reference is empty or does not resolve.
+	 *
+	 * @param array<string, mixed> $o The PensionFiling.
+	 * @param array<string, mixed> $c Evaluation context; reads `related.PayrollRun.byId`.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function referencedRunStatus(array $o, array $c): string {
+		$run = (self::relatedPayrollRunsById($c)[trim((string)($o['payrollRunId'] ?? ''))] ?? null);
+
+		return is_array($run) === true ? (string)($run['status'] ?? '') : '';
+
+	}//end referencedRunStatus()
+
+	/**
+	 * The completeness table's inputs, or null for a run without a period.
+	 *
+	 * @param array<string, mixed> $o The PayrollRun.
+	 * @param array<string, mixed> $c Evaluation context; reads `related.PensionFiling.filedPeriods`.
+	 *
+	 * @return array{nl: bool, status: string, periodFiled: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function completenessInputs(array $o, array $c): ?array {
+		$period = (string)($o['period'] ?? '');
+		if ($period === '') {
+			return null;
+		}
+
+		return [
+			'nl' => (strtoupper((string)($o['jurisdiction'] ?? '')) === 'NL'),
+			'status' => (string)($o['status'] ?? ''),
+			'periodFiled' => in_array($period, (array)($c['related']['PensionFiling']['filedPeriods'] ?? []), true),
+		];
+
+	}//end completenessInputs()
+
+	/**
+	 * Parity oracle for the two table-declared UPA rules: their closures from
+	 * before the conversion, compared with tables() by
+	 * NlPensionFilingTableParityTest and never registered; removed after the
+	 * OpenRegister audit run confirms the tables.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/pension-filing-upa-mvp/spec.md
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'PensionFiling' => [
+				'nl-upa-payrollrun-approved' => static fn (array $o, array $c): bool => self::payrollRunApproved($o, $c),
+			],
+			'PayrollRun' => [
+				'nl-upa-monthly-completeness' => static fn (array $o, array $c): bool => self::monthlyCompletenessSatisfied($o, $c),
+			],
+		];
+
+	}//end legacyChecks()
+
 }//end class
