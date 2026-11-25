@@ -1,11 +1,12 @@
 <?php
 
 /**
- * Reads Date Windows
+ * Date Window
  *
  * Whether a date falls between today and a number of days ahead, the window
  * arithmetic the HR signals (NlSignalChecks) share between their table
- * derivations and the closures kept as their parity oracle.
+ * derivations and the closures kept as their parity oracle. Pure and
+ * stateless; providers construct it where they need it.
  *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
@@ -29,12 +30,11 @@ namespace OCA\Humaniq\Standards\Checks;
 use DateTimeImmutable;
 
 /**
- * A forward-looking window of whole days starting today, mixed into the
- * providers that signal an approaching date.
+ * A forward-looking window of whole days starting today.
  *
  * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
-trait ReadsDateWindows {
+final class DateWindow {
 
 	/**
 	 * Whether the date lies on or after today and on or before today plus
@@ -47,7 +47,7 @@ trait ReadsDateWindows {
 	 *
 	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
-	private static function insideWindow(string $date, int $days): ?bool {
+	public function contains(string $date, int $days): ?bool {
 		$at = strtotime($date);
 		if ($at === false) {
 			return null;
@@ -57,5 +57,6 @@ trait ReadsDateWindows {
 
 		return $at >= $today && $at <= strtotime('+' . $days . ' days', $today);
 
-	}//end insideWindow()
-}//end trait
+	}//end contains()
+
+}//end class

@@ -71,7 +71,6 @@ use DateTimeImmutable;
 final class NlSignalChecks implements CheckProvider, ProvidesTables {
 
 	use BuildsSatisfiedTables;
-	use ReadsDateWindows;
 
 	/**
 	 * `nl-signaal-contract-verloopt` window, days (parameters.windowDays in
@@ -190,7 +189,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function windowInputs(string $date, int $days): ?array {
-		$within = self::insideWindow($date, $days);
+		$within = (new DateWindow())->contains($date, $days);
 
 		return $within === null ? null : ['withinWindow' => $within];
 
@@ -274,7 +273,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 * @spec openspec/specs/hr-signals/spec.md#REQ-SIG-007
 	 */
 	private static function proeftijdEindigtSatisfied(array $o): bool {
-		return self::insideWindow((string)($o['proeftijdEndDate'] ?? ''), self::PROBATION_WINDOW_DAYS) !== true;
+		return (new DateWindow())->contains((string)($o['proeftijdEndDate'] ?? ''), self::PROBATION_WINDOW_DAYS) !== true;
 	}//end proeftijdEindigtSatisfied()
 
 	/**
@@ -483,7 +482,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 * @return bool
 	 */
 	private static function bhvCertificaatVerloeptSatisfied(array $o): bool {
-		return self::insideWindow((string)($o['certificaatGeldigTot'] ?? ''), self::BHV_WINDOW_DAYS) !== true;
+		return (new DateWindow())->contains((string)($o['certificaatGeldigTot'] ?? ''), self::BHV_WINDOW_DAYS) !== true;
 	}//end bhvCertificaatVerloeptSatisfied()
 
 	/**
