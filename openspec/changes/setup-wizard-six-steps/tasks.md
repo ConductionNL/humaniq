@@ -106,3 +106,20 @@
       Written, runs in nightly: the recap (1.1) and the steps (2.1 to 2.5) it walks have landed; `setup-wizard-six-steps.spec.ts` is anchored for the Wijzigen scenario (gate 19), every other scenario keeps its reason-bearing exclude.
 - [ ] 5.2 One live pass of the wizard against board `humaniq/HuInrichten`, step by step, with a
       screenshot of the Klaar step next to the board.
+      Pass made 2026-11-25 on a sandbox Nextcloud 34.0.6 (MariaDB 10.11, OpenRegister main
+      7997381d, humaniq development 89e5e1bf, nextcloud-vue 2.204.0), reader language Dutch,
+      next to the board (identity.conduction.nl, HuInrichten, step 6 of 6). Left open, because the
+      Klaar step does not match the board yet:
+      - Fixed here: the example-data cards (`DemoDataService::listChoices()`) read English in a
+        Dutch wizard; their four strings are now in `l10n/` (`demoDataChoicesTranslated.test.mjs`).
+      - No health-check line under the recap. REQ-FTS-011 and the board ("Controle geslaagd:
+        register geïmporteerd met 54 schema's, achtergrondtaken draaien, loonpakket 2026
+        geladen.") want one; `healthCheck: true` on `done` is accepted by the manifest schema but
+        `CnSetupWizard` renders nothing for it, in 2.204.0 and in 2.225.1. Needs nextcloud-vue.
+      - The recap's Wijzigen column is too narrow: it renders "Wi…", "Wij…", "Wijz…"; the board
+        shows a full "Wijzigen" link per row. nextcloud-vue (`CnSetupWizard` summary rows).
+      - Dialog title "Humaniq instellen" (nextcloud-vue's "Set up {appName}") where the board says
+        "Humaniq inrichten, stap 6 van 6" over the heading "Controleer en rond af"; the finish
+        button reads "Afronden" where REQ-FTS-011 and the board say "Inrichting afronden".
+      - Seven steps with Welkom first and the example data second, the board's six without
+        Welkom: decided in design D2 (hydra ADR-111 rule 4 outranks the board), not a defect.
