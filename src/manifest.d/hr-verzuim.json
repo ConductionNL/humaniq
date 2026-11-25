@@ -164,7 +164,7 @@
 						"label": "Generate 42-week notification",
 						"type": "api-call",
 						"icon": "FileSendOutline",
-						"url": "/api/sick-leave/{objectId}/uwv-notification",
+						"url": "/apps/humaniq/api/sick-leave/{objectId}/uwv-notification",
 						"method": "POST",
 						"confirm": true,
 						"successMessage": "The 42-week notification is on the case. Submit it to UWV and fill in the date it was done.",

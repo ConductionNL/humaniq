@@ -110,6 +110,25 @@ async function statementsFor(
 	);
 }
 
+/**
+ * The stored document an outcome names. The endpoint answers with the outcome
+ * ({status, message, generatedDocumentId}), not the document itself, so the
+ * document is read back from OpenRegister by that id.
+ *
+ * @param api     An admin context.
+ * @param outcome The endpoint's reply.
+ * @return The HrGeneratedDocument, or an empty object when the outcome names none.
+ */
+async function documentOf(api: APIRequestContext, outcome: Record<string, unknown>): Promise<Record<string, unknown>> {
+	const id = String(outcome.generatedDocumentId ?? "");
+	if (id === "") {
+		return {};
+	}
+	const res = await api.get(`${OR_BASE}/HrGeneratedDocument/${id}`, { headers: HEADERS });
+	expect(res.ok(), `read HrGeneratedDocument ${id}: HTTP ${res.status()}`).toBeTruthy();
+	return (await res.json()) as Record<string, unknown>;
+}
+
 /** Whether filinq is enabled, and whether it lists the employer statement template. */
 async function filinqShape(api: APIRequestContext): Promise<{ enabled: boolean; template: boolean }> {
 	const apps = await api.get(`${NC_URL}/ocs/v2.php/cloud/apps?filter=enabled&format=json`, {
@@ -141,7 +160,9 @@ async function makeStatementFromThePage(page: Page, contractId: string): Promise
 	const answered = page.waitForResponse(
 		(res) => res.url().includes("/api/documents/generate") && res.request().method() === "POST",
 	);
-	await dialog.getByTestId("cn-confirm-dialog-confirm").click();
+	// The confirm button is not a descendant of the element that carries
+	// data-testid-modal, so it is found on the page, not inside `dialog`.
+	await page.getByTestId("cn-confirm-dialog-confirm").click();
 
 	const body = (await posted).postDataJSON() as Record<string, unknown>;
 	expect(body.contractId, "the action posts this contract").toBe(contractId);
@@ -231,7 +252,7 @@ test.describe("documents-employer-statement-from-the-contract", () => {
 			data: { contractId, documentType: "werkgeversverklaring" },
 		});
 		expect(first.status()).toBe(200);
-		const firstDoc = ((await first.json()).document ?? {}) as Record<string, unknown>;
+		const firstDoc = await documentOf(admin, (await first.json()) as Record<string, unknown>);
 		const firstId = idOf(firstDoc);
 		expect(firstId, "the first attempt is recorded").not.toEqual("");
 
@@ -242,7 +263,7 @@ test.describe("documents-employer-statement-from-the-contract", () => {
 		expect(second.status()).toBe(200);
 		const secondBody = await second.json();
 		expect(secondBody.status, "an employer statement is never deduplicated").not.toBe("already-generated");
-		const secondId = idOf((secondBody.document ?? {}) as Record<string, unknown>);
+		const secondId = idOf(await documentOf(admin, secondBody as Record<string, unknown>));
 		expect(secondId, "the second attempt is its own document").not.toEqual("");
 		expect(secondId).not.toEqual(firstId);
 
@@ -261,7 +282,7 @@ test.describe("documents-employer-statement-from-the-contract", () => {
 		test.skip(!shape.template, `needs filinq's ${TEMPLATE_SLUG} template (filinq templates-employer-statement)`);
 
 		const outcome = await makeStatementFromThePage(page, contractId);
-		const doc = (outcome.document ?? {}) as Record<string, unknown>;
+		const doc = await documentOf(admin, outcome);
 		expect(outcome.status).toBe("generated");
 		expect(doc.documentType).toBe("werkgeversverklaring");
 		expect(doc.employeeId, "made for the contract's employee").toBe(employeeId);
@@ -276,7 +297,7 @@ test.describe("documents-employer-statement-from-the-contract", () => {
 		test.skip(shape.template, `needs filinq WITHOUT its ${TEMPLATE_SLUG} template`);
 
 		const outcome = await makeStatementFromThePage(page, contractId);
-		const doc = (outcome.document ?? {}) as Record<string, unknown>;
+		const doc = await documentOf(admin, outcome);
 		expect(outcome.status).toBe("failed");
 		expect(doc.status, "the attempt is recorded as failed").toBe("failed");
 		expect(String(doc.errorMessage ?? ""), "with the reason").not.toEqual("");

@@ -1280,7 +1280,7 @@
 						"label": "Fill from BRP",
 						"type": "api-call",
 						"icon": "AccountBoxOutline",
-						"url": "/api/prefill/employee/@objectId",
+						"url": "/apps/humaniq/api/prefill/employee/@objectId",
 						"method": "POST",
 						"visibleWhen": {
 							"endpoint": "/apps/humaniq/api/prefill/brp-available",
@@ -1576,7 +1576,7 @@
 						"label": "Generate PDF",
 						"type": "api-call",
 						"icon": "FileDocumentPlusOutline",
-						"url": "/api/documents/generate",
+						"url": "/apps/humaniq/api/documents/generate",
 						"method": "POST",
 						"params": {
 							"payslipId": "@objectId",
@@ -1936,7 +1936,7 @@
 						"label": "(Re)calculate",
 						"type": "api-call",
 						"icon": "Calculator",
-						"url": "/api/payroll/calculate",
+						"url": "/apps/humaniq/api/payroll/calculate",
 						"method": "POST",
 						"params": {
 							"runId": "@objectId"
@@ -1950,7 +1950,7 @@
 						"label": "Check run",
 						"type": "api-call",
 						"icon": "ClipboardCheckOutline",
-						"url": "/api/payroll/check",
+						"url": "/apps/humaniq/api/payroll/check",
 						"method": "POST",
 						"params": {
 							"runId": "@objectId"
@@ -1963,7 +1963,7 @@
 						"label": "Mutation report",
 						"type": "api-call",
 						"icon": "SwapHorizontal",
-						"url": "/api/payroll/mutations",
+						"url": "/apps/humaniq/api/payroll/mutations",
 						"method": "POST",
 						"params": {
 							"toRunId": "@objectId"
@@ -2296,7 +2296,7 @@
 						"label": "Make message",
 						"type": "api-call",
 						"icon": "FileSendOutline",
-						"url": "/api/loonaangifte/filings/@objectId/message",
+						"url": "/apps/humaniq/api/loonaangifte/filings/@objectId/message",
 						"method": "POST",
 						"params": {},
 						"confirm": true,
@@ -2308,7 +2308,7 @@
 						"label": "Correct",
 						"type": "api-call",
 						"icon": "PencilOutline",
-						"url": "/api/loonaangifte/filings/@objectId/correction",
+						"url": "/apps/humaniq/api/loonaangifte/filings/@objectId/correction",
 						"method": "POST",
 						"params": {},
 						"confirm": true,
@@ -2694,7 +2694,7 @@
 						"label": "Assess",
 						"type": "api-call",
 						"icon": "Calculator",
-						"url": "/api/payroll/wkr-assess",
+						"url": "/apps/humaniq/api/payroll/wkr-assess",
 						"method": "POST",
 						"params": {
 							"assessmentId": "@objectId"
@@ -2723,7 +2723,7 @@
 						},
 						"successMessage": "The employment contract is being generated.",
 						"type": "api-call",
-						"url": "/api/documents/generate"
+						"url": "/apps/humaniq/api/documents/generate"
 					},
 					{
 						"confirm": true,
@@ -2738,7 +2738,7 @@
 						},
 						"successMessage": "The employer statement is being made.",
 						"type": "api-call",
-						"url": "/api/documents/generate"
+						"url": "/apps/humaniq/api/documents/generate"
 					}
 				],
 				"layout": [

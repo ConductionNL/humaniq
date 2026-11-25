@@ -249,7 +249,7 @@
 						"label": "Extract receipt data",
 						"type": "api-call",
 						"icon": "TextRecognition",
-						"url": "/api/expenses/extract-receipt",
+						"url": "/apps/humaniq/api/expenses/extract-receipt",
 						"method": "POST",
 						"params": {
 							"expenseId": "@objectId"
@@ -482,7 +482,7 @@
 						"label": "Calculate distance",
 						"type": "api-call",
 						"icon": "CarOutline",
-						"url": "/api/travel/route-distance",
+						"url": "/apps/humaniq/api/travel/route-distance",
 						"method": "POST",
 						"params": {
 							"arrangementId": "@objectId"
@@ -693,7 +693,7 @@
 						"label": "Compile",
 						"type": "api-call",
 						"icon": "ChartBar",
-						"url": "/api/travel/wpm-report",
+						"url": "/apps/humaniq/api/travel/wpm-report",
 						"method": "POST",
 						"params": {
 							"administrationId": "@object.administrationId",

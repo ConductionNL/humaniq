@@ -176,7 +176,7 @@
 						"label": "Working hours check",
 						"type": "api-call",
 						"icon": "ClipboardCheckOutline",
-						"url": "/api/roster/check",
+						"url": "/apps/humaniq/api/roster/check",
 						"method": "POST",
 						"params": {
 							"rosterId": "@objectId"

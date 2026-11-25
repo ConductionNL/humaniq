@@ -160,7 +160,7 @@
 						"label": "Verify and activate",
 						"type": "api-call",
 						"icon": "CheckCircleOutline",
-						"url": "/api/loonbeslag/activate",
+						"url": "/apps/humaniq/api/loonbeslag/activate",
 						"method": "POST",
 						"params": {
 							"loonbeslagId": "@objectId"
@@ -174,7 +174,7 @@
 						"label": "Mark settled",
 						"type": "api-call",
 						"icon": "CashCheck",
-						"url": "/api/loonbeslag/settle",
+						"url": "/apps/humaniq/api/loonbeslag/settle",
 						"method": "POST",
 						"params": {
 							"loonbeslagId": "@objectId"
@@ -188,7 +188,7 @@
 						"label": "Withdraw",
 						"type": "api-call",
 						"icon": "CloseCircleOutline",
-						"url": "/api/loonbeslag/withdraw",
+						"url": "/apps/humaniq/api/loonbeslag/withdraw",
 						"method": "POST",
 						"params": {
 							"loonbeslagId": "@objectId",

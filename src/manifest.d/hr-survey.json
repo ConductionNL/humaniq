@@ -154,7 +154,7 @@
 						"label": "Open survey",
 						"type": "api-call",
 						"icon": "SendOutline",
-						"url": "/api/surveys/@objectId/open",
+						"url": "/apps/humaniq/api/surveys/@objectId/open",
 						"method": "POST",
 						"params": {},
 						"confirm": true,

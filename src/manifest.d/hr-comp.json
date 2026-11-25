@@ -372,7 +372,7 @@
 						"label": "Effectuate",
 						"type": "api-call",
 						"icon": "CashCheck",
-						"url": "/api/comp/effectuate",
+						"url": "/apps/humaniq/api/comp/effectuate",
 						"method": "POST",
 						"params": {
 							"adjustmentId": "@objectId"

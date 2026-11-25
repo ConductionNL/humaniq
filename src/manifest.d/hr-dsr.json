@@ -48,7 +48,7 @@
 						"label": "Export",
 						"type": "api-call",
 						"icon": "DatabaseExportOutline",
-						"url": "/api/dsr/export",
+						"url": "/apps/humaniq/api/dsr/export",
 						"method": "POST",
 						"params": {
 							"employeeId": "@object.employeeId",
@@ -64,7 +64,7 @@
 						"label": "Preview erasure",
 						"type": "api-call",
 						"icon": "EyeOutline",
-						"url": "/api/dsr/erase-preview",
+						"url": "/apps/humaniq/api/dsr/erase-preview",
 						"method": "POST",
 						"params": {
 							"employeeId": "@object.employeeId",
@@ -79,7 +79,7 @@
 						"label": "Confirm erasure",
 						"type": "api-call",
 						"icon": "DeleteAlertOutline",
-						"url": "/api/dsr/erase-confirm",
+						"url": "/apps/humaniq/api/dsr/erase-confirm",
 						"method": "POST",
 						"params": {
 							"employeeId": "@object.employeeId",
@@ -94,7 +94,7 @@
 						"label": "Rectify",
 						"type": "api-call",
 						"icon": "PencilOutline",
-						"url": "/api/dsr/rectify",
+						"url": "/apps/humaniq/api/dsr/rectify",
 						"method": "POST",
 						"params": {
 							"employeeId": "@object.employeeId",

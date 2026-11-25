@@ -139,7 +139,7 @@
 						"label": "I have read this",
 						"type": "api-call",
 						"icon": "CheckDecagramOutline",
-						"url": "/api/announcements/@objectId/confirm",
+						"url": "/apps/humaniq/api/announcements/@objectId/confirm",
 						"method": "POST",
 						"confirm": true
 					}

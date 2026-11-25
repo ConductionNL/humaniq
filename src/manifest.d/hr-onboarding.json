@@ -267,7 +267,7 @@
 						"label": "Read document",
 						"type": "api-call",
 						"icon": "FileAccountOutline",
-						"url": "/api/onboarding/@objectId/read-document",
+						"url": "/apps/humaniq/api/onboarding/@objectId/read-document",
 						"method": "POST",
 						"params": {},
 						"confirm": false,
@@ -278,7 +278,7 @@
 						"label": "Create contract from document",
 						"type": "api-call",
 						"icon": "FileDocumentPlusOutline",
-						"url": "/api/onboarding/@objectId/contract-from-document",
+						"url": "/apps/humaniq/api/onboarding/@objectId/contract-from-document",
 						"method": "POST",
 						"params": {},
 						"confirm": true,
@@ -569,7 +569,7 @@
 						"label": "Revoke access",
 						"type": "api-call",
 						"icon": "AccountCancelOutline",
-						"url": "/api/offboarding/@objectId/revoke-access",
+						"url": "/apps/humaniq/api/offboarding/@objectId/revoke-access",
 						"method": "POST",
 						"confirm": true
 					},
@@ -578,7 +578,7 @@
 						"label": "Calculate transition payment",
 						"type": "api-call",
 						"icon": "Calculator",
-						"url": "/api/offboarding/@objectId/transition-payment",
+						"url": "/apps/humaniq/api/offboarding/@objectId/transition-payment",
 						"method": "POST",
 						"confirm": true
 					}
