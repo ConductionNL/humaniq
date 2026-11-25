@@ -25,6 +25,13 @@
  * cross-reference (the onboarding/pension precedent) — the Offboarding seed
  * data instead lives in lib/Settings/register.d/hr-seed.json (ADR-001).
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): each of the four offboarding rules is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -44,8 +51,12 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * Dutch offboarding (transitievergoeding / verlofsaldo / getuigschrift /
  * einddatum) executable checks.
+ *
+ * @spec openspec/specs/offboarding-wizard/spec.md
  */
-final class NlOffboardingChecks implements CheckProvider {
+final class NlOffboardingChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * Departure reasons treated as dismissal-initiated (design.md D3):
@@ -67,29 +78,84 @@ final class NlOffboardingChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			'Offboarding' => [
-				// BW art. 7:673 — transitievergoeding presence for
-				// dismissal-initiated departures at/past eindafrekening_gereed.
-				'nl-offboarding-transitievergoeding' => static fn (array $o): bool => self::transitievergoedingSatisfied($o),
-				// BW art. 7:641 — open leave balance paid out at afgerond.
-				'nl-offboarding-verlofsaldo-uitbetaling' => static fn (array $o, array $c): bool => self::verlofsaldoSatisfied($o, $c),
-				// BW art. 7:656 — getuigschrift provided on request (advisory).
-				'nl-offboarding-getuigschrift' => static fn (array $o): bool => self::hasGetuigschriftSatisfied($o),
-				// BW art. 7:667 — Employee.endDate matches lastWorkingDay at afgerond.
-				'nl-offboarding-einddatum-consistentie' => static fn (array $o, array $c): bool => self::einddatumSatisfied($o, $c),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * The four Offboarding rules as derivation + FIRST-hit decision tables,
+	 * each gated on the offboarding's own status.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/offboarding-wizard/spec.md
+	 */
+	public static function tables(): array {
+		return [
+			'Offboarding' => [
+				'nl-offboarding-transitievergoeding' => [
+					'derive' => static fn (array $o): array => [
+						'reason' => (string)($o['reason'] ?? ''),
+						'status' => (string)($o['status'] ?? ''),
+						'bedragRecorded' => (is_numeric($o['transitievergoedingBedrag'] ?? null) === true && (float)$o['transitievergoedingBedrag'] >= 0.0),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'reason', 'type' => 'string'], ['name' => 'status', 'type' => 'string'], ['name' => 'bedragRecorded', 'type' => 'boolean']],
+						[['id' => 'dismissal-settled-without-bedrag', 'inputEntries' => ['in ("opzegging-werkgever","einde-contract")', 'in ("eindafrekening_gereed","afgerond")', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+				'nl-offboarding-verlofsaldo-uitbetaling' => [
+					'derive' => static fn (array $o, array $c): array => [
+						'afgerond' => ((string)($o['status'] ?? '') === 'afgerond'),
+						'uitbetaald' => (($o['verlofsaldoUitbetaald'] ?? false) === true),
+						'openBalanceHours' => self::openBalanceHours($o, $c),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'afgerond', 'type' => 'boolean'], ['name' => 'uitbetaald', 'type' => 'boolean'], ['name' => 'openBalanceHours', 'type' => 'number']],
+						[['id' => 'closed-with-unpaid-balance', 'inputEntries' => ['true', 'false', '> 0'], 'outputEntries' => [false]]]
+					),
+				],
+				'nl-offboarding-getuigschrift' => [
+					'derive' => static fn (array $o): array => [
+						'afgerond' => ((string)($o['status'] ?? '') === 'afgerond'),
+						'getuigschriftVerstrekt' => (($o['getuigschriftVerstrekt'] ?? false) === true),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'afgerond', 'type' => 'boolean'], ['name' => 'getuigschriftVerstrekt', 'type' => 'boolean']],
+						[['id' => 'closed-without-getuigschrift', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+				'nl-offboarding-einddatum-consistentie' => [
+					'derive' => static fn (array $o, array $c): array => self::einddatumInputs($o, $c),
+					'table' => self::satisfiedTable(
+						[['name' => 'afgerond', 'type' => 'boolean'], ['name' => 'employeeResolves', 'type' => 'boolean'], ['name' => 'endDateMatches', 'type' => 'boolean']],
+						[
+							['id' => 'closed-employee-missing', 'inputEntries' => ['true', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'closed-end-date-differs', 'inputEntries' => ['true', '-', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/offboarding-wizard/spec.md
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -226,5 +292,82 @@ final class NlOffboardingChecks implements CheckProvider {
 		$byEmployeeId = ($c['related']['LeaveBalance']['byEmployeeId'] ?? []);
 		return is_array($byEmployeeId) === true ? $byEmployeeId : [];
 	}//end relatedLeaveBalancesByEmployeeId()
+
+	/**
+	 * The employee's open leave balance in hours: per LeaveBalance row the
+	 * entitled plus bovenwettelijk hours minus used, never below zero. Zero
+	 * when no rows resolve.
+	 *
+	 * @param array<string, mixed> $o The Offboarding.
+	 * @param array<string, mixed> $c Evaluation context; reads the LeaveBalance index.
+	 *
+	 * @return float
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function openBalanceHours(array $o, array $c): float {
+		$rows = (self::relatedLeaveBalancesByEmployeeId($c)[(string)($o['employeeId'] ?? '')] ?? null);
+		if (is_array($rows) === false) {
+			return 0.0;
+		}
+
+		$open = 0.0;
+		foreach ($rows as $row) {
+			$open += max(0.0, ((float)($row['entitledHours'] ?? 0)) + ((float)($row['bovenwettelijkHours'] ?? 0)) - ((float)($row['usedHours'] ?? 0)));
+		}
+
+		return $open;
+
+	}//end openBalanceHours()
+
+	/**
+	 * The end-date table's inputs: whether the offboarding is closed, its
+	 * employee resolves, and the employee's end date is the last working day.
+	 *
+	 * @param array<string, mixed> $o The Offboarding.
+	 * @param array<string, mixed> $c Evaluation context; reads the Employee index.
+	 *
+	 * @return array{afgerond: bool, employeeResolves: bool, endDateMatches: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function einddatumInputs(array $o, array $c): array {
+		$employee = (self::relatedEmployeesById($c)[(string)($o['employeeId'] ?? '')] ?? null);
+		$endDate = (is_array($employee) === true) ? trim((string)($employee['endDate'] ?? '')) : '';
+
+		return [
+			'afgerond' => ((string)($o['status'] ?? '') === 'afgerond'),
+			'employeeResolves' => is_array($employee),
+			'endDateMatches' => ($endDate !== '' && $endDate === trim((string)($o['lastWorkingDay'] ?? ''))),
+		];
+
+	}//end einddatumInputs()
+
+	/**
+	 * The four offboarding closures from before the tables, kept to compare:
+	 * NlOffboardingTableParityTest runs them beside tables(); the engine never
+	 * sees them, and they go once the OpenRegister audit run agrees.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/offboarding-wizard/spec.md
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'Offboarding' => [
+				// BW art. 7:673 — transitievergoeding presence for
+				// dismissal-initiated departures at/past eindafrekening_gereed.
+				'nl-offboarding-transitievergoeding' => static fn (array $o): bool => self::transitievergoedingSatisfied($o),
+				// BW art. 7:641 — open leave balance paid out at afgerond.
+				'nl-offboarding-verlofsaldo-uitbetaling' => static fn (array $o, array $c): bool => self::verlofsaldoSatisfied($o, $c),
+				// BW art. 7:656 — getuigschrift provided on request (advisory).
+				'nl-offboarding-getuigschrift' => static fn (array $o): bool => self::hasGetuigschriftSatisfied($o),
+				// BW art. 7:667 — Employee.endDate matches lastWorkingDay at afgerond.
+				'nl-offboarding-einddatum-consistentie' => static fn (array $o, array $c): bool => self::einddatumSatisfied($o, $c),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
