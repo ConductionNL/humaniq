@@ -52,21 +52,31 @@ function wizard(page: Page) {
 }
 
 /**
- * Press Next until the step whose heading matches is showing.
+ * Press Next until the step with this manifest id is the current one.
+ *
+ * The step titles are not headings (the dialog title is the only one), so the
+ * step rail is read instead: it marks the current step with
+ * aria-current="step" and carries the manifest step id. Next is never pressed
+ * on the Klaar step, where it reads "Inrichting afronden" and would finish the
+ * wizard (storing setup_completed_version).
  *
  * @param page The page.
- * @param heading The step's heading.
+ * @param stepId The step's manifest id (language, done, ...).
  * @return Resolves once the step shows.
  */
-async function nextUntil(page: Page, heading: RegExp): Promise<void> {
+async function nextUntil(page: Page, stepId: string): Promise<void> {
 	const dialog = wizard(page)
+	const current = dialog.locator(`[aria-current="step"][data-step-id="${stepId}"]`)
 	for (let i = 0; i < MAX_STEPS; i++) {
-		if (await dialog.getByRole('heading', { name: heading }).first().isVisible()) {
+		if (await current.isVisible()) {
 			return
+		}
+		if (await dialog.locator('[aria-current="step"][data-step-id="done"]').isVisible()) {
+			break
 		}
 		await dialog.getByTestId('cn-wizard-next').click()
 	}
-	await expect(dialog.getByRole('heading', { name: heading }).first(), `the wizard reaches ${heading}`).toBeVisible()
+	await expect(current, `the wizard reaches the ${stepId} step`).toBeVisible()
 }
 
 /**
@@ -85,7 +95,7 @@ async function pickLanguage(page: Page, label: RegExp): Promise<void> {
 	}
 	// A dropdown choice: open it, then pick.
 	await dialog.getByRole('combobox').first().click()
-	await page.getByRole('option', { name: label }).first().click()
+	await page.getByRole('option').filter({ hasText: label }).first().click()
 }
 
 /**
@@ -96,7 +106,8 @@ async function pickLanguage(page: Page, label: RegExp): Promise<void> {
  * @return The row locator.
  */
 function recapRow(page: Page, label: RegExp) {
-	return wizard(page).getByRole('listitem').filter({ hasText: label }).first()
+	// The recap is the step body's list; the step rail is an ordered list.
+	return wizard(page).locator('ul').getByRole('listitem').filter({ hasText: label }).first()
 }
 
 test.describe('the setup recap', () => {
@@ -138,15 +149,15 @@ test.describe('the setup recap', () => {
 		await page.goto('/index.php/apps/humaniq/', { waitUntil: 'domcontentloaded' })
 		await expect(wizard(page), 'the outstanding Taal step opens the wizard').toBeVisible({ timeout: 30_000 })
 
-		await nextUntil(page, /^(taal|language)$/i)
+		await nextUntil(page, 'language')
 		await pickLanguage(page, /nederlands|dutch/i)
-		await nextUntil(page, /klaar|ready|done/i)
+		await nextUntil(page, 'done')
 		await expect(recapRow(page, /taal|language/i), 'the Taal row names the answer').toContainText(/nederlands|dutch/i)
 
 		await recapRow(page, /taal|language/i).getByRole('button', { name: /wijzigen|change/i }).click()
-		await expect(wizard(page).getByRole('heading', { name: /^(taal|language)$/i }).first(), 'Wijzigen opens the Taal step').toBeVisible()
+		await expect(wizard(page).locator('[aria-current="step"][data-step-id="language"]'), 'Wijzigen opens the Taal step').toBeVisible()
 		await pickLanguage(page, /english|engels/i)
-		await nextUntil(page, /klaar|ready|done/i)
+		await nextUntil(page, 'done')
 		await expect(recapRow(page, /taal|language/i), 'the Taal row reads the new answer').toContainText(/english|engels/i)
 
 		// Annuleren: close without storing setup_completed_version.

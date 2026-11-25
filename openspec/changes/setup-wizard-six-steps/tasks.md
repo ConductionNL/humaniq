@@ -140,6 +140,9 @@
         answers do not line up and a short cell breaks inside a word ("Niet ingestel d"); the board
         draws label, answer, explanation and Wijzigen as aligned columns. nextcloud-vue
         (`CnSetupWizard` summary rows), built as a dependency next.
-      - The Wijzigen spec (5.1) needed `send: 'always'` on its admin request context: Nextcloud's
-        OCS 401 carries no Basic challenge, so Playwright never sent the credentials and the
-        provisioning call to clear `default_language` failed with 401 before the walk began.
+      - The Wijzigen spec (5.1) now passes live (1 passed; mutation-checked: a wrong expected
+        language fails on the recap row). Three spec fixes: `send: 'always'` on the admin request
+        context (Nextcloud's OCS 401 carries no Basic challenge, so the credentials were never
+        sent); steps are found by the rail's `aria-current="step"` + `data-step-id`, since step
+        titles are not headings (it used to press Next on Klaar, i.e. "Inrichting afronden",
+        and finish the wizard); the recap row is read from the step body's list, not the rail.
