@@ -38,6 +38,16 @@
  * under all three predicates — the golden fixtures are this change's
  * canonical data (design.md Seed Data).
  *
+ * Converted in part to the table-backed check form
+ * (rules-onto-or-decision-tables, next conversion wave):
+ * `nl-engine-table-version` and `nl-engine-provenance-complete` are declared
+ * as OpenRegister decision tables via the ProvidesTables capability, the
+ * artefact and snapshot reading staying here as their derivations; their
+ * closures stay as legacyChecks(), the oracle NlEngineTableParityTest
+ * compares with, never registered in the engine.
+ * `nl-engine-output-consistency` recomputes the net pay and compares cents,
+ * a formula rather than a table, and stays a closure.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -61,7 +71,9 @@ use OCA\Humaniq\Payroll\TaxTables;
 /**
  * Payroll-engine traceability + output-consistency executable checks.
  */
-final class NlEngineChecks implements CheckProvider {
+final class NlEngineChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * Memoised bundled jurisdiction-pack ids (globbed once — no per-object IO).
@@ -89,16 +101,90 @@ final class NlEngineChecks implements CheckProvider {
 	 */
 	public static function checks(): array {
 		return [
-			'PayrollRun' => [
-				'nl-engine-table-version' => static fn (array $o): bool => self::hasValidTableVersion($o),
-			],
 			'Payslip' => [
 				'nl-engine-output-consistency' => static fn (array $o, array $context): bool => self::isOutputConsistent($o, $context),
-				'nl-engine-provenance-complete' => static fn (array $o, array $context): bool => self::hasCompleteProvenance($o, $context),
 			],
 		];
 
 	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-engine-table-version`: a stamped run without a calculation time, or
+	 * whose engine version names no known table or pack, fails.
+	 * `nl-engine-provenance-complete`: a payslip of an engine run without a
+	 * readable input snapshot, without a jurisdiction in it, or with one other
+	 * than its pack's fails; a payslip outside an engine run, or of an
+	 * unbundled pack, derives null.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function tables(): array {
+		return [
+			'PayrollRun' => [
+				'nl-engine-table-version' => [
+					'derive' => static fn (array $o): array => [
+						'stamped' => (trim((string)($o['engineVersion'] ?? '')) !== ''),
+						'calculated' => (trim((string)($o['calculatedAt'] ?? '')) !== ''),
+						'knownArtefact' => self::namesAKnownEngineArtefact(self::artefactOf(trim((string)($o['engineVersion'] ?? '')))),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'stamped', 'type' => 'boolean'], ['name' => 'calculated', 'type' => 'boolean'], ['name' => 'knownArtefact', 'type' => 'boolean']],
+						[
+							['id' => 'stamped-without-calculation', 'inputEntries' => ['true', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'unknown-engine-artefact', 'inputEntries' => ['true', 'true', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+			'Payslip' => [
+				'nl-engine-provenance-complete' => [
+					'derive' => static fn (array $o, array $context): ?array => self::provenanceInputs($o, $context),
+					'table' => self::satisfiedTable(
+						[['name' => 'snapshotReadable', 'type' => 'boolean'], ['name' => 'jurisdictionMatchesPack', 'type' => 'boolean']],
+						[
+							['id' => 'snapshot-missing', 'inputEntries' => ['false', '-'], 'outputEntries' => [false]],
+							['id' => 'jurisdiction-not-the-packs', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * The provenance table's inputs: whether the payslip's input snapshot
+	 * decodes, and whether its (upper-cased, non-empty) jurisdiction is the
+	 * pack's. Null for a payslip outside an engine run, or when a readable
+	 * snapshot names a jurisdiction but the run's artefact is no bundled pack.
+	 *
+	 * @param array<string, mixed> $o       The Payslip.
+	 * @param array<string, mixed> $context Evaluation context; reads `payroll.runsById`.
+	 *
+	 * @return array{snapshotReadable: bool, jurisdictionMatchesPack: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function provenanceInputs(array $o, array $context): ?array {
+		if (self::isOfEngineRun(o: $o, context: $context) === false) {
+			return null;
+		}
+
+		$decoded = (new EngineInputSnapshot())->decode($o['engineInputSnapshot'] ?? null);
+		$jurisdiction = strtoupper(trim((string)($decoded['jurisdiction'] ?? '')));
+		$run = $context['payroll']['runsById'][trim((string)($o['payrollRunId'] ?? ''))];
+		$pack = (self::bundledPacksById()[self::artefactOf(trim((string)$run['engineVersion']))] ?? null);
+		if ($jurisdiction !== '' && $pack === null) {
+			return null;
+		}
+
+		return ['snapshotReadable' => ($decoded !== null), 'jurisdictionMatchesPack' => ($jurisdiction !== '' && $jurisdiction === $pack?->jurisdiction())];
+
+	}//end provenanceInputs()
 
 	/**
 	 * {@inheritDoc}
@@ -357,7 +443,7 @@ final class NlEngineChecks implements CheckProvider {
 			return true;
 		}
 
-		$decoded = self::decodeSnapshot($o['engineInputSnapshot'] ?? null);
+		$decoded = (new EngineInputSnapshot())->decode($o['engineInputSnapshot'] ?? null);
 		if ($decoded === null) {
 			// Missing snapshot, or one that failed to decode.
 			return false;
@@ -383,39 +469,6 @@ final class NlEngineChecks implements CheckProvider {
 	}//end hasCompleteProvenance()
 
 	/**
-	 * Decode an `engineInputSnapshot` value to an array, or null when
-	 * missing/undecodable.
-	 *
-	 * Accepts EITHER a raw JSON string (a hand-built test fixture, or a
-	 * direct-SQL read) OR an already-decoded array — live-verified against
-	 * 8080: `OCA\OpenRegister\Db\MagicMapper::rowToObjectEntity()` blanket
-	 * `json_decode()`s any string column value that happens to parse as
-	 * valid JSON, regardless of the schema's declared `type: string`, so
-	 * every real `ObjectService`/`RuleAuditService` read of this field
-	 * returns it pre-decoded.
-	 *
-	 * @param mixed $snapshot The raw `engineInputSnapshot` field value.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private static function decodeSnapshot(mixed $snapshot): ?array {
-		if ($snapshot === null || $snapshot === '' || $snapshot === []) {
-			return null;
-		}
-
-		if (is_array($snapshot) === true) {
-			return $snapshot;
-		}
-
-		$decoded = json_decode(trim((string)$snapshot), true);
-		if (json_last_error() !== JSON_ERROR_NONE || is_array($decoded) === false) {
-			return null;
-		}
-
-		return $decoded;
-	}//end decodeSnapshot()
-
-	/**
 	 * True when an object field holds a present, numeric value.
 	 *
 	 * @param array<string, mixed> $o Object.
@@ -438,5 +491,26 @@ final class NlEngineChecks implements CheckProvider {
 	private static function centsEqual(float $a, float $b): bool {
 		return (int)round($a * 100) === (int)round($b * 100);
 	}//end centsEqual()
+
+	/**
+	 * The table-version and provenance closures as registered before
+	 * tables(); NlEngineTableParityTest runs its matrix through them as the
+	 * oracle. The engine never sees this list.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'PayrollRun' => [
+				'nl-engine-table-version' => static fn (array $o): bool => self::hasValidTableVersion($o),
+			],
+			'Payslip' => [
+				'nl-engine-provenance-complete' => static fn (array $o, array $context): bool => self::hasCompleteProvenance($o, $context),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

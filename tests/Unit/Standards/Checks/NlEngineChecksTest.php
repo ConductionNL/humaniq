@@ -53,7 +53,7 @@ class NlEngineChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlEngineChecks::checks();
+		$this->checks = array_replace_recursive(NlEngineChecks::legacyChecks(), NlEngineChecks::checks());
 
 	}//end setUp()
 
