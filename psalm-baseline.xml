@@ -807,11 +807,6 @@
       <code><![CDATA[public function compose(]]></code>
     </MissingOverrideAttribute>
   </file>
-  <file src="lib/Service/DeploymentPlanService.php">
-    <InvalidArgument>
-      <code><![CDATA[[self::class, 'byDifferenceThenName']]]></code>
-    </InvalidArgument>
-  </file>
   <file src="lib/Service/DossierCompletenessService.php">
     <MissingOverrideAttribute>
       <code><![CDATA[public function hasGap(array $status): bool {]]></code>
