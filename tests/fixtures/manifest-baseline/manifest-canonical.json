@@ -3689,7 +3689,7 @@
 						"label": "I have read this",
 						"method": "POST",
 						"type": "api-call",
-						"url": "/api/announcements/@objectId/confirm"
+						"url": "/apps/humaniq/api/announcements/@objectId/confirm"
 					}
 				],
 				"hiddenTabs": [
@@ -3803,7 +3803,7 @@
 						"method": "POST",
 						"successMessage": "Filled the empty fields from the vehicle register. Fields you had already filled were kept.",
 						"type": "api-call",
-						"url": "/api/prefill/vehicle/@objectId",
+						"url": "/apps/humaniq/api/prefill/vehicle/@objectId",
 						"visibleWhen": {
 							"field": "category",
 							"op": "eq",
@@ -4002,7 +4002,7 @@
 						},
 						"successMessage": "The offer letter is being generated and an e-signature requested.",
 						"type": "api-call",
-						"url": "/api/offer/request-signature"
+						"url": "/apps/humaniq/api/offer/request-signature"
 					},
 					{
 						"confirm": false,
@@ -4013,7 +4013,7 @@
 						"params": {},
 						"successMessage": "The profile was read from the CV. Check it before you compare candidates.",
 						"type": "api-call",
-						"url": "/api/applications/@objectId/read-cv",
+						"url": "/apps/humaniq/api/applications/@objectId/read-cv",
 						"visibleWhen": {
 							"field": "cvFile",
 							"op": "notEmpty"
@@ -5308,7 +5308,7 @@
 						},
 						"successMessage": "Extraction started.",
 						"type": "api-call",
-						"url": "/api/expenses/extract-receipt"
+						"url": "/apps/humaniq/api/expenses/extract-receipt"
 					}
 				],
 				"layout": [
@@ -6189,7 +6189,7 @@
 						},
 						"successMessage": "Handoff compiled. The mutations are up to date.",
 						"type": "api-call",
-						"url": "/api/payroll/handoffs/compile"
+						"url": "/apps/humaniq/api/payroll/handoffs/compile"
 					},
 					{
 						"errorMessage": "Checking the bureau's payslips failed.",
@@ -6202,7 +6202,7 @@
 						},
 						"successMessage": "Intake checked. The findings are updated.",
 						"type": "api-call",
-						"url": "/api/payroll/handoffs/check-intake"
+						"url": "/apps/humaniq/api/payroll/handoffs/check-intake"
 					}
 				],
 				"layout": [
@@ -6820,7 +6820,7 @@
 						},
 						"successMessage": "Wage garnishment verified and activated.",
 						"type": "api-call",
-						"url": "/api/loonbeslag/activate"
+						"url": "/apps/humaniq/api/loonbeslag/activate"
 					},
 					{
 						"confirm": true,
@@ -6834,7 +6834,7 @@
 						},
 						"successMessage": "Wage garnishment marked as settled.",
 						"type": "api-call",
-						"url": "/api/loonbeslag/settle"
+						"url": "/apps/humaniq/api/loonbeslag/settle"
 					},
 					{
 						"confirm": true,
@@ -6849,7 +6849,7 @@
 						},
 						"successMessage": "Wage garnishment withdrawn.",
 						"type": "api-call",
-						"url": "/api/loonbeslag/withdraw"
+						"url": "/apps/humaniq/api/loonbeslag/withdraw"
 					}
 				],
 				"layout": [
@@ -7017,7 +7017,7 @@
 						"method": "POST",
 						"successMessage": "Filled the empty fields from the population register. Fields you had already filled were kept.",
 						"type": "api-call",
-						"url": "/api/prefill/employee/@objectId",
+						"url": "/apps/humaniq/api/prefill/employee/@objectId",
 						"visibleWhen": {
 							"endpoint": "/apps/humaniq/api/prefill/brp-available",
 							"field": "available",
@@ -8324,7 +8324,7 @@
 						},
 						"successMessage": "The payslip PDF is being generated.",
 						"type": "api-call",
-						"url": "/api/documents/generate"
+						"url": "/apps/humaniq/api/documents/generate"
 					}
 				],
 				"layout": [
@@ -8610,7 +8610,7 @@
 						},
 						"successMessage": "Payroll run (re)calculated — payslips and totals have been updated.",
 						"type": "api-call",
-						"url": "/api/payroll/calculate"
+						"url": "/apps/humaniq/api/payroll/calculate"
 					},
 					{
 						"errorMessage": "Checking the payroll run failed.",
@@ -8623,7 +8623,7 @@
 						},
 						"successMessage": "Run checked. The findings and their counts are updated.",
 						"type": "api-call",
-						"url": "/api/payroll/check"
+						"url": "/apps/humaniq/api/payroll/check"
 					},
 					{
 						"confirm": true,
@@ -8638,7 +8638,7 @@
 						},
 						"successMessage": "Mutation report generated — compared with the previous period.",
 						"type": "api-call",
-						"url": "/api/payroll/mutations"
+						"url": "/apps/humaniq/api/payroll/mutations"
 					},
 					{
 						"icon": "CashSync",
@@ -9005,7 +9005,7 @@
 						"params": {},
 						"successMessage": "Message made. Check the warnings, then set the filing ready.",
 						"type": "api-call",
-						"url": "/api/loonaangifte/filings/@objectId/message"
+						"url": "/apps/humaniq/api/loonaangifte/filings/@objectId/message"
 					},
 					{
 						"confirm": true,
@@ -9017,7 +9017,7 @@
 						"params": {},
 						"successMessage": "Correction opened. Find it in the wage tax filings for the same period.",
 						"type": "api-call",
-						"url": "/api/loonaangifte/filings/@objectId/correction"
+						"url": "/apps/humaniq/api/loonaangifte/filings/@objectId/correction"
 					}
 				],
 				"layout": [
@@ -9525,7 +9525,7 @@
 						},
 						"successMessage": "WKR assessment recalculated.",
 						"type": "api-call",
-						"url": "/api/payroll/wkr-assess"
+						"url": "/apps/humaniq/api/payroll/wkr-assess"
 					}
 				],
 				"layout": [
@@ -9728,7 +9728,7 @@
 						},
 						"successMessage": "The employment contract is being generated.",
 						"type": "api-call",
-						"url": "/api/documents/generate"
+						"url": "/apps/humaniq/api/documents/generate"
 					},
 					{
 						"confirm": true,
@@ -9743,7 +9743,7 @@
 						},
 						"successMessage": "The employer statement is being made.",
 						"type": "api-call",
-						"url": "/api/documents/generate"
+						"url": "/apps/humaniq/api/documents/generate"
 					}
 				],
 				"layout": [
@@ -10043,7 +10043,7 @@
 						"params": {},
 						"successMessage": "The documents were read. Check every value before the checklist moves on.",
 						"type": "api-call",
-						"url": "/api/onboarding/@objectId/read-document"
+						"url": "/apps/humaniq/api/onboarding/@objectId/read-document"
 					},
 					{
 						"confirm": true,
@@ -10054,7 +10054,7 @@
 						"params": {},
 						"successMessage": "The contract was made from the document. Check it before it is signed.",
 						"type": "api-call",
-						"url": "/api/onboarding/@objectId/contract-from-document"
+						"url": "/apps/humaniq/api/onboarding/@objectId/contract-from-document"
 					}
 				],
 				"layout": [
@@ -10385,7 +10385,7 @@
 						"label": "Revoke access",
 						"method": "POST",
 						"type": "api-call",
-						"url": "/api/offboarding/@objectId/revoke-access"
+						"url": "/apps/humaniq/api/offboarding/@objectId/revoke-access"
 					},
 					{
 						"confirm": true,
@@ -10394,7 +10394,7 @@
 						"label": "Calculate transition payment",
 						"method": "POST",
 						"type": "api-call",
-						"url": "/api/offboarding/@objectId/transition-payment"
+						"url": "/apps/humaniq/api/offboarding/@objectId/transition-payment"
 					}
 				],
 				"layout": [
@@ -12396,7 +12396,7 @@
 						},
 						"successMessage": "Correction recomputed — the delta has been updated.",
 						"type": "api-call",
-						"url": "/api/payroll/adjust"
+						"url": "/apps/humaniq/api/payroll/adjust"
 					}
 				],
 				"layout": [
@@ -12505,7 +12505,7 @@
 						},
 						"successMessage": "Working hours check completed — review the outcome per roster assignment.",
 						"type": "api-call",
-						"url": "/api/roster/check"
+						"url": "/apps/humaniq/api/roster/check"
 					}
 				],
 				"layout": [
@@ -12691,7 +12691,7 @@
 						"params": {},
 						"successMessage": "The survey is open and the employees in scope are invited.",
 						"type": "api-call",
-						"url": "/api/surveys/@objectId/open",
+						"url": "/apps/humaniq/api/surveys/@objectId/open",
 						"visibleWhen": {
 							"field": "status",
 							"op": "eq",
@@ -12939,7 +12939,7 @@
 						},
 						"successMessage": "Report assembled. Check the findings before you set it ready.",
 						"type": "api-call",
-						"url": "/api/third-party/reports/assemble"
+						"url": "/apps/humaniq/api/third-party/reports/assemble"
 					},
 					{
 						"errorMessage": "No statement could be generated. Check that filinq has one template for ubd-jaaropgaaf.",
@@ -12950,7 +12950,7 @@
 						"params": {},
 						"successMessage": "Statements generated and stored with each payee.",
 						"type": "api-call",
-						"url": "/api/third-party/reports/@objectId/statements"
+						"url": "/apps/humaniq/api/third-party/reports/@objectId/statements"
 					}
 				],
 				"layout": [
@@ -13695,7 +13695,7 @@
 						"method": "POST",
 						"successMessage": "The 42-week notification is on the case. Submit it to UWV and fill in the date it was done.",
 						"type": "api-call",
-						"url": "/api/sick-leave/{objectId}/uwv-notification"
+						"url": "/apps/humaniq/api/sick-leave/{objectId}/uwv-notification"
 					}
 				],
 				"layout": [
@@ -13870,7 +13870,7 @@
 						"method": "POST",
 						"params": {},
 						"type": "api-call",
-						"url": "/api/reports/pay-transparency/export"
+						"url": "/apps/humaniq/api/reports/pay-transparency/export"
 					}
 				],
 				"layout": [
@@ -15319,7 +15319,7 @@
 						},
 						"successMessage": "Interview synced to the shared calendar.",
 						"type": "api-call",
-						"url": "/api/interviews/sync"
+						"url": "/apps/humaniq/api/interviews/sync"
 					}
 				],
 				"layout": [
@@ -15409,7 +15409,7 @@
 					"params": {},
 					"successMessage": "You are clocked in. Your day is open until you clock out.",
 					"type": "api-call",
-					"url": "/api/attendance/clock-in"
+					"url": "/apps/humaniq/api/attendance/clock-in"
 				},
 				{
 					"confirm": true,
@@ -15421,7 +15421,7 @@
 					"params": {},
 					"successMessage": "You are clocked out. Your worked hours are recorded.",
 					"type": "api-call",
-					"url": "/api/attendance/clock-out"
+					"url": "/apps/humaniq/api/attendance/clock-out"
 				}
 			],
 			"config": {
@@ -16025,7 +16025,7 @@
 						},
 						"successMessage": "Compensation adjustment effectuated; the gross monthly salary has been updated.",
 						"type": "api-call",
-						"url": "/api/comp/effectuate"
+						"url": "/apps/humaniq/api/comp/effectuate"
 					}
 				],
 				"layout": [
@@ -16386,7 +16386,7 @@
 						"method": "POST",
 						"successMessage": "The signing request is on its way. Its status shows on this document.",
 						"type": "api-call",
-						"url": "/api/documents/@objectId/request-signature",
+						"url": "/apps/humaniq/api/documents/@objectId/request-signature",
 						"visibleWhen": {
 							"field": "status",
 							"op": "eq",
@@ -16508,7 +16508,7 @@
 					"params": {},
 					"successMessage": "Last year's annual statements are queued. They appear under Documents as each one is generated.",
 					"type": "api-call",
-					"url": "/api/documents/jaaropgaven"
+					"url": "/apps/humaniq/api/documents/jaaropgaven"
 				}
 			],
 			"config": {
@@ -16554,7 +16554,7 @@
 						},
 						"successMessage": "The annual statement PDF is being generated.",
 						"type": "api-call",
-						"url": "/api/documents/generate"
+						"url": "/apps/humaniq/api/documents/generate"
 					}
 				],
 				"layout": [
@@ -16942,7 +16942,7 @@
 						},
 						"successMessage": "Data export completed.",
 						"type": "api-call",
-						"url": "/api/dsr/export"
+						"url": "/apps/humaniq/api/dsr/export"
 					},
 					{
 						"confirm": false,
@@ -16957,7 +16957,7 @@
 						},
 						"successMessage": "Erasure preview retrieved (no write actions).",
 						"type": "api-call",
-						"url": "/api/dsr/erase-preview"
+						"url": "/apps/humaniq/api/dsr/erase-preview"
 					},
 					{
 						"confirm": true,
@@ -16972,7 +16972,7 @@
 						},
 						"successMessage": "Erasure completed (retained objects excluded, statutory retention obligation).",
 						"type": "api-call",
-						"url": "/api/dsr/erase-confirm"
+						"url": "/apps/humaniq/api/dsr/erase-confirm"
 					},
 					{
 						"confirm": true,
@@ -16988,7 +16988,7 @@
 						},
 						"successMessage": "Rectification applied.",
 						"type": "api-call",
-						"url": "/api/dsr/rectify"
+						"url": "/apps/humaniq/api/dsr/rectify"
 					}
 				],
 				"layout": [
@@ -17206,7 +17206,7 @@
 						},
 						"successMessage": "Distance calculated by the route planner.",
 						"type": "api-call",
-						"url": "/api/travel/route-distance"
+						"url": "/apps/humaniq/api/travel/route-distance"
 					}
 				],
 				"layout": [
@@ -17500,7 +17500,7 @@
 						},
 						"successMessage": "Mobility report compiled.",
 						"type": "api-call",
-						"url": "/api/travel/wpm-report"
+						"url": "/apps/humaniq/api/travel/wpm-report"
 					}
 				],
 				"layout": [
@@ -18311,7 +18311,7 @@
 						},
 						"successMessage": "Transaction settled; the leave balance has been updated.",
 						"type": "api-call",
-						"url": "/api/leave/settle"
+						"url": "/apps/humaniq/api/leave/settle"
 					}
 				],
 				"layout": [
