@@ -111,7 +111,8 @@ class InterviewAttendees {
 		$names = [];
 		foreach (self::ids(interviewers: $interviewers) as $id) {
 			$user = $this->users->get($id);
-			$name = (($user?->getDisplayName() ?? '') !== '') ? (string)$user?->getDisplayName() : $id;
+			$displayName = (string)($user?->getDisplayName() ?? '');
+			$name = ($displayName !== '') ? $displayName : $id;
 			$names[] = $name;
 			$email = trim((string)($user?->getEMailAddress() ?? ''));
 			if ($email !== '') {
