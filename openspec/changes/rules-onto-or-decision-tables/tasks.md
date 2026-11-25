@@ -50,10 +50,24 @@
 
 ## 6. Staged retirement (deliberately unchecked — proof before deletion)
 
-- [ ] 6.1 On an OpenRegister-backed environment, run `occ humaniq:rules:audit` before and after
+- [x] 6.1 On an OpenRegister-backed environment, run `occ humaniq:rules:audit` before and after
       this change over seeded data covering the four converted rules; verdicts must match.
-- [ ] 6.2 After 6.1 is proven, retire `NlLeaveChecks::legacyChecks()` and rewrite the parity test
+      Done 2026-11-25 on a sandbox Nextcloud 34.0.6 (MariaDB 10.11, OpenRegister main 7997381d,
+      humaniq development 89e5e1bf): 14 LeaveBalance fixtures seeded through the OpenRegister API
+      beside the 5 shipped seed balances (19 checked), covering each rule satisfied, violated and
+      vacuous. Audited once with the tables registered (as shipped) and once with
+      `legacyChecks()` registered as `checks()` and `tables()` empty (local, not committed). The
+      per-object violations (13 rows: 5 minimum, 3 saldo, 3 vervaltermijn, 2 bovenwettelijk) are
+      identical, and so are the audit's counts (152 objects, 103/22/41 violations, LeaveBalance
+      checked=19 compliant=9 withViolations=10); only the position of the LeaveBalance line in the
+      per-type list moves, because table-declared types register after closure types.
+- [x] 6.2 After 6.1 is proven, retire `NlLeaveChecks::legacyChecks()` and rewrite the parity test
       into a table-behaviour pin (fixtures + expected verdicts, no oracle).
+      Done: `legacyChecks()` and its four predicates are gone; `NlLeaveTableParityTest` became
+      `NlLeaveTableBehaviourTest` (16 fixtures with the expected verdict per rule, plus the
+      live audit's fractional-shortfall and all-violated rows; a second test asserts the four
+      rules, no registered closure, and both verdicts pinned per rule). The other providers keep
+      their oracles until their own audit proves them.
 - [x] 6.3 Next conversion wave: sweep the remaining 36 providers for tabular shapes (thresholds,
       enumerations, boolean gates over derived values) and convert them provider-by-provider with
       the same parity discipline; leave genuinely non-tabular predicates as closures.
