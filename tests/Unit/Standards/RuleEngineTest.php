@@ -78,6 +78,8 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\DateWindow
  * @uses \OCA\Humaniq\Standards\Checks\SickPayFloor
  * @uses \OCA\Humaniq\Standards\Checks\EngineInputSnapshot
+ * @uses \OCA\Humaniq\Standards\Checks\NlEmployeeDocumentChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlThirtyPercentRulingChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlOrgChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlPayrollChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlPensionFilingChecks

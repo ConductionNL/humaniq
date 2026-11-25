@@ -13,6 +13,12 @@
  * structured fields declared in lib/Settings/register.d/hr-objects.json; the
  * seedObjects() samples satisfy every predicate keyed to their type.
  *
+ * The Employee rules live in two sibling providers as decision tables
+ * (rules-onto-or-decision-tables): NlEmployeeDocumentChecks (ID-copy and
+ * loonheffingenverklaring retention, the A1 certificate) and
+ * NlThirtyPercentRulingChecks (the 30%-ruling); the Employee seed stays here
+ * with the other payroll samples.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -44,36 +50,8 @@ use OCA\Humaniq\Support\RoundsToCents;
  */
 final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	use PayrollSampleFields;
+	use ReadsRecordedFields;
 	use RoundsToCents;
-
-	/**
-	 * The 30%-ruling maximum term in months (Belastingdienst beschikking; the
-	 * `dertigProcentRegeling.maxDurationMonths` corpus leaf). An Employee check
-	 * has no wage period to load a versioned table for, so the flat statutory
-	 * value is a class constant here -- the `nl-30-percent-regeling` <= 30 and
-	 * `nl-minimumloon-2026` >= 14,71 hardcoding precedent.
-	 *
-	 * @var int
-	 */
-	private const THIRTY_PERCENT_MAX_DURATION_MONTHS = 60;
-
-	/**
-	 * The 2026 general 30%-ruling annual salary norm in cents
-	 * (`dertigProcentRegeling.salarisnormAlgemeen`, €48.013). Same
-	 * Employee-check hardcoding precedent as the term above.
-	 *
-	 * @var int
-	 */
-	private const THIRTY_PERCENT_SALARISNORM_ALGEMEEN_CENTS = 4801300;
-
-	/**
-	 * The 2026 reduced 30%-ruling annual salary norm in cents
-	 * (`dertigProcentRegeling.salarisnormMasterOnder30`, €36.497) for employees
-	 * under 30 with a qualifying master's degree.
-	 *
-	 * @var int
-	 */
-	private const THIRTY_PERCENT_SALARISNORM_MASTER_ONDER30_CENTS = 3649700;
 
 	/**
 	 * {@inheritDoc}
@@ -85,7 +63,6 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	public static function checks(): array {
 		return [
 			'Payslip' => [...self::payslipWithholdingChecks(), ...self::payslipStatementChecks()],
-			'Employee' => self::employeeChecks(),
 			'EmploymentContract' => self::contractChecks(),
 			'PayrollRun' => self::payrollRunChecks(),
 		];
@@ -148,46 +125,6 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 		];
 
 	}//end payslipStatementChecks()
-
-	/**
-	 * Employee checks: document retention, the 30%-ruling and the A1 certificate.
-	 *
-	 * @return array<string, callable>
-	 */
-	private static function employeeChecks(): array {
-		return [
-			// Handboek Loonheffingen — a verified ID-document copy is kept until at least
-			// 5 years after the year employment ends.
-			'nl-id-bewaarplicht-5jaar' => self::identityDocumentRetained(...),
-			// Uitvoeringsregeling loonbelasting 2011 art. 12.1 lid 5 - the
-			// loonheffingenverklaring is kept until at least 5 years after the year
-			// employment ends, the same clock as the ID copy above.
-			//
-			// Gated on the statement actually being on file. The retention duty
-			// attaches to a document that exists, so an employee with no statement
-			// is VACUOUS here rather than in violation; whether one must be on file
-			// at all is a different obligation and no corpus rule covers it yet.
-			'nl-loonbelastingverklaring-bewaarplicht-5jaar' => self::loonheffingenVerklaringRetained(...),
-			// Wet LB 1964 art. 31a (30%-regeling) — when granted, the applied tax-free
-			// percentage must not exceed 30 for 2025-2026.
-			'nl-30-percent-regeling' => self::thirtyPercentRateWithinCap(...),
-			// Wet LB 1964 art. 31a (aftopping WNT-norm) — a granted 30%-ruling is capped
-			// at the WNT-norm.
-			'nl-30-regeling-aftoppingsgrens' => self::thirtyPercentCappedAtWntNorm(...),
-			// Wet LB 1964 art. 31a (looptijd) — a granted 30%-ruling runs at most
-			// 60 months from its start; flags an end date absent/beyond the term
-			// or a stale ruling past its end date (30-procent-regeling).
-			'nl-30-regeling-looptijd-5jaar' => self::thirtyPercentTermSatisfied(...),
-			// Wet LB 1964 art. 31a (salarisnorm) — a granted 30%-ruling requires an
-			// annualised salary at or above the applicable norm (general or the
-			// under-30-master reduced norm) (30-procent-regeling).
-			'nl-30-regeling-salarisnorm' => self::thirtyPercentSalaryNormSatisfied(...),
-			// Regulation (EC) 883/2004 art. 12 — a posted worker holds a valid A1
-			// certificate that runs no longer than 24 months from the posting.
-			'eu-a1-posted-worker' => self::a1CertificateValid(...),
-		];
-
-	}//end employeeChecks()
 
 	/**
 	 * EmploymentContract checks: the Awf tariff and the statutory minimum wage.
@@ -367,75 +304,6 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 			&& (($o['showsEmployerEmployeeIds'] ?? false) === true);
 
 	}//end loonstrookComplete()
-
-	/**
-	 * Whether a verified ID-document copy is retained long enough.
-	 *
-	 * @param array<string, mixed> $o The Employee.
-	 *
-	 * @return bool
-	 */
-	private static function identityDocumentRetained(array $o): bool {
-		return (($o['identityDocumentVerified'] ?? false) === true)
-			&& self::present($o, 'identityDocumentRetainedUntil')
-			&& self::retainedAtLeastYearsAfterEnd($o, 'identityDocumentRetainedUntil', 5);
-
-	}//end identityDocumentRetained()
-
-	/**
-	 * Whether a loonheffingenverklaring on file is retained long enough.
-	 *
-	 * @param array<string, mixed> $o The Employee.
-	 *
-	 * @return bool
-	 */
-	private static function loonheffingenVerklaringRetained(array $o): bool {
-		return (($o['loonheffingenVerklaringOnFile'] ?? false) !== true)
-			|| (self::present($o, 'loonheffingenVerklaringRetainedUntil')
-			&& self::retainedAtLeastYearsAfterEnd($o, 'loonheffingenVerklaringRetainedUntil', 5));
-
-	}//end loonheffingenVerklaringRetained()
-
-	/**
-	 * Whether a granted 30%-ruling applies at most 30 percent.
-	 *
-	 * @param array<string, mixed> $o The Employee.
-	 *
-	 * @return bool
-	 */
-	private static function thirtyPercentRateWithinCap(array $o): bool {
-		return (($o['thirtyPercentRulingGranted'] ?? false) !== true)
-			|| (self::numeric($o, 'thirtyPercentRulingRate') && ((float)$o['thirtyPercentRulingRate']) <= 30.0);
-
-	}//end thirtyPercentRateWithinCap()
-
-	/**
-	 * Whether a granted 30%-ruling is capped at the WNT-norm.
-	 *
-	 * @param array<string, mixed> $o The Employee.
-	 *
-	 * @return bool
-	 */
-	private static function thirtyPercentCappedAtWntNorm(array $o): bool {
-		return (($o['thirtyPercentRulingGranted'] ?? false) !== true)
-			|| (($o['thirtyPercentCappedAtWntNorm'] ?? false) === true);
-
-	}//end thirtyPercentCappedAtWntNorm()
-
-	/**
-	 * Whether a posted worker holds an A1 certificate of at most 24 months.
-	 *
-	 * @param array<string, mixed> $o The Employee.
-	 *
-	 * @return bool
-	 */
-	private static function a1CertificateValid(array $o): bool {
-		return (($o['postedWorker'] ?? false) !== true)
-			|| (self::present($o, 'a1CertificateNumber')
-			&& self::present($o, 'a1ValidUntil')
-			&& self::withinMonths($o, 'startDate', 'a1ValidUntil', 24));
-
-	}//end a1CertificateValid()
 
 	/**
 	 * Whether the contract carries the Awf tariff its terms call for.
@@ -754,30 +622,6 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	}//end awfHoursWithinLine()
 
 	/**
-	 * True when an object field holds a non-empty value.
-	 *
-	 * @param array<string, mixed> $o Object.
-	 * @param string $key Field.
-	 *
-	 * @return bool
-	 */
-	private static function present(array $o, string $key): bool {
-		return isset($o[$key]) === true && trim((string)$o[$key]) !== '';
-	}//end present()
-
-	/**
-	 * True when an object field holds a present, numeric value.
-	 *
-	 * @param array<string, mixed> $o Object.
-	 * @param string $key Field.
-	 *
-	 * @return bool
-	 */
-	private static function numeric(array $o, string $key): bool {
-		return isset($o[$key]) === true && $o[$key] !== '' && is_numeric($o[$key]) === true;
-	}//end numeric()
-
-	/**
 	 * Compare two amounts at cent precision (avoids float-equality issues).
 	 *
 	 * @param float $a Left amount.
@@ -800,108 +644,6 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	private static function ratesEqual(float $a, float $b): bool {
 		return (int)round($a * 100) === (int)round($b * 100);
 	}//end ratesEqual()
-
-	/**
-	 * True when a retention date is at least $years after the end of the year in
-	 * which employment ended (or, while still employed, simply a future-dated and
-	 * present retention date).
-	 *
-	 * @param array<string, mixed> $o The Employee.
-	 * @param string $key Retention-date field.
-	 * @param int $years Minimum number of years.
-	 *
-	 * @return bool
-	 */
-	private static function retainedAtLeastYearsAfterEnd(array $o, string $key, int $years): bool {
-		$retain = strtotime((string)($o[$key] ?? ''));
-		if ($retain === false) {
-			return false;
-		}
-
-		$end = trim((string)($o['endDate'] ?? ''));
-		if ($end === '') {
-			// Still employed: retention clock has not started; presence is enough.
-			return true;
-		}
-
-		$endYear = (int)date('Y', (int)strtotime($end));
-		$required = mktime(0, 0, 0, 12, 31, ($endYear + $years));
-		return $retain >= $required;
-	}//end retainedAtLeastYearsAfterEnd()
-
-	/**
-	 * The `nl-30-regeling-looptijd-5jaar` predicate (30-procent-regeling
-	 * REQ-30P-004): vacuous when the ruling is not granted, or when the ruling
-	 * has no `thirtyPercentRulingStartDate` (an incomplete-but-not-contradictory
-	 * record — a MISSING start date is a data-quality signal deferred to a
-	 * follow-up check, design.md D5, so it is not flagged here). Otherwise flags
-	 * when the end date is absent, more than the 60-month maximum term after the
-	 * start date, or already in the past while the ruling is still granted.
-	 *
-	 * @param array<string, mixed> $o The Employee object.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-004
-	 */
-	private static function thirtyPercentTermSatisfied(array $o): bool {
-		if (($o['thirtyPercentRulingGranted'] ?? false) !== true) {
-			return true;
-		}
-
-		$start = strtotime((string)($o['thirtyPercentRulingStartDate'] ?? ''));
-		if ($start === false) {
-			// Incomplete-but-not-contradictory ruling (no start date) — vacuous,
-			// deferred to a follow-up data-quality check (design.md D5).
-			return true;
-		}
-
-		$end = strtotime((string)($o['thirtyPercentRulingEndDate'] ?? ''));
-		if ($end === false) {
-			// Granted with a start but no end date — flag.
-			return false;
-		}
-
-		$maxEnd = strtotime('+' . self::THIRTY_PERCENT_MAX_DURATION_MONTHS . ' months', $start);
-		if ($maxEnd !== false && $end > $maxEnd) {
-			// End date runs beyond the 60-month statutory term — flag.
-			return false;
-		}
-
-		// A stale ruling still marked granted after its end date has passed — flag.
-		return $end >= time();
-	}//end thirtyPercentTermSatisfied()
-
-	/**
-	 * The `nl-30-regeling-salarisnorm` predicate (30-procent-regeling
-	 * REQ-30P-004): vacuous when the ruling is not granted or
-	 * `grossMonthlySalary` is non-numeric. Otherwise flags when the annualised
-	 * salary (`grossMonthlySalary × 12`) is below the applicable norm — the
-	 * reduced under-30-master norm when
-	 * `thirtyPercentRulingReducedNormApplies` is true, else the general norm.
-	 *
-	 * @param array<string, mixed> $o The Employee object.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/specs/30-procent-regeling/spec.md#REQ-30P-004
-	 */
-	private static function thirtyPercentSalaryNormSatisfied(array $o): bool {
-		if (($o['thirtyPercentRulingGranted'] ?? false) !== true) {
-			return true;
-		}
-
-		if (self::numeric($o, 'grossMonthlySalary') === false) {
-			return true;
-		}
-
-		$annualCents = (int)round(((float)$o['grossMonthlySalary']) * 12 * 100);
-		$normCents = ((($o['thirtyPercentRulingReducedNormApplies'] ?? false) === true)
-			? self::THIRTY_PERCENT_SALARISNORM_MASTER_ONDER30_CENTS
-			: self::THIRTY_PERCENT_SALARISNORM_ALGEMEEN_CENTS);
-
-		return $annualCents >= $normCents;
-	}//end thirtyPercentSalaryNormSatisfied()
 
 	/**
 	 * The `nl-30-regeling-aftoppingsgrens-bedrag` predicate (30-procent-regeling
@@ -980,25 +722,4 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 
 	}//end tablesFor()
 
-	/**
-	 * True when the date at $endKey is no more than $months after the date at
-	 * $startKey.
-	 *
-	 * @param array<string, mixed> $o The object.
-	 * @param string $startKey Start-date field.
-	 * @param string $endKey End-date field.
-	 * @param int $months Maximum number of months.
-	 *
-	 * @return bool
-	 */
-	private static function withinMonths(array $o, string $startKey, string $endKey, int $months): bool {
-		$start = strtotime((string)($o[$startKey] ?? ''));
-		$end = strtotime((string)($o[$endKey] ?? ''));
-		if ($start === false || $end === false || $end < $start) {
-			return false;
-		}
-
-		$limit = strtotime('+' . $months . ' months', $start);
-		return $end <= $limit;
-	}//end withinMonths()
 }//end class
