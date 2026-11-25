@@ -322,7 +322,7 @@
                         {
                             "name": "Loonrun",
                             "app": "humaniq",
-                            "description": "Runs one wage period's payroll from calculation to payment preparation (payroll-run-as-a-flow). The draft run and payslips are calculated, a reviewer approves or rejects, and an approved run is posted to the ledger and prepared for payment. A rejected run stays draft; recalculate and run the flow again. The flow arrives disabled per the engine's adoption contract: enable it deliberately, re-point the review step's candidate group to your payroll reviewers, and for a monthly cadence add an openregister.trigger-schedule node with an explicit runAs service account (design.md D5).",
+                            "description": "Runs one wage period's payroll from calculation to payment preparation (payroll-run-as-a-flow). The draft run and payslips are calculated, a reviewer approves or rejects, and an approved run waits for its pay date (payroll.payDate, from the administration's paymentDayOfMonth; no pay date: no wait) before it is posted to the ledger and prepared for payment. A rejected run stays draft; recalculate and run the flow again. The flow arrives disabled per the engine's adoption contract: enable it deliberately, re-point the review step's candidate group to your payroll reviewers, and for a monthly cadence add an openregister.trigger-schedule node with an explicit runAs service account (design.md D5).",
                             "trigger": "manual",
                             "executionMode": "async",
                             "limits": {"maxTransitions": 50},
@@ -351,6 +351,7 @@
                                     ]
                                 },
                                 {"id": "approve", "type": "humaniq.payroll-approve", "config": {}},
+                                {"id": "payday", "type": "openregister.wait", "config": {"until": "{{ payroll.payDate }}"}},
                                 {"id": "glpost", "type": "humaniq.payroll-glpost", "config": {}},
                                 {"id": "netpay", "type": "humaniq.payroll-netpay", "config": {}},
                                 {"id": "end", "type": "openregister.end", "config": {}},
@@ -362,7 +363,8 @@
                                 {"id": "e-reviewed", "from": "review", "to": "gate"},
                                 {"id": "e-approved", "from": "gate", "fromExit": "approved", "to": "approve"},
                                 {"id": "e-not-approved", "from": "gate", "fromExit": "not-approved", "to": "end-rejected"},
-                                {"id": "e-commit", "from": "approve", "to": "glpost"},
+                                {"id": "e-commit", "from": "approve", "to": "payday"},
+                                {"id": "e-payday", "from": "payday", "to": "glpost"},
                                 {"id": "e-posted", "from": "glpost", "to": "netpay"},
                                 {"id": "e-paid", "from": "netpay", "to": "end"}
                             ]

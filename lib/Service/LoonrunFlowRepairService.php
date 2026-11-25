@@ -90,6 +90,14 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	public const FLOW_TRIGGER_SCHEMA = 'PayrollRun';
 
 	/**
+	 * The pay-day wait between approve and glpost, which the v1 import did
+	 * not carry.
+	 *
+	 * @var string
+	 */
+	public const PAY_DAY_STEP = 'payday';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param OpenRegisterAvailability $openRegister OpenRegister availability.
@@ -250,6 +258,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 * @return bool True when nodes and edges equal the v1 import exactly.
 	 *
 	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
 	 */
 	private function matchesShippedV1(array $published): bool {
 		$declaration = $this->shippedDeclaration();
@@ -257,11 +266,17 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 			return false;
 		}
 
-		$shippedNodes = (array)($declaration['nodes'] ?? []);
-		$v1Nodes = $this->keypaths->withV1OutcomePaths($shippedNodes, $this->keypaths->outcomeKeys($shippedNodes));
+		// v1 had no pay-day wait between approve and glpost; that step came
+		// later (payroll-run-pay-date-and-schedule) and is spliced back out.
+		$v1Graph = $this->keypaths->withoutStep(
+			(array)($declaration['nodes'] ?? []),
+			(array)($declaration['edges'] ?? []),
+			self::PAY_DAY_STEP
+		);
+		$v1Nodes = $this->keypaths->withV1OutcomePaths($v1Graph['nodes'], $this->keypaths->outcomeKeys($v1Graph['nodes']));
 
 		return $this->keypaths->sameStructure((array)($published['nodes'] ?? []), $v1Nodes)
-			&& $this->keypaths->sameStructure((array)($published['edges'] ?? []), (array)($declaration['edges'] ?? []));
+			&& $this->keypaths->sameStructure((array)($published['edges'] ?? []), $v1Graph['edges']);
 
 	}//end matchesShippedV1()
 

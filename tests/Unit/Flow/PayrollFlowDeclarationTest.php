@@ -65,6 +65,7 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 		'openregister.trigger-manual',
 		'openregister.user-task',
 		'openregister.switch',
+		'openregister.wait',
 		'openregister.end',
 	];
 
@@ -135,6 +136,55 @@ class PayrollFlowDeclarationTest extends FlowNodeTestCase {
 			$this->assertContains($type, self::ENGINE_TYPES, 'Unexpected engine node type ' . $type);
 		}
 	}//end testEveryNodeTypeResolves()
+
+	/**
+	 * An approved run waits for its pay date before it is posted: one
+	 * `openregister.wait` sits on the only path from approve to glpost, and
+	 * its `until` reads the pay date the calculate step put on the item
+	 * (`<calculate outcome key>.payDate`). An empty pay date renders to no
+	 * moment, which the wait passes straight through (openregister#11043).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
+	 */
+	public function testAnApprovedRunWaitsForItsPayDateBeforeItIsPosted(): void {
+		$declaration = $this->declaration();
+		$byId = [];
+		foreach (($declaration['nodes'] ?? []) as $node) {
+			$byId[(string)$node['id']] = $node;
+		}
+
+		$waits = array_values(array_filter($byId, static fn (array $node): bool => $node['type'] === 'openregister.wait'));
+		$this->assertCount(1, $waits, 'The Loonrun carries exactly one wait');
+		$wait = $waits[0];
+		$this->assertSame(
+			'{{ ' . PayrollCalculateNode::OUTCOME_KEY . '.payDate }}',
+			$wait['config']['until'] ?? null,
+			'The wait reads the pay date the calculate step stamps on the item'
+		);
+		$this->assertArrayNotHasKey('for', $wait['config']);
+
+		$from = [];
+		foreach (($declaration['edges'] ?? []) as $edge) {
+			$from[(string)$edge['from']][] = (string)$edge['to'];
+		}
+
+		$approveId = null;
+		$glpostId = null;
+		foreach ($byId as $id => $node) {
+			if ($node['type'] === 'humaniq.payroll-approve') {
+				$approveId = $id;
+			}
+
+			if ($node['type'] === 'humaniq.payroll-glpost') {
+				$glpostId = $id;
+			}
+		}
+
+		$this->assertSame([$wait['id']], $from[$approveId] ?? null, 'Approve leads only to the wait');
+		$this->assertSame([$glpostId], $from[$wait['id']] ?? null, 'The wait leads only to glpost');
+	}//end testAnApprovedRunWaitsForItsPayDateBeforeItIsPosted()
 
 	/**
 	 * All four contributed steps appear in the flow — a node the palette

@@ -45,7 +45,10 @@ Administrations): the day of the month salaries are paid; in a shorter month the
 a monthly run is calculated, its pay date travels with the run as `payroll.payDate`, for example
 `2026-11-25`.
 
-The wait between approval and posting that uses it needs OpenRegister to fill a field of the run
-into a wait step (ConductionNL/openregister#11043). Until that is in your OpenRegister, an approved
-run is posted at once, as it is for an administration without a pay day and for four-weekly and
-weekly periods.
+After the reviewer approves, the Loonrun waits in its **payday** step (`openregister.wait` with
+`until: "{{ payroll.payDate }}"`) until that date, and only then posts the run to the ledger and
+prepares the payment batch. A run without a pay date (an administration without a pay day, or a
+four-weekly or weekly period) passes the wait at once and is posted straight after approval, as
+is a run approved on or after its pay date. The wait needs an OpenRegister that fills a field of
+the run into a wait step (ConductionNL/openregister#11043); an older OpenRegister refuses the
+placeholder when the flow is saved.
