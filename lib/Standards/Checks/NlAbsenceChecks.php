@@ -44,6 +44,17 @@
  * catches both an engine regression and a hand-edit that drops the paid
  * amount below the floor (design.md D5).
  *
+ * Converted in part to the table-backed check form
+ * (rules-onto-or-decision-tables, next conversion wave):
+ * `nl-wvp-milestone-overdue`, `nl-loondoorbetaling-minimum` and
+ * `nl-loondoorbetaling-floor` are declared as OpenRegister decision tables
+ * via the ProvidesTables capability, the date and floor arithmetic staying
+ * here as their derivations; their closures stay as legacyChecks(), the
+ * oracle NlAbsenceTableParityTest compares with, never registered in the
+ * engine. `nl-wvp-milestone-derivation` recomputes every due date from the
+ * first sick day and compares, which is a formula, not a table, and stays a
+ * closure.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -67,7 +78,9 @@ use OCA\Humaniq\Standards\RuleCatalogue;
 /**
  * Dutch sickness / Wet verbetering poortwachter executable checks.
  */
-final class NlAbsenceChecks implements CheckProvider {
+final class NlAbsenceChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * Number of days before (and including) a milestone Due date that an
@@ -104,21 +117,104 @@ final class NlAbsenceChecks implements CheckProvider {
 				// firstSickDay + its rule-parameterised week offset; no null Due
 				// on an open case.
 				'nl-wvp-milestone-derivation' => static fn (array $o): bool => self::derivationSatisfied($o),
-				// Regeling procesgang art. 2/4; ZW art. 38 — an open case with an
-				// overdue or approaching, not-yet-Done milestone is flagged.
-				'nl-wvp-milestone-overdue' => static fn (array $o): bool => self::overdueSatisfied($o),
-				// BW art. 7:629 lid 1 — at least 70% loondoorbetaling on open cases.
-				'nl-loondoorbetaling-minimum' => static fn (array $o): bool => self::continuedWagePaymentSatisfied($o),
-			],
-			'Payslip' => [
-				// BW art. 7:629 lid 1 jo. WML art. 12 — a sick-pay payslip's
-				// doorbetaald loon is at least the independently recomputed
-				// 70%/year-1-WML floor (sick-pay-calc design.md D5).
-				'nl-loondoorbetaling-floor' => static fn (array $o): bool => self::continuedWagePaymentFloorSatisfied($o),
 			],
 		];
 
 	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-wvp-milestone-overdue`: an open case with an undone milestone due
+	 * within the alert window (or past it) fails. `nl-loondoorbetaling-minimum`:
+	 * an open case without a recorded percentage, or below 70, fails.
+	 * `nl-loondoorbetaling-floor`: a sick-pay payslip without numeric figures,
+	 * or paying below the floor, fails; a payslip outside a sick case, or no
+	 * floor parameters in the corpus, derives null.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function tables(): array {
+		return [
+			'SickLeaveCase' => [
+				// Regeling procesgang art. 2/4; ZW art. 38.
+				'nl-wvp-milestone-overdue' => [
+					'derive' => static fn (array $o): array => ['open' => self::isOpen($o), 'alertingMilestones' => self::alertingMilestones($o)],
+					'table' => self::satisfiedTable(
+						[['name' => 'open', 'type' => 'boolean'], ['name' => 'alertingMilestones', 'type' => 'number']],
+						[['id' => 'milestone-due-soon-or-overdue', 'inputEntries' => ['true', '> 0'], 'outputEntries' => [false]]]
+					),
+				],
+				// BW art. 7:629 lid 1.
+				'nl-loondoorbetaling-minimum' => [
+					'derive' => static fn (array $o): array => [
+						'open' => self::isOpen($o),
+						'percentageRecorded' => in_array(($o['loondoorbetalingPercentage'] ?? null), [null, ''], true) === false,
+						'percentage' => (float)($o['loondoorbetalingPercentage'] ?? 0),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'open', 'type' => 'boolean'], ['name' => 'percentageRecorded', 'type' => 'boolean'], ['name' => 'percentage', 'type' => 'number']],
+						[
+							['id' => 'percentage-missing', 'inputEntries' => ['true', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'percentage-below-statutory', 'inputEntries' => ['true', 'true', '< 70'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+			'Payslip' => [
+				// BW art. 7:629 lid 1 jo. WML art. 12 (sick-pay-calc design.md D5).
+				'nl-loondoorbetaling-floor' => [
+					'derive' => static fn (array $o): ?array => (new SickPayFloor())->inputs($o, self::continuedWagePaymentFloorParameters()),
+					'table' => self::satisfiedTable(
+						[['name' => 'figuresRecorded', 'type' => 'boolean'], ['name' => 'shortfallCents', 'type' => 'number']],
+						[
+							['id' => 'sick-pay-figures-missing', 'inputEntries' => ['false', '-'], 'outputEntries' => [false]],
+							['id' => 'sick-pay-below-floor', 'inputEntries' => ['true', '> 0'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * Whether the sick case is still open (status `gemeld`, the default).
+	 *
+	 * @param array<string, mixed> $o The SickLeaveCase.
+	 *
+	 * @return bool
+	 */
+	private static function isOpen(array $o): bool {
+		return (string)($o['status'] ?? 'gemeld') === 'gemeld';
+
+	}//end isOpen()
+
+	/**
+	 * How many undone milestones with a readable due date fall within the
+	 * alert window from today, or before it.
+	 *
+	 * @param array<string, mixed> $o The SickLeaveCase.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function alertingMilestones(array $o): int {
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		$count = 0;
+		foreach (self::MILESTONES as $milestone) {
+			$due = strtotime((string)($o[$milestone['due']] ?? ''));
+			if (trim((string)($o[$milestone['done']] ?? '')) === '' && $due !== false && (int)floor(($due - $today) / 86400) <= self::ALERT_WINDOW_DAYS) {
+				$count++;
+			}
+		}
+
+		return $count;
+
+	}//end alertingMilestones()
 
 	/**
 	 * {@inheritDoc}
@@ -321,16 +417,7 @@ final class NlAbsenceChecks implements CheckProvider {
 			return false;
 		}
 
-		$statutoryPercentage = (float)($parameters['statutoryPercentage'] ?? 70);
-		$statutoryFloorCents = (int)round((self::euroToCents((float)$referenceWage) * $statutoryPercentage) / 100);
-
-		$yearOneFloorCents = 0;
-		if (($o['sickPayYearOne'] ?? false) === true) {
-			$minimumWageFloor = ($o['sickPayMinimumWageFloor'] ?? null);
-			$yearOneFloorCents = (is_numeric($minimumWageFloor) === true ? self::euroToCents((float)$minimumWageFloor) : 0);
-		}
-
-		$floorCents = max($statutoryFloorCents, $yearOneFloorCents);
+		$floorCents = (new SickPayFloor())->cents($o, $parameters);
 
 		return self::euroToCents((float)$doorbetaald) >= $floorCents;
 	}//end continuedWagePaymentFloorSatisfied()
@@ -365,5 +452,26 @@ final class NlAbsenceChecks implements CheckProvider {
 	private static function euroToCents(float $euro): int {
 		return (int)round($euro * 100);
 	}//end euroToCents()
+
+	/**
+	 * The overdue, percentage and floor closures that tables() replaced; the
+	 * parity oracle NlAbsenceTableParityTest runs against, never registered.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'SickLeaveCase' => [
+				'nl-wvp-milestone-overdue' => static fn (array $o): bool => self::overdueSatisfied($o),
+				'nl-loondoorbetaling-minimum' => static fn (array $o): bool => self::continuedWagePaymentSatisfied($o),
+			],
+			'Payslip' => [
+				'nl-loondoorbetaling-floor' => static fn (array $o): bool => self::continuedWagePaymentFloorSatisfied($o),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
