@@ -75,6 +75,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\NlOffboardingChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlOnboardingChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlOpeningBalanceChecks
+ * @uses \OCA\Humaniq\Standards\Checks\DateWindow
  * @uses \OCA\Humaniq\Standards\Checks\NlOrgChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlPayrollChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlPensionFilingChecks

@@ -197,8 +197,8 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 
 	/**
 	 * The expiry table's inputs: whether the contract is temporary, whether it
-	 * ends inside the window, and whether a successor is on file. Null for a
-	 * temporary contract whose end date does not read.
+	 * ends inside the window, and whether a successor is on file. Null when
+	 * the end date does not read.
 	 *
 	 * @param array<string, mixed> $o       The EmploymentContract.
 	 * @param array<string, mixed> $context Evaluation context; reads `signals.contractsByEmployeeId`.
@@ -208,24 +208,20 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function expiryInputs(array $o, array $context): ?array {
-		if ((string)($o['type'] ?? '') !== 'temporary') {
-			return ['temporary' => false, 'withinWindow' => false, 'hasSuccessor' => false];
-		}
-
 		$window = self::windowInputs((string)($o['endDate'] ?? ''), self::WINDOW_DAYS);
 		if ($window === null) {
 			return null;
 		}
 
-		return ['temporary' => true, 'withinWindow' => $window['withinWindow'], 'hasSuccessor' => ($window['withinWindow'] === true && self::hasSuccessor($o, $context) === true)];
+		return ['temporary' => ((string)($o['type'] ?? '') === 'temporary'), 'withinWindow' => $window['withinWindow'], 'hasSuccessor' => self::hasSuccessor($o, $context)];
 
 	}//end expiryInputs()
 
 	/**
 	 * The notice table's inputs: whether the contract is temporary, whether
 	 * its monitored term has ended, whether today is past the notice deadline,
-	 * and whether the aanzegging was given by that deadline. Null for a
-	 * temporary contract whose term is unreadable or too short to monitor.
+	 * and whether the aanzegging was given by that deadline. Null when the
+	 * term is unreadable or too short to monitor.
 	 *
 	 * @param array<string, mixed> $o The EmploymentContract.
 	 *
@@ -234,10 +230,6 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function noticeInputs(array $o): ?array {
-		if ((string)($o['type'] ?? '') !== 'temporary') {
-			return ['temporary' => false, 'ended' => false, 'pastDeadline' => false, 'notifiedInTime' => false];
-		}
-
 		$endDate = self::monitoredTermEnd($o);
 		if ($endDate === null) {
 			return null;
@@ -246,7 +238,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 		$today = (new DateTimeImmutable('today'))->getTimestamp();
 		$deadline = strtotime('-' . self::NOTICE_MONTHS . ' months', $endDate);
 
-		return ['temporary' => true, 'ended' => ($endDate < $today), 'pastDeadline' => ($today > $deadline), 'notifiedInTime' => self::aanzegdBy($o, $deadline)];
+		return ['temporary' => ((string)($o['type'] ?? '') === 'temporary'), 'ended' => ($endDate < $today), 'pastDeadline' => ($today > $deadline), 'notifiedInTime' => self::aanzegdBy($o, $deadline)];
 
 	}//end noticeInputs()
 
