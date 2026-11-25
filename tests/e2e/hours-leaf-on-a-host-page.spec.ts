@@ -82,6 +82,20 @@ function today(): string {
 	return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
+/**
+ * Whether dossiq's Overview tab places the hours card on a case of this type,
+ * without first asking the reader why they open it.
+ *
+ * @param type A dossiq caseType row.
+ * @return True when a case of this type shows the leaf straight away.
+ */
+function placesTheHoursCard(type: Record<string, unknown>): boolean {
+	const cards = Array.isArray(type?.overviewCards) ? (type.overviewCards as unknown[]) : [];
+	const special = Array.isArray(type?.specialDataCategories) ? (type.specialDataCategories as unknown[]) : [];
+
+	return (cards.length === 0 || cards.includes("case-kpis-hours")) && special.length === 0;
+}
+
 test.describe.configure({ mode: "serial" });
 
 test.describe("the hours leaf on a consuming page", () => {
@@ -92,7 +106,10 @@ test.describe("the hours leaf on a consuming page", () => {
 
 	test.beforeAll(async () => {
 		api = await request.newContext({
-			httpCredentials: ADMIN_CREDENTIALS,
+			// "always": OCS and OpenRegister answer an anonymous call with 401 without a
+			// challenge, or with 200 and nothing in it, so credentials sent only on a
+			// challenge never go out and the journey skips as if the host were missing.
+			httpCredentials: { ...ADMIN_CREDENTIALS, send: "always" },
 			storageState: { cookies: [], origins: [] },
 		});
 
@@ -103,11 +120,24 @@ test.describe("the hours leaf on a consuming page", () => {
 			return;
 		}
 
-		const cases = await api.get(`${OR_BASE}/${HOST_REGISTER}/${HOST_SCHEMA}?_limit=1`, { headers: HEADERS });
+		// Not every case shows the card: dossiq's Overview tab places it only when the
+		// case type's overviewCards is empty or lists it, and a type with special
+		// categories of personal data asks the reader's purpose before the case opens.
+		const types = await api.get(`${OR_BASE}/${HOST_REGISTER}/caseType?_limit=500`, { headers: HEADERS });
+		expect(types.ok(), `listing ${HOST_REGISTER} case types failed ${types.status()}: ${await types.text()}`).toBe(true);
+		const placing = new Set(
+			((await types.json())?.results ?? [])
+				.filter((type: Record<string, unknown>) => placesTheHoursCard(type))
+				.map((type: Record<string, unknown>) => idOf(type)),
+		);
+
+		const cases = await api.get(`${OR_BASE}/${HOST_REGISTER}/${HOST_SCHEMA}?_limit=500`, { headers: HEADERS });
 		expect(cases.ok(), `listing ${HOST_TYPE} failed ${cases.status()}: ${await cases.text()}`).toBe(true);
-		hostId = idOf(((await cases.json())?.results ?? [])[0]);
+		hostId = idOf(
+			((await cases.json())?.results ?? []).find((row: Record<string, unknown>) => placing.has(String(row?.caseType ?? ""))),
+		);
 		if (hostId === "") {
-			hostUnavailable = `${HOST_REGISTER} holds no case to mount the leaf on; load its example set first.`;
+			hostUnavailable = `${HOST_REGISTER} holds no case whose type places the hours card; run occ dossiq:demo:seed first.`;
 			return;
 		}
 
@@ -163,7 +193,7 @@ test.describe("the hours leaf on a consuming page", () => {
 			}
 		});
 
-		await page.goto(`/apps/${HOST_REGISTER}/cases/${hostId}`, { waitUntil: "domcontentloaded" });
+		await page.goto(`/index.php/apps/${HOST_REGISTER}/cases/${hostId}`, { waitUntil: "domcontentloaded" });
 		const widget = page.getByTestId(HOOK.widget);
 		await expect(widget, "the leaf must render on the consuming page").toBeVisible({ timeout: 30_000 });
 		expect(leafRequests.length, "the page must load humaniq's leaf bundle, not its whole interface").toBeGreaterThan(0);
