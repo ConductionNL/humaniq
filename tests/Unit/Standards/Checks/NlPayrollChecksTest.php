@@ -58,7 +58,7 @@ class NlPayrollChecksTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		RuleEngine::reset();
-		$this->checks = array_replace_recursive(NlEmployeeDocumentChecks::legacyChecks(), NlThirtyPercentRulingChecks::legacyChecks(), NlPayrollChecks::checks());
+		$this->checks = array_replace_recursive(NlEmployeeDocumentChecks::legacyChecks(), NlThirtyPercentRulingChecks::legacyChecks(), NlPayrollChecks::legacyChecks(), NlPayrollChecks::checks());
 
 	}//end setUp()
 
