@@ -14,6 +14,14 @@
  * contract page reads too. A sibling provider of NlSignalChecks, so neither
  * class grows past the complexity limit.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): both rules are declared as OpenRegister decision
+ * tables via the ProvidesTables capability. The chain composition and the
+ * date arithmetic stay here as derivations; the shared
+ * Dmn\DecisionTableEvaluator decides. The pre-table closures stay as
+ * legacyChecks(), the oracle NlFlexContractTableParityTest compares with,
+ * never registered in the engine, until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -42,7 +50,9 @@ use OCA\Humaniq\Service\ContractChainService;
  *
  * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
  */
-final class NlFlexContractChecks implements CheckProvider {
+final class NlFlexContractChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * `nl-signaal-ketenregeling` window, days (parameters.windowDays in
@@ -63,18 +73,54 @@ final class NlFlexContractChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: both rules this provider owns are table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
+		return [];
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-signaal-ketenregeling`: a contract live today that closes the
+	 * chain's last allowed contract, or whose chain turns permanent within the
+	 * window, fails. `nl-signaal-oproep-vaste-uren`: a running on-call
+	 * contract past its offer date without a recorded offer fails; an on-call
+	 * contract without a readable start derives null and passes.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
+	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-003
+	 */
+	public static function tables(): array {
 		return [
 			'EmploymentContract' => [
-				'nl-signaal-ketenregeling' => static fn (array $contract, array $context): bool => self::ketenregelingSatisfied($contract, $context),
-				'nl-signaal-oproep-vaste-uren' => static fn (array $contract): bool => self::oproepAanbodSatisfied($contract),
+				'nl-signaal-ketenregeling' => [
+					'derive' => static fn (array $contract, array $context): array => self::chainInputs($contract, $context),
+					'table' => self::satisfiedTable(
+						[['name' => 'live', 'type' => 'boolean'], ['name' => 'position', 'type' => 'number'], ['name' => 'permanentWithinWindow', 'type' => 'boolean']],
+						[
+							['id' => 'chain-at-maximum', 'inputEntries' => ['true', '>= ' . ContractChainService::MAX_CONTRACTS, '-'], 'outputEntries' => [false]],
+							['id' => 'chain-turns-permanent-soon', 'inputEntries' => ['true', '>= 1', 'true'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				'nl-signaal-oproep-vaste-uren' => [
+					'derive' => static fn (array $contract): ?array => self::onCallOfferInputs($contract),
+					'table' => self::satisfiedTable(
+						[['name' => 'onCall', 'type' => 'boolean'], ['name' => 'ended', 'type' => 'boolean'], ['name' => 'offerDue', 'type' => 'boolean'], ['name' => 'offerRecorded', 'type' => 'boolean']],
+						[['id' => 'on-call-offer-missing', 'inputEntries' => ['true', 'false', 'true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
 			],
 		];
-	}//end checks()
+	}//end tables()
 
 	/**
 	 * {@inheritDoc}
@@ -107,20 +153,7 @@ final class NlFlexContractChecks implements CheckProvider {
 			return true;
 		}
 
-		$ownId = (string)($contract['id'] ?? $contract['@self']['id'] ?? '');
-		if ($ownId === '') {
-			$ownId = '__self__';
-		}
-
-		$siblings = array_values(
-			array_filter(
-				self::contractsByEmployeeId($context)[(string)($contract['employeeId'] ?? '')] ?? [],
-				static fn (array $row): bool => (string)($row['id'] ?? '') !== $ownId
-			)
-		);
-		$siblings[] = array_merge($contract, ['id' => $ownId]);
-
-		$chain = (new ContractChainService())->chainFor(contracts: $siblings, contractId: $ownId);
+		$chain = self::chainOf($contract, $context);
 		if ($chain['position'] === 0) {
 			return true;
 		}
@@ -185,6 +218,92 @@ final class NlFlexContractChecks implements CheckProvider {
 	}//end oproepAanbodSatisfied()
 
 	/**
+	 * The chain table's inputs: whether the contract runs today, its position
+	 * in its chain (zero when it does not run today or starts no chain), and
+	 * whether the chain turns permanent between today and the window's end.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param array<string, mixed> $context  Evaluation context; reads `signals.contractsByEmployeeId`.
+	 *
+	 * @return array{live: bool, position: int, permanentWithinWindow: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function chainInputs(array $contract, array $context): array {
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		$inputs = ['live' => self::runsOn($contract, $today), 'position' => 0, 'permanentWithinWindow' => false];
+		if ($inputs['live'] === false) {
+			return $inputs;
+		}
+
+		$chain = self::chainOf($contract, $context);
+		$inputs['position'] = (int)$chain['position'];
+		$permanentOn = strtotime((string)$chain['turnsPermanentOn']);
+		if ($permanentOn !== false) {
+			$inputs['permanentWithinWindow'] = ($permanentOn >= $today && $permanentOn <= strtotime('+' . self::CHAIN_WINDOW_DAYS . ' days', $today));
+		}
+
+		return $inputs;
+	}//end chainInputs()
+
+	/**
+	 * The contract's chain, composed from its siblings in the context index
+	 * with the contract itself in place of its stored row.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 * @param array<string, mixed> $context  Evaluation context.
+	 *
+	 * @return array<string, mixed> ContractChainService::chainFor()'s answer.
+	 */
+	private static function chainOf(array $contract, array $context): array {
+		$ownId = (string)($contract['id'] ?? $contract['@self']['id'] ?? '');
+		if ($ownId === '') {
+			$ownId = '__self__';
+		}
+
+		$siblings = array_values(
+			array_filter(
+				self::contractsByEmployeeId($context)[(string)($contract['employeeId'] ?? '')] ?? [],
+				static fn (array $row): bool => (string)($row['id'] ?? '') !== $ownId
+			)
+		);
+		$siblings[] = array_merge($contract, ['id' => $ownId]);
+
+		return (new ContractChainService())->chainFor(contracts: $siblings, contractId: $ownId);
+	}//end chainOf()
+
+	/**
+	 * The on-call offer table's inputs: whether this is an on-call contract,
+	 * whether it has ended, whether its offer date has passed, and whether an
+	 * offer is recorded. Null for an on-call contract without a readable start.
+	 *
+	 * @param array<string, mixed> $contract The EmploymentContract.
+	 *
+	 * @return array{onCall: bool, ended: bool, offerDue: bool, offerRecorded: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function onCallOfferInputs(array $contract): ?array {
+		$inputs = ['onCall' => ((string)($contract['type'] ?? '') === 'oproep'), 'ended' => false, 'offerDue' => false, 'offerRecorded' => false];
+		if ($inputs['onCall'] === false) {
+			return $inputs;
+		}
+
+		$start = strtotime((string)($contract['startDate'] ?? ''));
+		if ($start === false) {
+			return null;
+		}
+
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		$end = strtotime((string)($contract['endDate'] ?? ''));
+		$inputs['ended'] = ($end !== false && $end < $today);
+		$inputs['offerDue'] = (strtotime('+' . self::ONCALL_OFFER_MONTHS . ' months', $start) <= $today);
+		$inputs['offerRecorded'] = (trim((string)($contract['vasteUrenAanbodOp'] ?? '')) !== '');
+
+		return $inputs;
+	}//end onCallOfferInputs()
+
+	/**
 	 * The `signals.contractsByEmployeeId` index from the context, or an empty
 	 * array when the pre-pass has not populated it.
 	 *
@@ -196,4 +315,23 @@ final class NlFlexContractChecks implements CheckProvider {
 		$byEmployeeId = ($context['signals']['contractsByEmployeeId'] ?? []);
 		return is_array($byEmployeeId) === true ? $byEmployeeId : [];
 	}//end contractsByEmployeeId()
+
+	/**
+	 * Before the tables, the chain and on-call signals were these closures.
+	 * NlFlexContractTableParityTest drives tables() against them; nothing
+	 * registers this list with the engine.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/flex-contract-rules/spec.md#REQ-FLX-001
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-signaal-ketenregeling' => static fn (array $contract, array $context): bool => self::ketenregelingSatisfied($contract, $context),
+				'nl-signaal-oproep-vaste-uren' => static fn (array $contract): bool => self::oproepAanbodSatisfied($contract),
+			],
+		];
+	}//end legacyChecks()
 }//end class
