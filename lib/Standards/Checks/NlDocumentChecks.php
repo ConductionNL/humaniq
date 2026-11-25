@@ -128,29 +128,6 @@ final class NlDocumentChecks implements CheckProvider, ProvidesTables {
 	}//end tables()
 
 	/**
-	 * The pre-conversion closure predicates, kept as the PARITY ORACLE only:
-	 * not registered in the engine (checks() is empty), consumed by the
-	 * table/legacy parity test, retired with the other converted rules after
-	 * the table form is proven on an OpenRegister-backed audit run
-	 * (REQ-RULE-009, tasks section 6).
-	 *
-	 * @return array<string, array<string, callable>>
-	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
-	 */
-	public static function legacyChecks(): array {
-		return [
-			'EmploymentContract' => [
-				'nl-contract-schriftelijk' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
-			],
-			'Payslip' => [
-				'nl-loonstrook-verplicht' => static fn (array $o, array $context): bool => self::isLoonstrookDocumented($o, $context),
-			],
-		];
-
-	}//end legacyChecks()
-
-	/**
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
@@ -233,5 +210,28 @@ final class NlDocumentChecks implements CheckProvider, ProvidesTables {
 
 		return (bool)($context['documents']['generatedLoonstrookByPayslip'][$payslipId] ?? false);
 	}//end isLoonstrookDocumented()
+
+	/**
+	 * Parity oracle for the two document-evidence rules: their closures from
+	 * before the conversion, read only by NlDocumentTableParityTest and
+	 * dropped once an OpenRegister audit run has shown the tables give the
+	 * same verdicts (REQ-RULE-009).
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-004
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-contract-schriftelijk' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
+			],
+			'Payslip' => [
+				'nl-loonstrook-verplicht' => static fn (array $o, array $context): bool => self::isLoonstrookDocumented($o, $context),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

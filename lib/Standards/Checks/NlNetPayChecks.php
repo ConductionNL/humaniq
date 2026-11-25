@@ -102,26 +102,6 @@ final class NlNetPayChecks implements CheckProvider, ProvidesTables {
 	}//end tables()
 
 	/**
-	 * The pre-conversion closure predicates, kept as the PARITY ORACLE only:
-	 * not registered in the engine (checks() is empty), consumed by the
-	 * table/legacy parity test, retired with the other converted rules after
-	 * the table form is proven on an OpenRegister-backed audit run
-	 * (REQ-RULE-009, tasks section 6).
-	 *
-	 * @return array<string, array<string, callable>>
-	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
-	 */
-	public static function legacyChecks(): array {
-		return [
-			'Payslip' => [
-				'nl-netpay-iban-present' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
-			],
-		];
-
-	}//end legacyChecks()
-
-	/**
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
@@ -180,5 +160,25 @@ final class NlNetPayChecks implements CheckProvider, ProvidesTables {
 
 		return $ibanByEmployeeKey[$employeeKey] === true;
 	}//end isCompliant()
+
+	/**
+	 * Parity oracle: the IBAN-presence predicate as it stood before the table
+	 * form. Never handed to the engine; NlNetPayTableParityTest compares it
+	 * with tables() until the audit run on OpenRegister proves the table and
+	 * it is retired (REQ-RULE-009).
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-008
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'Payslip' => [
+				'nl-netpay-iban-present' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
