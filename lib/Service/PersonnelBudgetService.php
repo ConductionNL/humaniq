@@ -95,7 +95,7 @@ class PersonnelBudgetService implements PersonnelBudgetServiceInterface {
 			'byUnit' => $this->totals->rollUp(lines: $lines, key: 'orgUnitId'),
 			'byFunction' => $this->totals->rollUp(lines: $lines, key: 'normfunctieId'),
 			'byCostCenter' => $this->totals->rollUp(lines: $lines, key: 'costCenter'),
-			'total' => round(array_sum(array_column($lines, 'total')), 2),
+			'total' => $this->totals->cents(amount: (float)array_sum(array_column($lines, 'total'))),
 		];
 	}//end budget()
 

@@ -63,6 +63,24 @@ class PersonnelBudgetTotals {
 	}//end holidayAllowancePercentage()
 
 	/**
+	 * An amount in euros rounded to whole cents, the same on every PHP version.
+	 *
+	 * Sums of floats land a hair under a half cent (51048.07499999999 for
+	 * 51048.075). PHP 8.3's round() pre-rounded that noise away and gave .08;
+	 * PHP 8.4's round() no longer does and gives .07. Rounding to six decimals
+	 * first removes the noise, so the half cent rounds up on both.
+	 *
+	 * @param float $amount The amount in euros.
+	 *
+	 * @return float
+	 *
+	 * @spec openspec/specs/personnel-budget/spec.md#REQ-PBS-001
+	 */
+	public function cents(float $amount): float {
+		return round(round($amount, 6), 2);
+	}//end cents()
+
+	/**
 	 * Add holiday allowance, employer charges and the total to a line.
 	 *
 	 * @param array<string, mixed> $line The line.
@@ -76,11 +94,11 @@ class PersonnelBudgetTotals {
 		$base = ((float)$line['occupiedCost'] + (float)$line['vacantCost']);
 		$holiday = ($base * $this->holidayAllowancePercentage / 100.0);
 		$charges = (($base + $holiday) * $chargesRatio);
-		$line['occupiedCost'] = round((float)$line['occupiedCost'], 2);
-		$line['vacantCost'] = round((float)$line['vacantCost'], 2);
-		$line['holidayAllowance'] = round($holiday, 2);
-		$line['employerCharges'] = round($charges, 2);
-		$line['total'] = round(($base + $holiday + $charges), 2);
+		$line['occupiedCost'] = $this->cents(amount: (float)$line['occupiedCost']);
+		$line['vacantCost'] = $this->cents(amount: (float)$line['vacantCost']);
+		$line['holidayAllowance'] = $this->cents(amount: $holiday);
+		$line['employerCharges'] = $this->cents(amount: $charges);
+		$line['total'] = $this->cents(amount: ($base + $holiday + $charges));
 
 		return $line;
 	}//end withSurcharges()
@@ -133,9 +151,9 @@ class PersonnelBudgetTotals {
 		foreach ($lines as $line) {
 			$group = ($line[$key] !== '') ? (string)$line[$key] : 'none';
 			$out[$group] ??= ['name' => (($key === 'orgUnitId') ? $line['unitName'] : $group), 'occupiedCost' => 0.0, 'vacantCost' => 0.0, 'total' => 0.0, 'unpriced' => false, 'fteByMonth' => array_fill(0, 12, 0.0)];
-			$out[$group]['occupiedCost'] = round(($out[$group]['occupiedCost'] + $line['occupiedCost']), 2);
-			$out[$group]['vacantCost'] = round(($out[$group]['vacantCost'] + $line['vacantCost']), 2);
-			$out[$group]['total'] = round(($out[$group]['total'] + $line['total']), 2);
+			$out[$group]['occupiedCost'] = $this->cents(amount: ($out[$group]['occupiedCost'] + $line['occupiedCost']));
+			$out[$group]['vacantCost'] = $this->cents(amount: ($out[$group]['vacantCost'] + $line['vacantCost']));
+			$out[$group]['total'] = $this->cents(amount: ($out[$group]['total'] + $line['total']));
 			$out[$group]['unpriced'] = ($out[$group]['unpriced'] || $line['unpriced']);
 			foreach ($line['fteByMonth'] as $index => $month) {
 				$out[$group]['fteByMonth'][$index] = round(($out[$group]['fteByMonth'][$index] + $month['budgeted']), 4);
@@ -172,8 +190,8 @@ class PersonnelBudgetTotals {
 				$unit[$which] = ['cost' => floatval($row['total'] ?? 0), 'fteByMonth' => ($row['fteByMonth'] ?? [])];
 			}
 
-			$unit['diffA'] = ['cost' => round(($unit['a']['cost'] - $unit['baseline']['cost']), 2)];
-			$unit['diffB'] = ['cost' => round(($unit['b']['cost'] - $unit['baseline']['cost']), 2)];
+			$unit['diffA'] = ['cost' => $this->cents(amount: ($unit['a']['cost'] - $unit['baseline']['cost']))];
+			$unit['diffB'] = ['cost' => $this->cents(amount: ($unit['b']['cost'] - $unit['baseline']['cost']))];
 			$units[$unitId] = $unit;
 		}
 

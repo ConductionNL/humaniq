@@ -159,6 +159,8 @@ class TimesheetProcessStampListener implements IEventListener {
 	 * @param \OCA\OpenRegister\Event\ObjectCreatingEvent $event The pre-save event.
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called from StampsProcessFields::stampOrRefuse().
 	 */
 	private function stampCreating(\OCA\OpenRegister\Event\ObjectCreatingEvent $event): void {
 		$entity = $event->getObject();
@@ -174,6 +176,8 @@ class TimesheetProcessStampListener implements IEventListener {
 	 * @param \OCA\OpenRegister\Event\ObjectUpdatingEvent $event The pre-save event.
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called from StampsProcessFields::stampOrRefuse().
 	 */
 	private function stampUpdating(\OCA\OpenRegister\Event\ObjectUpdatingEvent $event): void {
 		$entity = $event->getNewObject();

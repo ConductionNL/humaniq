@@ -73,12 +73,16 @@
 - [x] 6.3 Run `npx openspec validate hours-leaf-loads-on-a-consuming-page --strict`.
       Done 2026-11-21: valid, after dropping the `status: proposed` front matter above the
       delta spec's first section, which strict mode reported as text archive does not carry.
-- [ ] 6.4 Run `composer check:strict`.
+- [x] 6.4 Run `composer check:strict`.
       Measured 2026-11-22 on development 58e3582f, left open: lint, phpcs (warnings
       only), phpstan and PHPUnit pass; phpmd exits 2 on findings outside the baseline
       in files this change did not touch (`Application.php` length, `FilingDates`
       short names, static access in the DSR commands), and psalm does not start on
       PHP 8.3.6 (it needs 8.3.16 or later). Tick once both run green.
+      Done 2026-11-25 on PHP 8.4.28 (PR #1327): `composer check:strict` exits 0,
+      ALL CHECKS PASSED (lint, phpcs, phpmd, psalm 7, phpstan, PHPUnit 4,855 tests,
+      1 skipped). phpmd and psalm inherited findings baselined; the PHPUnit red was
+      a PHP 8.4 rounding drift in the personnel budget, fixed.
 - [ ] 6.5 On the dev instance, open a host detail page in another app and
       confirm the leaf renders. Confirm `js/humaniq-leaves.js` is requested by
       that page.

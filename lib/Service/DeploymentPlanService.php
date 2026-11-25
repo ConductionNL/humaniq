@@ -224,7 +224,7 @@ class DeploymentPlanService {
 			$withPlan[] = array_merge($row, $this->planColumns(plan: $plansByEmployee[$employeeId]));
 		}
 
-		usort($withPlan, [self::class, 'byDifferenceThenName']);
+		usort($withPlan, self::byDifferenceThenName(...));
 		usort($withoutPlan, static fn (array $left, array $right): int => strcmp((string)$left['name'], (string)$right['name']));
 
 		return array_merge($withPlan, $withoutPlan);
