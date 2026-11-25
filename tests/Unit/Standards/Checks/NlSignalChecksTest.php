@@ -62,7 +62,7 @@ class NlSignalChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$all = NlSignalChecks::checks();
+		$all = NlSignalChecks::legacyChecks();
 		$this->checks = $all['EmploymentContract'];
 		$this->bhvChecks = $all['BhvCertificering'];
 
@@ -592,7 +592,7 @@ class NlSignalChecksTest extends TestCase {
 	 * @spec openspec/specs/bhv-organisatie/spec.md#REQ-BHV-002
 	 */
 	public function testExistingContractPredicatesRemainUnderEmploymentContractKeyOnly(): void {
-		$all = NlSignalChecks::checks();
+		$all = NlSignalChecks::tables();
 
 		$this->assertArrayHasKey('nl-signaal-contract-verloopt', $all['EmploymentContract']);
 		$this->assertArrayHasKey('nl-aanzegtermijn-bewaking', $all['EmploymentContract']);
