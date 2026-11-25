@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlOrgChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -69,8 +70,8 @@ class NlOrgChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
+		$this->assignmentChecks = TableCheckRegistry::checks([NlOrgChecks::class])['OrgAssignment'];
 		$checks = NlOrgChecks::checks();
-		$this->assignmentChecks = $checks['OrgAssignment'];
 		$this->unitChecks = $checks['OrgUnit'];
 		$this->timesheetChecks = $checks['Timesheet'];
 
