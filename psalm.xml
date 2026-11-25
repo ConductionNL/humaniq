@@ -22,6 +22,8 @@
         <!-- OpenRegister's working calendar contract (Flow\Timer), the same stub the tests load;
              it mirrors the public shape WorkingCalendarReader calls. -->
         <file name="tests/stubs/OpenRegisterWorkingCalendarStub.php" />
+        <!-- OpenRegister's lifecycle transition guard contract, the same stub phpstan loads. -->
+        <file name="tests/stubs/OpenRegisterLifecycleTransitionStub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
@@ -58,6 +60,16 @@
                 <!-- Cross-app classes: OpenRegister and DocuDesk are only available
                      at runtime once those apps are installed alongside humaniq -->
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\SaveActor"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch"/>
+                <referencedClass name="OCA\OpenRegister\Service\Flow\ICallFlowNode"/>
+                <referencedClass name="OCA\OpenRegister\Service\Integration\LeafRendering"/>
+                <referencedClass name="OCA\OpenRegister\Service\Integration\LeafIdentity"/>
+                <referencedClass name="OCA\OpenRegister\Service\Integration\LeafAvailability"/>
                 <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
                 <referencedClass name="OCA\OpenRegister\Exception\FlowTimerValidationException"/>
                 <referencedClass name="OCA\OpenRegister\Service\Flow\Timer\WorkingCalendarInterface"/>
