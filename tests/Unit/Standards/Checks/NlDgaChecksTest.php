@@ -36,6 +36,7 @@ namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Standards\Checks\NlDgaChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
@@ -59,7 +60,14 @@ class NlDgaChecksTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		RuleEngine::reset();
-		$this->checks = NlDgaChecks::checks();
+		// The engine's table path; the context stays optional, as before.
+		$this->checks = array_map(
+			static fn (array $byRule): array => array_map(
+				static fn (callable $predicate): callable => static fn (array $o, array $c = []): bool => $predicate($o, $c),
+				$byRule
+			),
+			TableCheckRegistry::checks([NlDgaChecks::class])
+		);
 
 	}//end setUp()
 

@@ -25,6 +25,13 @@
  *   MVP's single-active-beslag assumption (design.md D4), made
  *   machine-checkable rather than a silent doc note.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): each of the two loonbeslag rules is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -47,35 +54,74 @@ use OCA\Humaniq\Support\RoundsToCents;
 
 /**
  * Loonbeslag floor-enforcement + single-active-beslag executable checks.
+ *
+ * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
  */
-final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects {
+final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects, ProvidesTables {
 
+	use BuildsSatisfiedTables;
 	use RoundsToCents;
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-002
-	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			'Payslip' => [
-				'nl-loonbeslag-beslagvrije-voet-floor' => static fn (array $o, array $context): bool => self::isFloorRespected($o, $context),
-			],
-			'Loonbeslag' => [
-				'nl-loonbeslag-single-active' => static fn (array $o, array $context): bool => self::isSingleActive($o, $context),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Both loonbeslag rules as derivation + FIRST-hit decision tables: net pay
+	 * below the beslagvrije voet fails, and an active beslag overlapping
+	 * another active beslag of the same employee fails. A payslip without a
+	 * (resolvable) beslag derives null and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
+	 */
+	public static function tables(): array {
+		return [
+			'Payslip' => [
+				'nl-loonbeslag-beslagvrije-voet-floor' => [
+					'derive' => static fn (array $o, array $context): ?array => self::floorInputs($o, $context),
+					'table' => self::satisfiedTable(
+						[['name' => 'marginCents', 'type' => 'number']],
+						[['id' => 'net-pay-below-voet', 'inputEntries' => ['< 0'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+			'Loonbeslag' => [
+				'nl-loonbeslag-single-active' => [
+					'derive' => static fn (array $o, array $context): array => [
+						'canConflict' => self::canConflict(o: $o),
+						'overlappingActive' => self::overlappingActiveCount($o, $context),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'canConflict', 'type' => 'boolean'], ['name' => 'overlappingActive', 'type' => 'number']],
+						[['id' => 'second-active-beslag', 'inputEntries' => ['true', '> 0'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -246,4 +292,72 @@ final class NlWageGarnishmentChecks implements CheckProvider, SeedsObjects {
 		];
 
 	}//end rangeBounds()
+
+	/**
+	 * The floor table's input: net pay minus the beslagvrije voet, in cents.
+	 * Null when the payslip carries no beslag or it does not resolve.
+	 *
+	 * @param array<string, mixed> $o       The Payslip.
+	 * @param array<string, mixed> $context Evaluation context; reads `payroll.loonbeslagenById`.
+	 *
+	 * @return array{marginCents: int}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function floorInputs(array $o, array $context): ?array {
+		$loonbeslagId = trim((string)($o['loonbeslagId'] ?? ''));
+		$loonbeslag = ($loonbeslagId === '') ? null : ($context['payroll']['loonbeslagenById'][$loonbeslagId] ?? null);
+		if (is_array($loonbeslag) === false) {
+			return null;
+		}
+
+		return ['marginCents' => (self::cents($o['nettoPay'] ?? null) - self::cents($loonbeslag['beslagvrijeVoet'] ?? null))];
+
+	}//end floorInputs()
+
+	/**
+	 * How many other active beslagen of the same employee overlap this one.
+	 *
+	 * @param array<string, mixed> $o       The Loonbeslag.
+	 * @param array<string, mixed> $context Evaluation context; reads `payroll.loonbeslagenById`.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function overlappingActiveCount(array $o, array $context): int {
+		$selfId = trim((string)($o['id'] ?? $o['@self']['id'] ?? ''));
+		$count = 0;
+		foreach ((array)($context['payroll']['loonbeslagenById'] ?? []) as $id => $other) {
+			if ((string)$id !== $selfId && self::conflictsWith(o: $o, other: $other) === true) {
+				$count++;
+			}
+		}
+
+		return $count;
+
+	}//end overlappingActiveCount()
+
+	/**
+	 * The loonbeslag closures as they ran before the tables, the reference
+	 * NlWageGarnishmentTableParityTest compares them with. Not registered;
+	 * retired after the OpenRegister audit run confirms the tables.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/loonbeslag/spec.md#REQ-BESLAG-005
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'Payslip' => [
+				'nl-loonbeslag-beslagvrije-voet-floor' => static fn (array $o, array $context): bool => self::isFloorRespected($o, $context),
+			],
+			'Loonbeslag' => [
+				'nl-loonbeslag-single-active' => static fn (array $o, array $context): bool => self::isSingleActive($o, $context),
+			],
+		];
+
+	}//end legacyChecks()
+
 }//end class
