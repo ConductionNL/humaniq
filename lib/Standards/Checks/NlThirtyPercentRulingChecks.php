@@ -78,33 +78,6 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 	/**
 	 * {@inheritDoc}
 	 *
-	 * No closures: the four ruling rules are decision tables, see tables().
-	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
-	 *
-	 * @return array<string, array<string, callable>>
-	 */
-	public static function checks(): array {
-		return [];
-	}//end checks()
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * No generated seed: NlPayrollChecks::seedObjects() carries the sample
-	 * Employee these rules read.
-	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
-	 *
-	 * @return array<string, array<string, mixed>>
-	 */
-	public static function seedSpec(): array {
-		return [];
-	}//end seedSpec()
-
-	/**
-	 * {@inheritDoc}
-	 *
  * The ruling rules: a granted ruling at a numeric rate of at most 30,
  * capped at the WNT-norm, with a readable end inside 60 months of its start
  * and not past, at or above its salary norm.
@@ -114,11 +87,6 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function tables(): array {
-		$failsUnlessBoth = self::satisfiedTable(
-			[['name' => 'applies', 'type' => 'boolean'], ['name' => 'met', 'type' => 'boolean']],
-			[['id' => 'applies-and-not-met', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
-		);
-
 		return [
 			'Employee' => [
 				// Wet LB 1964 art. 31a (30%-regeling) — at most 30% tax-free for 2025-2026.
@@ -134,8 +102,11 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 				],
 				// Wet LB 1964 art. 31a (aftopping WNT-norm) — a granted ruling is capped at the WNT-norm.
 				'nl-30-regeling-aftoppingsgrens' => [
-					'derive' => static fn (array $employee): array => ['applies' => self::thirtyPercentGranted($employee), 'met' => (($employee['thirtyPercentCappedAtWntNorm'] ?? false) === true)],
-					'table' => $failsUnlessBoth,
+					'derive' => static fn (array $employee): array => ['granted' => self::thirtyPercentGranted($employee), 'capped' => (($employee['thirtyPercentCappedAtWntNorm'] ?? false) === true)],
+					'table' => self::satisfiedTable(
+						[['name' => 'granted', 'type' => 'boolean'], ['name' => 'capped', 'type' => 'boolean']],
+						[['id' => 'ruling-not-capped-at-wnt-norm', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
+					),
 				],
 				// Wet LB 1964 art. 31a (looptijd) — a granted ruling runs at most 60 months, and not past its end.
 				'nl-30-regeling-looptijd-5jaar' => [
@@ -161,6 +132,33 @@ final class NlThirtyPercentRulingChecks implements CheckProvider, ProvidesTables
 		];
 
 	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * No closures: the four ruling rules are decision tables, see tables().
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 *
+	 * @return array<string, array<string, callable>>
+	 */
+	public static function checks(): array {
+		return [];
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * No generated seed: NlPayrollChecks::seedObjects() carries the sample
+	 * Employee these rules read.
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	public static function seedSpec(): array {
+		return [];
+	}//end seedSpec()
 
 	/**
 	 * Whether a 30%-ruling is granted.
