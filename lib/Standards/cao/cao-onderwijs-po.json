@@ -8,6 +8,10 @@
     {
       "doc": "PO-Raad, CAO PO 2024-2025 (en opvolger)",
       "url": "https://www.poraad.nl/"
+    },
+    {
+      "doc": "PO-Raad, Cao primair onderwijs 2025-2027 (geactualiseerde tekst 5 maart 2026; geldt 1 november 2025 t/m 28 februari 2027)",
+      "url": "https://www.poraad.nl/arbeidszaken/cao-primair-onderwijs-primaire-en-secundaire-arbeidsvoorwaarden/cao-primair-onderwijs"
     }
   ],
   "payScales": {
@@ -57,17 +61,12 @@
     "value": {
       "normjaartaakUrenPerJaar": 1659,
       "lesgevendeTaakMaxUren": 940,
-      "lesgebondenTakenOpslagfactorPct": [
-        35,
-        45
-      ],
-      "professionaliseringUren": 83,
-      "duurzameInzetbaarheidUren": 40
+      "pdiUrenPerJaar": 123
     },
-    "source": "The CAO PO normjaartaak (structural annual-hours unit, distinct from the weekly fulltimeHoursPerWeek the other five CAOs use) — 1659 hours/year decomposed into lesgevende taak (max 940u), lesgebonden taken (35-45% opslagfactor), professionalisering (83u) and duurzame inzetbaarheid (40u). High cross-source agreement, but not directly fetched from poraad.nl itself in this pass (corroborating sources were third-party explainers) — kept placeholder despite the agreement. Display-only — not read by any CaoRegistry resolver (workingTime is free-form; CaoRegistry::isWellFormed() checks only that the four leaf groups exist, not their internal keys).",
-    "verified": false,
-    "placeholder": true,
-    "checkAgainst": "PO-Raad CAO PO tekst, hoofdstuk werktijden/taakbeleid (poraad.nl)"
+    "source": "Cao primair onderwijs 2025-2027, PO-Raad (pdf at https://www.poraad.nl/arbeidszaken/cao-primair-onderwijs-primaire-en-secundaire-arbeidsvoorwaarden/cao-primair-onderwijs, fetched 2026-11-25, geactualiseerde tekst 5 maart 2026). Begrippen 'Jaartaak': 'Een taak van 1659 uur bij een voltijdbetrekking per jaar'; art. 2.2 lid 6: a full-time employee 'kan 1659 uur per schooljaar worden ingezet'. Art. 2.3 lid 6: more than 940 uur lesgevende taken only 'met wederzijds goedvinden', within the total 1659 uur. Art. 9.4 lid 4: 123 PDI-uren per year naar rato van de werktijdfactor; footnote 11: the merger of the former 40 uur duurzame inzetbaarheid and 83 uur professionalisering, so those two separate figures are gone. The CAO sets no opslagfactor percentage: Begrippen 'Opslagfactor' and art. 2.2 lid 7 leave it to the team's werkverdelingsplan, so the earlier 35-45% range was dropped. Only normjaartaakUrenPerJaar is read by a resolver (CaoRegistry::annualNormHours, the deployment plan's norm).",
+    "verified": true,
+    "placeholder": false,
+    "checkAgainst": "PO-Raad Cao primair onderwijs 2025-2027: Begrippen (Jaartaak, Opslagfactor), art. 2.2, 2.3 lid 6, 9.4 lid 4"
   },
   "overtime": {
     "value": {

@@ -25,8 +25,9 @@ Rows: `tt-staff-deployment` (planninq matrix, owned by humaniq), tender https://
 #### Scenario: An unverified CAO figure is not used
 
 @e2e exclude Backend rule with no journey of its own: normFor() returns null for an unverified CAO figure, verified by DeploymentPlanServiceTest and CaoAnnualNormTest; the hand-entered norm is an ordinary field
-- **GIVEN** the CAO PO normjaartaak is still marked unverified
-- **WHEN** a plan is created for a CAO PO teacher
+- **GIVEN** a CAO whose annual norm is still marked unverified (the CAO VO today; the CAO PO
+  normjaartaak was verified against the CAO text on 2026-11-25)
+- **WHEN** a plan is created for a teacher under that CAO
 - **THEN** the plan asks for the norm to be entered and shows its source as entered by hand
 
 #### Scenario: A part-time contract halfway through the year
