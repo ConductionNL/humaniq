@@ -43,9 +43,16 @@ no-op; a `failed` or `skipped-no-docudesk` record never blocks a retry.
 ## Generating documents
 
 ```bash
-occ humaniq:documents:generate
-occ humaniq:documents:generate --type=werkgeversverklaring --employee=<employee-id>
+occ humaniq:documents:generate --as-user=<admin-uid>
+occ humaniq:documents:generate --type=werkgeversverklaring --employee=<employee-id> --as-user=<admin-uid>
 ```
+
+A console process has no signed-in user, and docudesk lets only a
+signed-in user read its templates, so pass `--as-user` with a Nextcloud
+administrator's uid. Without it every attempt ends `failed` with
+"User 'Anonymous' does not have permission to 'read' objects in schema
+'Document Template'"; a uid that is not an administrator is refused
+before anything renders.
 
 With no options, the default backlog is every permanent
 `EmploymentContract` with `writtenContract: true` that has no active

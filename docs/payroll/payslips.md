@@ -52,8 +52,8 @@ a diagnostic; no partial aggregate is ever written.
 ## Generating documents
 
 ```bash
-occ humaniq:documents:generate --type=loonstrook --employee=<employee-id> --period=2026-06
-occ humaniq:documents:generate --type=jaaropgaaf --employee=<employee-id> --year=2026
+occ humaniq:documents:generate --type=loonstrook --employee=<employee-id> --period=2026-06 --as-user=<admin-uid>
+occ humaniq:documents:generate --type=jaaropgaaf --employee=<employee-id> --year=2026 --as-user=<admin-uid>
 ```
 
 - `--type` — `loonstrook` or `jaaropgaaf` (also accepts the other HR
