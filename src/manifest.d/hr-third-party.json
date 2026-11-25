@@ -148,7 +148,7 @@
 						"label": "Assemble",
 						"type": "api-call",
 						"icon": "Calculator",
-						"url": "/api/third-party/reports/assemble",
+						"url": "/apps/humaniq/api/third-party/reports/assemble",
 						"method": "POST",
 						"params": {
 							"administrationId": "@object.administrationId",
@@ -163,7 +163,7 @@
 						"label": "Statements",
 						"type": "api-call",
 						"icon": "FileDocumentMultipleOutline",
-						"url": "/api/third-party/reports/@objectId/statements",
+						"url": "/apps/humaniq/api/third-party/reports/@objectId/statements",
 						"method": "POST",
 						"params": {},
 						"successMessage": "Statements generated and stored with each payee.",

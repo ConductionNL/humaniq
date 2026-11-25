@@ -97,7 +97,7 @@
 						"label": "Recompute",
 						"type": "api-call",
 						"icon": "Calculator",
-						"url": "/api/payroll/adjust",
+						"url": "/apps/humaniq/api/payroll/adjust",
 						"method": "POST",
 						"params": {
 							"adjustmentId": "@objectId"

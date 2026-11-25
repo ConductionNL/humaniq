@@ -299,7 +299,7 @@
 						"label": "Request offer letter + e-signature",
 						"type": "api-call",
 						"icon": "FileDocumentPlusOutline",
-						"url": "/api/offer/request-signature",
+						"url": "/apps/humaniq/api/offer/request-signature",
 						"method": "POST",
 						"params": {
 							"applicationId": "@objectId"
@@ -313,7 +313,7 @@
 						"label": "Read CV",
 						"type": "api-call",
 						"icon": "FileAccountOutline",
-						"url": "/api/applications/@objectId/read-cv",
+						"url": "/apps/humaniq/api/applications/@objectId/read-cv",
 						"method": "POST",
 						"params": {},
 						"confirm": false,
@@ -708,7 +708,7 @@
 						"label": "Sync to calendar",
 						"type": "api-call",
 						"icon": "CalendarSyncOutline",
-						"url": "/api/interviews/sync",
+						"url": "/apps/humaniq/api/interviews/sync",
 						"method": "POST",
 						"params": {
 							"interviewId": "@objectId"

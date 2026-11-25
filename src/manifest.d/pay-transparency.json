@@ -40,7 +40,7 @@
 						"label": "Download last year's report (CSV)",
 						"type": "api-call",
 						"icon": "DownloadOutline",
-						"url": "/api/reports/pay-transparency/export",
+						"url": "/apps/humaniq/api/reports/pay-transparency/export",
 						"method": "POST",
 						"params": {},
 						"download": true,

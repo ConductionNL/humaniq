@@ -182,7 +182,7 @@
 						"label": "Fill from RDW",
 						"type": "api-call",
 						"icon": "CarOutline",
-						"url": "/api/prefill/vehicle/@objectId",
+						"url": "/apps/humaniq/api/prefill/vehicle/@objectId",
 						"method": "POST",
 						"visibleWhen": {
 							"field": "category",

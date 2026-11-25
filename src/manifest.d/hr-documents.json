@@ -79,7 +79,7 @@
 						"label": "Request signature",
 						"type": "api-call",
 						"icon": "FileSign",
-						"url": "/api/documents/@objectId/request-signature",
+						"url": "/apps/humaniq/api/documents/@objectId/request-signature",
 						"method": "POST",
 						"visibleWhen": {
 							"field": "status",
@@ -121,7 +121,7 @@
 						"label": "Generate last year's statements",
 						"type": "api-call",
 						"icon": "FileDocumentPlusOutline",
-						"url": "/api/documents/jaaropgaven",
+						"url": "/apps/humaniq/api/documents/jaaropgaven",
 						"method": "POST",
 						"params": {},
 						"confirm": true,
@@ -154,7 +154,7 @@
 						"label": "Generate PDF",
 						"type": "api-call",
 						"icon": "FileDocumentPlusOutline",
-						"url": "/api/documents/generate",
+						"url": "/apps/humaniq/api/documents/generate",
 						"method": "POST",
 						"params": {
 							"jaaropgaafId": "@objectId",

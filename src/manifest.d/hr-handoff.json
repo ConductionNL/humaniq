@@ -129,7 +129,7 @@
 						"label": "Compile",
 						"type": "api-call",
 						"icon": "Calculator",
-						"url": "/api/payroll/handoffs/compile",
+						"url": "/apps/humaniq/api/payroll/handoffs/compile",
 						"method": "POST",
 						"params": {
 							"administrationId": "@object.administrationId",
@@ -144,7 +144,7 @@
 						"label": "Check intake",
 						"type": "api-call",
 						"icon": "ClipboardCheckOutline",
-						"url": "/api/payroll/handoffs/check-intake",
+						"url": "/apps/humaniq/api/payroll/handoffs/check-intake",
 						"method": "POST",
 						"params": {
 							"handoffId": "@objectId"

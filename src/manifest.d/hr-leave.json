@@ -383,7 +383,7 @@
 						"label": "Settle",
 						"type": "api-call",
 						"icon": "CashCheck",
-						"url": "/api/leave/settle",
+						"url": "/apps/humaniq/api/leave/settle",
 						"method": "POST",
 						"params": {
 							"transactionId": "@objectId"
