@@ -188,7 +188,7 @@ class SetupController extends Controller {
 				// The Klaar step's health check: what the import left, whether
 				// background jobs run, which payroll tables are loaded. A
 				// failure reads as failed, never as passed.
-				'health'    => $this->steps->healthCheck->check(),
+				'health'    => $this->steps->healthCheck->check(l10n: $this->steps->l10n),
 			]
 		);
 

@@ -3889,7 +3889,6 @@
         "Whether hours on this activity are billable unless the booking says otherwise.": "Whether hours on this activity are billable unless the booking says otherwise.",
         "Whether this activity is offered on new bookings. A retired activity still resolves on the entries that already carry it.": "Whether this activity is offered on new bookings. A retired activity still resolves on the entries that already carry it.",
         "Whether this is project work, work outside a project, or absence. Absence is never booked by hand.": "Whether this is project work, work outside a project, or absence. Absence is never booked by hand.",
-        "This card cannot show hours: the page did not say which item it is on.": "This card cannot show hours: the page did not say which item it is on.",
         "Own fields": "Own fields",
         "Manage fields": "Manage fields",
         "Access grants": "Access grants",
@@ -4063,8 +4062,6 @@
         "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.",
         "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.": "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.",
         "IT": "IT",
-        "Own fields": "Own fields",
-        "Manage fields": "Manage fields",
         "Coverage if approved": "Coverage if approved",
         "Present after approval": "Present after approval",
         "Minimum": "Minimum",
@@ -4334,7 +4331,14 @@
         "None, I will set this up myself": "None, I will set this up myself",
         "Nothing is imported. You start with an empty app and add your own data.": "Nothing is imported. You start with an empty app and add your own data.",
         "Example data": "Example data",
-        "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards."
+        "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.",
+        "Finish setup": "Finish setup",
+        "register imported with %1$s schemas": "register imported with %1$s schemas",
+        "the register was not imported": "the register was not imported",
+        "background jobs running": "background jobs running",
+        "background jobs are not running": "background jobs are not running",
+        "payroll tables %1$s loaded": "payroll tables %1$s loaded",
+        "no payroll tables are loaded": "no payroll tables are loaded"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

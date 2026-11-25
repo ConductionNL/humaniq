@@ -130,6 +130,7 @@
 				"summaryEditable": true,
 				"type": "summary",
 				"healthCheck": true,
+				"submitLabel": "Finish setup",
 				"title": "You're ready",
 				"body": "That's it. Open Employees to see your people, or reopen this setup anytime from the app's \u2026 menu."
 			}

@@ -3889,7 +3889,6 @@
         "Whether hours on this activity are billable unless the booking says otherwise.": "Of uren op deze activiteit declarabel zijn, tenzij de boeking iets anders zegt.",
         "Whether this activity is offered on new bookings. A retired activity still resolves on the entries that already carry it.": "Of deze activiteit wordt aangeboden bij nieuwe boekingen. Een ingetrokken activiteit blijft zichtbaar op de boekingen die haar al dragen.",
         "Whether this is project work, work outside a project, or absence. Absence is never booked by hand.": "Of dit projectwerk, werk buiten een project of afwezigheid is. Afwezigheid boek je nooit met de hand.",
-        "This card cannot show hours: the page did not say which item it is on.": "Deze kaart kan geen uren tonen: de pagina zegt niet bij welk item ze hoort.",
         "Own fields": "Eigen velden",
         "Manage fields": "Velden beheren",
         "Access grants": "Toegangsrechten",
@@ -4063,8 +4062,6 @@
         "Whether the hire's manager shared the programme of the first month. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker het programma van de eerste maand heeft gedeeld. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
         "Whether the hire's manager planned the talk at the end of the probation period. Ticked when the manager marks the task done in the onboarding flow.": "Of de leidinggevende van de nieuwe medewerker het gesprek aan het einde van de proeftijd heeft gepland. Wordt aangevinkt als de leidinggevende de taak in de onboardingflow als gedaan markeert.",
         "IT": "IT",
-        "Own fields": "Eigen velden",
-        "Manage fields": "Velden beheren",
         "Coverage if approved": "Bezetting bij goedkeuren",
         "Present after approval": "Aanwezig na goedkeuren",
         "Minimum": "Minimum",
@@ -4334,7 +4331,14 @@
         "None, I will set this up myself": "Geen, ik richt het zelf in",
         "Nothing is imported. You start with an empty app and add your own data.": "Er wordt niets geïmporteerd. Je begint met een lege app en voegt je eigen gegevens toe.",
         "Example data": "Voorbeeldgegevens",
-        "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Voorbeeldmedewerkers, -contracten, -verlofaanvragen en -salarisgegevens voor elk schema dat deze app levert, gemaakt uit de schema's zelf. Zo zie je de lijsten, detailpagina's en dashboards werken; het vertelt geen verhaal. Je kunt het vaker draaien en het daarna weer verwijderen."
+        "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Voorbeeldmedewerkers, -contracten, -verlofaanvragen en -salarisgegevens voor elk schema dat deze app levert, gemaakt uit de schema's zelf. Zo zie je de lijsten, detailpagina's en dashboards werken; het vertelt geen verhaal. Je kunt het vaker draaien en het daarna weer verwijderen.",
+        "Finish setup": "Inrichting afronden",
+        "register imported with %1$s schemas": "register geïmporteerd met %1$s schema's",
+        "the register was not imported": "het register is niet geïmporteerd",
+        "background jobs running": "achtergrondtaken draaien",
+        "background jobs are not running": "achtergrondtaken draaien niet",
+        "payroll tables %1$s loaded": "loonpakket %1$s geladen",
+        "no payroll tables are loaded": "geen loonpakket geladen"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

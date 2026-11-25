@@ -22361,6 +22361,7 @@
 				"body": "That's it. Open Employees to see your people, or reopen this setup anytime from the app's … menu.",
 				"healthCheck": true,
 				"id": "done",
+				"submitLabel": "Finish setup",
 				"summaryEditable": true,
 				"title": "You're ready",
 				"type": "summary"
