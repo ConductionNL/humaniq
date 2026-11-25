@@ -31,9 +31,11 @@
 
 ## 4. Not in this change
 
-- [ ] 4.1 pipelinq's migration onto this schema, plus a `billingTimeEntry`
-      satellite for its 11 billing/WIP fields.
-- [ ] 4.2 planninq's migration, plus a satellite for `contractorRef` and
-      `hourlyRate`, and `task` mapped onto `domainObjectType`/`domainObjectRef`.
-- [ ] 4.3 A `user` (Nextcloud uid) to `employeeId` (Employee uuid) resolution
-      both consumers need, and the degradation when humaniq is not installed.
+Each consumer carries its own change, as the proposal says; they are not humaniq tasks:
+
+- pipelinq's migration onto this schema, plus a `billingTimeEntry` satellite for its 11
+  billing/WIP fields: pipelinq `the-billing-time-entry-is-a-satellite`.
+- planninq's migration, plus a satellite for `contractorRef` and `hourlyRate`, and `task` mapped
+  onto `domainObjectType`/`domainObjectRef`: planninq `plannedtimeentry-reads-humaniqs-hours`.
+- The `user` (Nextcloud uid) to `employeeId` (Employee uuid) resolution both consumers need, and
+  the degradation when humaniq is not installed: in each of those two changes.
