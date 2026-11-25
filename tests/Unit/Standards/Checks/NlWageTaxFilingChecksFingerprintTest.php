@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlWageTaxFilingChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -95,14 +96,17 @@ class NlWageTaxFilingChecksFingerprintTest extends TestCase {
 	public function testEveryPredicateKeepsItsOutcomes(): void {
 		$seeds  = NlWageTaxFilingChecks::seedObjects();
 		$actual = [];
-		foreach (NlWageTaxFilingChecks::checks() as $type => $rules) {
+		// The registered checks: closures and table-declared rules, the latter
+		// through the engine's own table wrapper, in the corpus order pinned below.
+		$registered = array_merge_recursive(NlWageTaxFilingChecks::checks(), TableCheckRegistry::checks([NlWageTaxFilingChecks::class]));
+		foreach (self::EXPECTED as $type => $expectedRules) {
 			$grid = PredicateFingerprint::grid(PredicateFingerprint::rebase($seeds[$type] ?? [], self::SELECTORS), self::FIELDS);
 			$actual[$type] = [];
-			foreach ($rules as $ruleId => $predicate) {
-				if (in_array($ruleId, self::TIME_DEPENDENT, true) === false) {
-					$actual[$type][$ruleId] = PredicateFingerprint::of($predicate, $grid);
-				}
+			foreach (array_keys($expectedRules) as $ruleId) {
+				$actual[$type][$ruleId] = PredicateFingerprint::of($registered[$type][$ruleId], $grid);
 			}
+
+			$this->assertSame([], array_diff(array_keys($registered[$type]), array_keys($expectedRules), self::TIME_DEPENDENT), $type . ': every registered rule is pinned or time-dependent');
 		}
 
 		$this->assertSame(self::EXPECTED, $actual);
