@@ -66,17 +66,18 @@ function wizard(page: Page) {
  */
 async function nextUntil(page: Page, stepId: string): Promise<void> {
 	const dialog = wizard(page)
-	const current = dialog.locator(`[aria-current="step"][data-step-id="${stepId}"]`)
+	const rail = dialog.locator('[aria-current="step"][data-step-id]')
 	for (let i = 0; i < MAX_STEPS; i++) {
-		if (await current.isVisible()) {
-			return
-		}
-		if (await dialog.locator('[aria-current="step"][data-step-id="done"]').isVisible()) {
+		const at = await rail.getAttribute('data-step-id')
+		if (at === stepId || at === 'done') {
 			break
 		}
 		await dialog.getByTestId('cn-wizard-next').click()
+		// Wait for the rail to move on, or a second click lands on the same step's
+		// successor before it shows and the walk skips a step.
+		await expect(rail, `Next leaves the ${at} step`).not.toHaveAttribute('data-step-id', at ?? '')
 	}
-	await expect(current, `the wizard reaches the ${stepId} step`).toBeVisible()
+	await expect(dialog.locator(`[aria-current="step"][data-step-id="${stepId}"]`), `the wizard reaches the ${stepId} step`).toBeVisible()
 }
 
 /**

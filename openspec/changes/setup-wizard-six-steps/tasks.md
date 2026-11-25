@@ -136,13 +136,19 @@
         schema's, achtergrondtaken draaien, loonpakket 2026 geladen." under the recap (the board's
         54 is the schema count of its day), a full "Wijzigen" per row, and the finish button
         "Inrichting afronden" between Annuleren and Terug.
-      - Still off: the recap rows are not columns. Every row sizes its own answer cell, so the
-        answers do not line up and a short cell breaks inside a word ("Niet ingestel d"); the board
-        draws label, answer, explanation and Wijzigen as aligned columns. nextcloud-vue
-        (`CnSetupWizard` summary rows), built as a dependency next.
+      - Still off on 2.232.1: the recap rows are not columns. Every row sizes its own answer cell,
+        so the answers do not line up and a short cell breaks inside a word ("Niet ingestel d");
+        the board draws label, answer, explanation and Wijzigen as aligned columns. Built in
+        nextcloud-vue (branch `cloud/b-humaniq-dep-recap-columns`: one grid through subgrid, in
+        the board's order; a narrow dialog stacks the answer and the explanation under the step)
+        and checked live against a local build of it: `setup-wizard-klaar-nl-columns.png` (1280
+        wide) and `setup-wizard-klaar-nl-phone.png` (390 wide) in docs/static/img/screenshots.
+        Left: raise `@conduction/nextcloud-vue` to the release that carries it, then tick 5.2.
       - The Wijzigen spec (5.1) now passes live (1 passed; mutation-checked: a wrong expected
         language fails on the recap row). Three spec fixes: `send: 'always'` on the admin request
         context (Nextcloud's OCS 401 carries no Basic challenge, so the credentials were never
         sent); steps are found by the rail's `aria-current="step"` + `data-step-id`, since step
         titles are not headings (it used to press Next on Klaar, i.e. "Inrichting afronden",
-        and finish the wizard); the recap row is read from the step body's list, not the rail.
+        and finish the wizard); the recap row is read from the step body's list, not the rail;
+        after each Next the walk waits for the rail to move on (a second click before the next
+        step showed skipped it). 3 runs in a row green, plus one from an answered language.
