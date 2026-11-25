@@ -21,6 +21,8 @@ namespace OCA\Humaniq\Tests\Unit\Service\Setup;
 use OCA\Humaniq\Service\Setup\SetupTemplates;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -52,7 +54,7 @@ class SetupTemplatesTest extends TestCase {
 	 *
 	 * @return SetupTemplates
 	 */
-	private function templates(?object $store): SetupTemplates {
+	private function templates(?object $store, ?ICacheFactory $caches=null): SetupTemplates {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('has')->willReturn($store !== null);
 		$container->method('get')->willReturnCallback(static fn () => $store ?? throw new RuntimeException('no store'));
@@ -64,7 +66,150 @@ class SetupTemplatesTest extends TestCase {
 			return true;
 		});
 
-		return new SetupTemplates($container, $appConfig, $this->createMock(LoggerInterface::class));
+		return new SetupTemplates($container, $appConfig, $this->createMock(LoggerInterface::class), $caches);
+	}
+
+	/**
+	 * A cache factory over one in-memory cache, recording the TTLs it was given.
+	 *
+	 * @param array<int,int> $ttls Receives the TTL of every set.
+	 *
+	 * @return ICacheFactory
+	 */
+	private function caches(array &$ttls): ICacheFactory {
+		$kept  = [];
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturnCallback(static function (string $key) use (&$kept) {
+			return $kept[$key] ?? null;
+		});
+		$cache->method('set')->willReturnCallback(static function (string $key, mixed $value, int $ttl=0) use (&$kept, &$ttls): bool {
+			$kept[$key] = $value;
+			$ttls[]     = $ttl;
+			return true;
+		});
+
+		$caches = $this->createMock(ICacheFactory::class);
+		$caches->method('isAvailable')->willReturn(true);
+		$caches->method('createDistributed')->willReturn($cache);
+
+		return $caches;
+	}
+
+	/**
+	 * A store that counts its searches and answers one published set.
+	 *
+	 * @return object
+	 */
+	private function countingStore(): object {
+		return new class {
+			/**
+			 * Searches made.
+			 *
+			 * @var int
+			 */
+			public int $searches = 0;
+
+			/**
+			 * Search.
+			 *
+			 * @return JSONResponse
+			 */
+			public function search(): JSONResponse {
+				$this->searches++;
+				return new JSONResponse(['cards' => [['slug' => 'leave-policy', 'title' => 'Leave policy', 'description' => 'A policy.']]]);
+			}
+		};
+	}
+
+	/**
+	 * The step's cards are kept between page loads, for CHOICES_TTL seconds.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 */
+	public function testTheCardsAreKeptBetweenPageLoads(): void {
+		$ttls  = [];
+		$store = $this->countingStore();
+		$first = $this->templates($store, $this->caches($ttls))->choices();
+
+		$this->assertSame(['none', 'leave-policy'], array_column($first, 'id'));
+		$this->assertSame(1, $store->searches);
+		$this->assertSame([SetupTemplates::CHOICES_TTL], $ttls);
+
+		$kept = $this->templates($store, $this->caches($ttls));
+		$this->assertSame(['none', 'leave-policy'], array_column($kept->choices(), 'id'));
+		$this->assertSame(2, $store->searches, 'a fresh cache asks the store again');
+	}
+
+	/**
+	 * Within one cache, a second read does not ask the store.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 */
+	public function testASecondReadComesFromTheCache(): void {
+		$ttls   = [];
+		$store  = $this->countingStore();
+		$caches = $this->caches($ttls);
+
+		$first  = $this->templates($store, $caches)->choices();
+		$second = $this->templates($store, $caches)->choices();
+
+		$this->assertSame($first, $second);
+		$this->assertSame(1, $store->searches);
+	}
+
+	/**
+	 * A failing store is kept too, so pages do not wait out its failure again.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 */
+	public function testAFailingStoreIsKeptToo(): void {
+		$ttls  = [];
+		$store = new class {
+			/**
+			 * Searches made.
+			 *
+			 * @var int
+			 */
+			public int $searches = 0;
+
+			/**
+			 * Search.
+			 *
+			 * @return JSONResponse
+			 */
+			public function search(): JSONResponse {
+				$this->searches++;
+				throw new RuntimeException('registry down');
+			}
+		};
+		$caches = $this->caches($ttls);
+
+		$this->assertSame(['none'], array_column($this->templates($store, $caches)->choices(), 'id'));
+		$this->assertSame(['none'], array_column($this->templates($store, $caches)->choices(), 'id'));
+		$this->assertSame(1, $store->searches);
+	}
+
+	/**
+	 * Without a cache every read asks the store, as before.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 */
+	public function testWithoutACacheEveryReadAsksTheStore(): void {
+		$store     = $this->countingStore();
+		$templates = $this->templates($store);
+
+		$templates->choices();
+		$templates->choices();
+
+		$this->assertSame(2, $store->searches);
 	}
 
 	/**

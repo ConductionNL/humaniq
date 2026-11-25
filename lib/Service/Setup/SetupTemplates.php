@@ -30,6 +30,8 @@ namespace OCA\Humaniq\Service\Setup;
 use OCA\Humaniq\AppInfo\Application;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -71,11 +73,45 @@ class SetupTemplates {
 	private const SLUG_PATTERN = '/^[a-z0-9][a-z0-9-]*[a-z0-9]$/';
 
 	/**
+	 * Cache key of the step's cards.
+	 *
+	 * @var string
+	 */
+	public const CHOICES_CACHE_KEY = 'setup-template-choices';
+
+	/**
+	 * How long the step's cards are kept, in seconds.
+	 *
+	 * The setup status carries them and every page boot reads that status, so
+	 * without this each page waited on the store registry (about a second on
+	 * the reference stack) for cards only the wizard shows. A failing registry
+	 * is kept too, or every page would wait out its timeout again.
+	 *
+	 * @var int
+	 */
+	public const CHOICES_TTL = 300;
+
+	/**
+	 * The cache, once asked for; null without a cache factory or cache.
+	 *
+	 * @var ICache|null
+	 */
+	private ?ICache $cache = null;
+
+	/**
+	 * Whether the cache factory was already asked.
+	 *
+	 * @var bool
+	 */
+	private bool $cacheResolved = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container Resolves OpenRegister's store controller for this app.
 	 * @param IAppConfig         $appConfig Records the answer.
 	 * @param LoggerInterface    $logger    Records a failing store.
+	 * @param ICacheFactory|null $caches    Keeps the step's cards between page loads.
 	 *
 	 * @return void
 	 */
@@ -83,6 +119,7 @@ class SetupTemplates {
 		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly ?ICacheFactory $caches=null,
 	) {
 	}//end __construct()
 
@@ -90,13 +127,36 @@ class SetupTemplates {
 	 * The step's cards: "no templates" first, then the sets the store lists.
 	 *
 	 * A missing or failing store leaves only the "no templates" card, so the
-	 * step can always be answered and never blocks the app.
+	 * step can always be answered and never blocks the app. The answer is kept
+	 * for CHOICES_TTL seconds, so page loads do not wait on the store registry.
 	 *
 	 * @return array<int,array{id:string,name:string,description:string}>
 	 *
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	public function choices(): array {
+		$kept = $this->cache()?->get(self::CHOICES_CACHE_KEY);
+		if (is_string($kept) === true) {
+			$decoded = json_decode($kept, true);
+			if (is_array($decoded) === true) {
+				return $decoded;
+			}
+		}
+
+		$choices = $this->fetchChoices();
+		$this->cache()?->set(self::CHOICES_CACHE_KEY, (string)json_encode($choices), self::CHOICES_TTL);
+
+		return $choices;
+	}//end choices()
+
+	/**
+	 * The step's cards as the store lists them now.
+	 *
+	 * @return array<int,array{id:string,name:string,description:string}>
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 */
+	private function fetchChoices(): array {
 		$choices = [[
 			'id'          => self::NONE,
 			'name'        => 'No templates',
@@ -121,7 +181,7 @@ class SetupTemplates {
 		}
 
 		return $choices;
-	}//end choices()
+	}//end fetchChoices()
 
 	/**
 	 * Whether the step holds an answer: a set installed, or "no templates" picked.
@@ -220,6 +280,22 @@ class SetupTemplates {
 
 		$this->appConfig->setValueString(Application::APP_ID, self::CONFIG_KEY, (string)json_encode($installed));
 	}//end record()
+
+	/**
+	 * The cache for the step's cards, made on first use; null without one.
+	 *
+	 * @return ICache|null
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
+	 */
+	private function cache(): ?ICache {
+		if ($this->cacheResolved === false && $this->caches !== null && $this->caches->isAvailable() === true) {
+			$this->cache = $this->caches->createDistributed(Application::APP_ID . '-setup');
+		}
+
+		$this->cacheResolved = true;
+		return $this->cache;
+	}//end cache()
 
 	/**
 	 * The data of the store's answer to a call, or null when there is no store or it failed.
