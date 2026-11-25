@@ -13,6 +13,15 @@
  * structured fields declared in lib/Settings/register.d/hr-objects.json; the
  * seedObjects() samples satisfy every predicate keyed to their type.
  *
+ * Converted in part to the table-backed check form
+ * (rules-onto-or-decision-tables, next conversion wave): the seven Employee
+ * rules (ID-copy and loonheffingenverklaring retention, the 30%-ruling rate,
+ * cap, term and salary norm, the A1 certificate) are declared as
+ * OpenRegister decision tables via the ProvidesTables capability, their
+ * field and date reading staying here as derivations; their closures stay as
+ * employeeChecks(), listed by legacyChecks() as the oracle
+ * NlPayrollTableParityTest compares with, never registered in the engine.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -42,7 +51,8 @@ use OCA\Humaniq\Support\RoundsToCents;
  *
  * @spec openspec/specs/hrm-rule-engine/spec.md
  */
-final class NlPayrollChecks implements CheckProvider, SeedsObjects {
+final class NlPayrollChecks implements CheckProvider, ProvidesTables, SeedsObjects {
+	use BuildsSatisfiedTables;
 	use PayrollSampleFields;
 	use RoundsToCents;
 
@@ -85,12 +95,174 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	public static function checks(): array {
 		return [
 			'Payslip' => [...self::payslipWithholdingChecks(), ...self::payslipStatementChecks()],
-			'Employee' => self::employeeChecks(),
 			'EmploymentContract' => self::contractChecks(),
 			'PayrollRun' => self::payrollRunChecks(),
 		];
 
 	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * The Employee rules: a verified ID copy, and a loonheffingenverklaring on
+	 * file, kept 5 years after the year employment ends; a granted 30%-ruling
+	 * at a numeric rate of at most 30, capped at the WNT-norm, with a readable
+	 * end inside 60 months of its start and not past, at or above its salary
+	 * norm; a posted worker's A1 certificate numbered, dated and within 24
+	 * months of the start.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function tables(): array {
+		$failsUnlessBoth = self::satisfiedTable(
+			[['name' => 'applies', 'type' => 'boolean'], ['name' => 'met', 'type' => 'boolean']],
+			[['id' => 'applies-and-not-met', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
+		);
+
+		return [
+			'Employee' => [
+				// Handboek Loonheffingen — a verified ID-document copy, kept 5 years after the year employment ends.
+				'nl-id-bewaarplicht-5jaar' => [
+					'derive' => static fn (array $o): array => ['verified' => (($o['identityDocumentVerified'] ?? false) === true), 'retained' => self::retainedFiveYears($o, 'identityDocumentRetainedUntil')],
+					'table' => self::satisfiedTable(
+						[['name' => 'verified', 'type' => 'boolean'], ['name' => 'retained', 'type' => 'boolean']],
+						[
+							['id' => 'id-copy-not-verified', 'inputEntries' => ['false', '-'], 'outputEntries' => [false]],
+							['id' => 'id-copy-not-retained', 'inputEntries' => ['-', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				// Uitvoeringsregeling loonbelasting 2011 art. 12.1 lid 5 — a statement on file is kept 5 years after the year employment ends.
+				'nl-loonbelastingverklaring-bewaarplicht-5jaar' => [
+					'derive' => static fn (array $o): array => ['applies' => (($o['loonheffingenVerklaringOnFile'] ?? false) === true), 'met' => self::retainedFiveYears($o, 'loonheffingenVerklaringRetainedUntil')],
+					'table' => $failsUnlessBoth,
+				],
+				// Wet LB 1964 art. 31a (30%-regeling) — at most 30% tax-free for 2025-2026.
+				'nl-30-percent-regeling' => [
+					'derive' => static fn (array $o): array => ['granted' => self::thirtyPercentGranted($o), 'rateRecorded' => self::numeric($o, 'thirtyPercentRulingRate'), 'rate' => (float)($o['thirtyPercentRulingRate'] ?? 0)],
+					'table' => self::satisfiedTable(
+						[['name' => 'granted', 'type' => 'boolean'], ['name' => 'rateRecorded', 'type' => 'boolean'], ['name' => 'rate', 'type' => 'number']],
+						[
+							['id' => 'ruling-rate-missing', 'inputEntries' => ['true', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'ruling-rate-above-cap', 'inputEntries' => ['true', 'true', '> 30'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				// Wet LB 1964 art. 31a (aftopping WNT-norm) — a granted ruling is capped at the WNT-norm.
+				'nl-30-regeling-aftoppingsgrens' => [
+					'derive' => static fn (array $o): array => ['applies' => self::thirtyPercentGranted($o), 'met' => (($o['thirtyPercentCappedAtWntNorm'] ?? false) === true)],
+					'table' => $failsUnlessBoth,
+				],
+				// Wet LB 1964 art. 31a (looptijd) — a granted ruling runs at most 60 months, and not past its end.
+				'nl-30-regeling-looptijd-5jaar' => [
+					'derive' => static fn (array $o): ?array => self::thirtyPercentTermInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'endReadable', 'type' => 'boolean'], ['name' => 'beyondMaximumTerm', 'type' => 'boolean'], ['name' => 'ended', 'type' => 'boolean']],
+						[
+							['id' => 'ruling-end-missing', 'inputEntries' => ['false', '-', '-'], 'outputEntries' => [false]],
+							['id' => 'ruling-beyond-60-months', 'inputEntries' => ['true', 'true', '-'], 'outputEntries' => [false]],
+							['id' => 'ruling-past-its-end', 'inputEntries' => ['true', 'false', 'true'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				// Wet LB 1964 art. 31a (salarisnorm) — the annualised salary reaches the applicable norm.
+				'nl-30-regeling-salarisnorm' => [
+					'derive' => static fn (array $o): ?array => self::thirtyPercentSalaryInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'shortfallCents', 'type' => 'number']],
+						[['id' => 'salary-below-ruling-norm', 'inputEntries' => ['> 0'], 'outputEntries' => [false]]]
+					),
+				],
+				// Regulation (EC) 883/2004 art. 12 — a posted worker's A1 runs at most 24 months.
+				'eu-a1-posted-worker' => [
+					'derive' => static fn (array $o): array => [
+						'applies' => (($o['postedWorker'] ?? false) === true),
+						'met' => (self::present($o, 'a1CertificateNumber') && self::present($o, 'a1ValidUntil') && self::withinMonths($o, 'startDate', 'a1ValidUntil', 24)),
+					],
+					'table' => $failsUnlessBoth,
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * Whether a dated retention field is present and lies at least 5 years
+	 * after the year employment ends.
+	 *
+	 * @param array<string, mixed> $o   The Employee.
+	 * @param string               $key The retained-until field.
+	 *
+	 * @return bool
+	 */
+	private static function retainedFiveYears(array $o, string $key): bool {
+		return self::present($o, $key) && self::retainedAtLeastYearsAfterEnd($o, $key, 5);
+
+	}//end retainedFiveYears()
+
+	/**
+	 * Whether a 30%-ruling is granted.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return bool
+	 */
+	private static function thirtyPercentGranted(array $o): bool {
+		return ($o['thirtyPercentRulingGranted'] ?? false) === true;
+
+	}//end thirtyPercentGranted()
+
+	/**
+	 * The ruling-term table's inputs: whether the end date reads, whether it
+	 * lies beyond 60 months from the start, and whether it has passed. Null
+	 * without a granted ruling or a readable start.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return array{endReadable: bool, beyondMaximumTerm: bool, ended: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function thirtyPercentTermInputs(array $o): ?array {
+		$start = strtotime((string)($o['thirtyPercentRulingStartDate'] ?? ''));
+		if (self::thirtyPercentGranted($o) === false || $start === false) {
+			return null;
+		}
+
+		$end = strtotime((string)($o['thirtyPercentRulingEndDate'] ?? ''));
+		$maxEnd = strtotime('+' . self::THIRTY_PERCENT_MAX_DURATION_MONTHS . ' months', $start);
+
+		return [
+			'endReadable' => ($end !== false),
+			'beyondMaximumTerm' => ($end !== false && $maxEnd !== false && $end > $maxEnd),
+			'ended' => ($end !== false && $end < time()),
+		];
+
+	}//end thirtyPercentTermInputs()
+
+	/**
+	 * The salary-norm table's input: how far the annualised salary falls short
+	 * of the ruling's norm (the reduced under-30-master norm when it applies),
+	 * in cents. Null without a granted ruling or a numeric salary.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return array{shortfallCents: int}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function thirtyPercentSalaryInputs(array $o): ?array {
+		if (self::thirtyPercentGranted($o) === false || self::numeric($o, 'grossMonthlySalary') === false) {
+			return null;
+		}
+
+		$normCents = ((($o['thirtyPercentRulingReducedNormApplies'] ?? false) === true) ? self::THIRTY_PERCENT_SALARISNORM_MASTER_ONDER30_CENTS : self::THIRTY_PERCENT_SALARISNORM_ALGEMEEN_CENTS);
+
+		return ['shortfallCents' => ($normCents - (int)round(((float)$o['grossMonthlySalary']) * 12 * 100))];
+
+	}//end thirtyPercentSalaryInputs()
 
 	/**
 	 * Payslip checks on the withheld loonheffing and the insurance premiums.
@@ -1001,4 +1173,17 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 		$limit = strtotime('+' . $months . ' months', $start);
 		return $end <= $limit;
 	}//end withinMonths()
+
+	/**
+	 * The Employee closures employeeChecks() holds, the engine's registration
+	 * before tables(); NlPayrollTableParityTest compares the tables with them.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 */
+	public static function legacyChecks(): array {
+		return ['Employee' => self::employeeChecks()];
+
+	}//end legacyChecks()
 }//end class
