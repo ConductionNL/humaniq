@@ -63,8 +63,8 @@ class NlAbsenceChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlAbsenceChecks::checks()['SickLeaveCase'];
-		$this->payslipChecks = NlAbsenceChecks::checks()['Payslip'];
+		$this->checks = NlAbsenceChecks::legacyChecks()['SickLeaveCase'] + NlAbsenceChecks::checks()['SickLeaveCase'];
+		$this->payslipChecks = NlAbsenceChecks::legacyChecks()['Payslip'];
 
 	}//end setUp()
 
