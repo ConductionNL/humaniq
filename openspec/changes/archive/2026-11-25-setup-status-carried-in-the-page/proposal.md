@@ -12,7 +12,8 @@ nextcloud-vue#2378 lets a page carry the status as initial state `setup_status`.
 
 ## What Changes
 
-- `PageController::index()` carries, for an administrator, the document `SetupController::status()`
+- A listener on Nextcloud's `BeforeTemplateRenderedEvent` (`SetupStatusInitialStateListener`)
+  carries, on humaniq's own page and for an administrator, the document `SetupController::status()`
   answers, as initial state `setup_status`. Nobody else gets it carried; their shell asks the
   endpoint as before, so nobody reads more than the endpoint gives them.
 - SetupController is resolved lazily and a failure carries nothing (ADR-083 rule 3).
@@ -21,5 +22,6 @@ nextcloud-vue#2378 lets a page carry the status as initial state `setup_status`.
 
 ## Impact
 
-- `lib/Controller/PageController.php`, `tests/Unit/Controller/PageControllerTest.php`.
+- `lib/Listener/SetupStatusInitialStateListener.php` (registered in `lib/AppInfo/Application.php`),
+  `tests/Unit/Listener/SetupStatusInitialStateListenerTest.php`.
 - Spec `first-time-setup`: REQ-FTS-008.

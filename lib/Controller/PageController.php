@@ -47,7 +47,6 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
-use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -79,9 +78,8 @@ class PageController extends Controller {
 	 * @param IRequest $request The request object.
 	 * @param IUserSession $userSession The user session.
 	 * @param IInitialState $initialState The initial-state service.
-	 * @param ContainerInterface $container DI container for lazy AdministrationService and SetupController resolution.
+	 * @param ContainerInterface $container DI container for lazy AdministrationService resolution.
 	 * @param LoggerInterface $logger Logger.
-	 * @param IGroupManager $groupManager Tells whether the caller is an administrator, the only reader the page carries the setup status for.
 	 *
 	 * @return void
 	 */
@@ -91,7 +89,6 @@ class PageController extends Controller {
 		private readonly IInitialState $initialState,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly IGroupManager $groupManager,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -121,15 +118,10 @@ class PageController extends Controller {
 	 * predicate keyed on `administrationMode` needs a value present to
 	 * evaluate, and `standard` is the no-menu-change default.
 	 *
-	 * For an administrator it also carries the setup status under
-	 * `setup_status` (see provideSetupStatus()), so the shell does not wait
-	 * for `GET /api/setup/status` before it reads the page's own data.
-	 *
 	 * @return TemplateResponse
 	 *
 	 * @spec openspec/specs/multi-administratie/spec.md#REQ-MULTI-004
 	 * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-002
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-page-carries-the-setup-status-for-an-administrator-req-fts-008
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
@@ -171,57 +163,10 @@ class PageController extends Controller {
 					['exceptionClass' => $e::class]
 				);
 			}
-
-			$this->provideSetupStatus(userId: $user->getUID());
 		}
 
 		return new TemplateResponse(Application::APP_ID, 'index');
 	}//end index()
-
-	/**
-	 * Carry the setup status as initial state `setup_status` for an administrator.
-	 *
-	 * The shell (nextcloud-vue CnAppRoot) reads its setup status before it
-	 * renders the page, so `GET /api/setup/status` sat at the head of every
-	 * page's request chain: page data was only asked for once it answered.
-	 * Carried in the page, the shell needs no such request.
-	 *
-	 * Only for an administrator, and the document is exactly the one
-	 * SetupController::status() answers, so nobody reads more than the
-	 * endpoint gives them. Everyone else gets nothing carried and the shell
-	 * asks the endpoint as before (a delegated settings admin is let in there;
-	 * a user without access gets its 403). SetupController is resolved here,
-	 * not injected, and a failure carries nothing: its services reach
-	 * OpenRegister, and this page must render without it (ADR-083 rule 3).
-	 *
-	 * @param string $userId The caller.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-page-carries-the-setup-status-for-an-administrator-req-fts-008
-	 */
-	private function provideSetupStatus(string $userId): void {
-		if ($this->groupManager->isAdmin($userId) === false) {
-			return;
-		}
-
-		try {
-			$status = $this->container->get(SetupController::class)->status()->getData();
-		} catch (\Throwable $e) {
-			// Not an authorization decision: nothing is carried, and the shell
-			// asks the endpoint itself, which applies its own access check.
-			$this->logger->debug(
-				'humaniq: setup status not carried; the shell asks the endpoint.',
-				['exceptionClass' => $e::class]
-			);
-			return;
-		}
-
-		if (is_array($status) === true) {
-			$this->initialState->provideInitialState('setup_status', $status);
-		}
-
-	}//end provideSetupStatus()
 
 	/**
 	 * Serve the SPA for deep links (Vue history mode). Delegates to index().
