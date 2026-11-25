@@ -43,10 +43,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 class PayrollRunCommand extends Command {
 
 	/**
-	 * @param PayrollRunServiceInterface $service The draft-run generation service.
+	 * @param PayrollRunServiceInterface $service         The draft-run generation service.
+	 * @param PrivilegedSessionResolver  $sessionResolver Establishes the --as-user session the run reads as.
+	 *
+	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-006
 	 */
 	public function __construct(
 		private readonly PayrollRunServiceInterface $service,
+		private readonly PrivilegedSessionResolver $sessionResolver,
 	) {
 		parent::__construct();
 
@@ -62,7 +66,8 @@ class PayrollRunCommand extends Command {
 			->setDescription('Create (or with --recalculate regenerate) the draft PayrollRun + engine Payslips for a wage period.')
 			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Wage period (YYYY-MM).')
 			->addOption('administration', null, InputOption::VALUE_REQUIRED, 'Administration id (defaults to the seed convention ADM-001).')
-			->addOption('recalculate', null, InputOption::VALUE_NONE, 'Regenerate an existing draft run in place (draft-only).');
+			->addOption('recalculate', null, InputOption::VALUE_NONE, 'Regenerate an existing draft run in place (draft-only).')
+			->addOption('as-user', null, InputOption::VALUE_REQUIRED, 'The Nextcloud administrator uid the run reads and writes as (required: without a user the field authorization hides every salary).');
 
 	}//end configure()
 
@@ -79,6 +84,13 @@ class PayrollRunCommand extends Command {
 		$period = (is_string($periodOption) === true) ? trim($periodOption) : '';
 		if ($period === '') {
 			$output->writeln('<error>--period is verplicht (JJJJ-MM).</error>');
+			return 1;
+		}
+
+		// A console process has no user, and Employee.grossMonthlySalary is
+		// readable only by HR, payroll or the employee: without a session every
+		// salaried employee read as unpaid and --recalculate emptied the draft.
+		if ($this->sessionResolver->refuses($input, $output) === true) {
 			return 1;
 		}
 

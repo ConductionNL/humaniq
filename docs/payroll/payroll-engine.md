@@ -238,13 +238,16 @@ Create (or recalculate) the draft `PayrollRun` and its `Payslip` objects
 for a wage period:
 
 ```bash
-occ humaniq:payroll:run --period=2026-06 --administration=ADM-001
-occ humaniq:payroll:run --period=2026-06 --recalculate
+occ humaniq:payroll:run --period=2026-06 --administration=ADM-001 --as-user=admin
+occ humaniq:payroll:run --period=2026-06 --recalculate --as-user=admin
 ```
 
 - `--period` — the wage period, `YYYY-MM`
 - `--administration` — the administration id (defaults to the seed
   convention `ADM-001`)
+- `--as-user` — a Nextcloud administrator the run reads and writes as
+  (required: a console process has no user, and salaries are readable
+  only by HR, payroll and the employee)
 - `--recalculate` — regenerate an existing **draft** run in place;
   approval is a human act and moves the run out of draft, so an
   approved run is never silently recalculated

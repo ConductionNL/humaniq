@@ -19,6 +19,11 @@
  * uncaught throw, and `DsarService` is never invoked before this succeeds
  * (REQ-DSR-004).
  *
+ * `occ humaniq:payroll:run` establishes its session the same way: the
+ * field authorization on Employee.grossMonthlySalary hides the salary from a
+ * process without a user, so the run must read as an administrator
+ * (REQ-PCE-006).
+ *
  * `grep -rn IUserSession lib/Command/` (design.md Context) confirmed no
  * existing humaniq command established a user session -- this mechanism is
  * genuinely new to this codebase, not a reused pattern.
@@ -85,7 +90,7 @@ final class PrivilegedSessionResolver {
 		}
 
 		if ($this->groupManager->isAdmin($uid) === false) {
-			return '\'' . $uid . '\' is geen Nextcloud-beheerder; AVG data-subject-rights-bewerkingen vereisen een beheerderssessie.';
+			return '\'' . $uid . '\' is geen Nextcloud-beheerder; deze opdracht vereist een beheerderssessie.';
 		}
 
 		$this->userSession->setUser($user);

@@ -25,9 +25,14 @@ namespace OCA\Humaniq\Tests\Unit\Command;
 
 use InvalidArgumentException;
 use OCA\Humaniq\Command\PayrollRunCommand;
+use OCA\Humaniq\Command\PrivilegedSessionResolver;
 use OCA\Humaniq\Command\ProformaPayslipCommand;
 use OCA\Humaniq\Service\PayrollRunService;
 use OCA\Humaniq\Service\ProformaPayslipService;
+use OCP\IGroupManager;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -61,11 +66,11 @@ class PayrollRunAndProformaCommandsTest extends TestCase {
 				]
 		);
 
-		$tester = new CommandTester(new PayrollRunCommand($service));
+		$tester = new CommandTester(new PayrollRunCommand($service, $this->adminSession()));
 		self::assertSame(1, $tester->execute(['--period' => '  ']));
 		self::assertSame("--period is verplicht (JJJJ-MM).\n", $tester->getDisplay());
 
-		self::assertSame(0, $tester->execute(['--period' => ' 2026-02 ', '--administration' => ' ADM-2 ', '--recalculate' => true]));
+		self::assertSame(0, $tester->execute(['--period' => ' 2026-02 ', '--administration' => ' ADM-2 ', '--recalculate' => true, '--as-user' => 'admin']));
 		self::assertSame(
 			"Humaniq payroll run\n"
 			."  periode        : 2026-02\n"
@@ -78,10 +83,60 @@ class PayrollRunAndProformaCommandsTest extends TestCase {
 			$tester->getDisplay()
 		);
 
-		self::assertSame(1, $tester->execute(['--period' => '2026-02', '--administration' => ' ']));
+		self::assertSame(1, $tester->execute(['--period' => '2026-02', '--administration' => ' ', '--as-user' => 'admin']));
 		self::assertSame("Humaniq payroll run\n  periode        : 2026-02\n  administratie  : ADM-001\n  run            : geen\n  status         : refused — Al geboekt.\n", $tester->getDisplay());
 
 	}//end testPayrollRun()
+
+	/**
+	 * Without an administrator session the run refuses before reading anything:
+	 * a console process has no user, so the field authorization would hide
+	 * every salary and the run would pay nobody.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-006
+	 */
+	public function testPayrollRunRefusesWithoutAnAdministratorSession(): void {
+		$service = $this->createMock(PayrollRunService::class);
+		$service->expects(self::never())->method('runFor');
+
+		$users = $this->createMock(IUserManager::class);
+		$users->method('get')->willReturnCallback(fn (string $uid): ?IUser => $uid === 'nobody' ? null : $this->createMock(IUser::class));
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->willReturnCallback(static fn (string $uid): bool => $uid === 'admin');
+		$session = $this->createMock(IUserSession::class);
+		$session->expects(self::never())->method('setUser');
+
+		$tester = new CommandTester(new PayrollRunCommand($service, new PrivilegedSessionResolver($users, $groups, $session)));
+
+		self::assertSame(1, $tester->execute(['--period' => '2026-02']));
+		self::assertSame("--as-user is verplicht.\n", $tester->getDisplay());
+
+		self::assertSame(1, $tester->execute(['--period' => '2026-02', '--as-user' => 'nobody']));
+		self::assertStringContainsString("Onbekende gebruiker 'nobody'", $tester->getDisplay());
+
+		self::assertSame(1, $tester->execute(['--period' => '2026-02', '--as-user' => 'medewerker']));
+		self::assertStringContainsString('geen Nextcloud-beheerder', $tester->getDisplay());
+
+	}//end testPayrollRunRefusesWithoutAnAdministratorSession()
+
+	/**
+	 * A resolver whose `admin` is a real administrator; the session is set once per run.
+	 *
+	 * @return PrivilegedSessionResolver
+	 */
+	private function adminSession(): PrivilegedSessionResolver {
+		$users = $this->createMock(IUserManager::class);
+		$users->method('get')->willReturn($this->createMock(IUser::class));
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->willReturn(true);
+		$session = $this->createMock(IUserSession::class);
+		$session->expects(self::exactly(2))->method('setUser');
+
+		return new PrivilegedSessionResolver($users, $groups, $session);
+
+	}//end adminSession()
 
 	/**
 	 * The pro-forma breakdown prints every figure; a refused input prints the refusal and exits 1.

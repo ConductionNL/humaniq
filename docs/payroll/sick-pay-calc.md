@@ -68,7 +68,7 @@ occ humaniq:rules:audit
 Sick pay is generated automatically as part of the normal run:
 
 ```bash
-occ humaniq:payroll:run --period 2026-06
+occ humaniq:payroll:run --period 2026-06 --as-user admin
 ```
 
 There is no separate command — `SickLeaveCase` lookups happen inside
