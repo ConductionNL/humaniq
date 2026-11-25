@@ -37,6 +37,15 @@
  * predicates whose sample needs a resolvable cross-reference or an
  * intentional-violation demonstration rather than a compliant sample.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the four signals are declared as OpenRegister
+ * decision tables via the ProvidesTables capability. The date windows and
+ * the successor lookup stay here as derivations (null where a date does not
+ * read); the shared Dmn\DecisionTableEvaluator decides. The pre-table
+ * closures stay as legacyChecks(), the oracle NlSignalTableParityTest
+ * compares with, never registered in the engine, until staged retirement
+ * (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -59,7 +68,9 @@ use DateTimeImmutable;
 /**
  * Contract-expiry signal + statutory aanzegtermijn executable checks.
  */
-final class NlSignalChecks implements CheckProvider {
+final class NlSignalChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * `nl-signaal-contract-verloopt` window, days (parameters.windowDays in
@@ -104,33 +115,145 @@ final class NlSignalChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the four signals this provider owns are table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
+		return [];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-signaal-contract-verloopt`: a temporary contract ending inside the
+	 * window without a successor fails. `nl-aanzegtermijn-bewaking`: a running
+	 * monitored temporary contract past its notice deadline without a timely
+	 * aanzegging fails. `nl-signaal-proeftijd-eindigt` and
+	 * `nl-bhv-certificaat-verloopt`: a date inside its window fails. A date
+	 * that does not read, or a term too short to monitor, derives null.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function tables(): array {
+		$windowTable = self::satisfiedTable(
+			[['name' => 'withinWindow', 'type' => 'boolean']],
+			[['id' => 'date-inside-window', 'inputEntries' => ['true'], 'outputEntries' => [false]]]
+		);
+
 		return [
 			'EmploymentContract' => [
-				// HR contract-lifecycle control -- expiring temporary contract
-				// with no successor is signalled for HR follow-up.
-				'nl-signaal-contract-verloopt' => static fn (array $o, array $context): bool => self::contractVerloeptSatisfied($o, $context),
-				// BW art. 7:668 lid 1 -- written aanzegging at least one month
-				// before the end date of a fixed-term contract of >= 6 months.
-				'nl-aanzegtermijn-bewaking' => static fn (array $o): bool => self::aanzegtermijnSatisfied($o),
-				// BW art. 7:652 -- a probation period ending within 14 days is
-				// signalled so HR holds the end-of-probation conversation in time.
-				'nl-signaal-proeftijd-eindigt' => static fn (array $o): bool => self::proeftijdEindigtSatisfied($o),
+				'nl-signaal-contract-verloopt' => [
+					'derive' => static fn (array $o, array $context): ?array => self::expiryInputs($o, $context),
+					'table' => self::satisfiedTable(
+						[['name' => 'temporary', 'type' => 'boolean'], ['name' => 'withinWindow', 'type' => 'boolean'], ['name' => 'hasSuccessor', 'type' => 'boolean']],
+						[['id' => 'ends-soon-without-successor', 'inputEntries' => ['true', 'true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+				'nl-aanzegtermijn-bewaking' => [
+					'derive' => static fn (array $o): ?array => self::noticeInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'temporary', 'type' => 'boolean'], ['name' => 'ended', 'type' => 'boolean'], ['name' => 'pastDeadline', 'type' => 'boolean'], ['name' => 'notifiedInTime', 'type' => 'boolean']],
+						[['id' => 'notice-deadline-missed', 'inputEntries' => ['true', 'false', 'true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+				'nl-signaal-proeftijd-eindigt' => [
+					'derive' => static fn (array $o): ?array => self::windowInputs((string)($o['proeftijdEndDate'] ?? ''), self::PROBATION_WINDOW_DAYS),
+					'table' => $windowTable,
+				],
 			],
 			'BhvCertificering' => [
-				// bhv-organisatie -- expiring BHV-related certification is
-				// signalled for HR follow-up (herhalingscursus /
-				// herbeoordeling van de aanwijzing). Same hr-signals
-				// framework, same object-local shape as the two
-				// EmploymentContract predicates above -- no second alerting
-				// mechanism (design.md D1).
-				'nl-bhv-certificaat-verloopt' => static fn (array $o): bool => self::bhvCertificaatVerloeptSatisfied($o),
+				'nl-bhv-certificaat-verloopt' => [
+					'derive' => static fn (array $o): ?array => self::windowInputs((string)($o['certificaatGeldigTot'] ?? ''), self::BHV_WINDOW_DAYS),
+					'table' => $windowTable,
+				],
 			],
 		];
 
-	}//end checks()
+	}//end tables()
+
+	/**
+	 * A window table's input: whether the date falls between today and the
+	 * given number of days ahead. Null when the date does not read.
+	 *
+	 * @param string $date The date.
+	 * @param int    $days The window, in days.
+	 *
+	 * @return array{withinWindow: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function windowInputs(string $date, int $days): ?array {
+		$at = strtotime($date);
+		if ($at === false) {
+			return null;
+		}
+
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+
+		return ['withinWindow' => ($at >= $today && $at <= strtotime('+' . $days . ' days', $today))];
+
+	}//end windowInputs()
+
+	/**
+	 * The expiry table's inputs: whether the contract is temporary, whether it
+	 * ends inside the window, and whether a successor is on file. Null for a
+	 * temporary contract whose end date does not read.
+	 *
+	 * @param array<string, mixed> $o       The EmploymentContract.
+	 * @param array<string, mixed> $context Evaluation context; reads `signals.contractsByEmployeeId`.
+	 *
+	 * @return array{temporary: bool, withinWindow: bool, hasSuccessor: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function expiryInputs(array $o, array $context): ?array {
+		if ((string)($o['type'] ?? '') !== 'temporary') {
+			return ['temporary' => false, 'withinWindow' => false, 'hasSuccessor' => false];
+		}
+
+		$window = self::windowInputs((string)($o['endDate'] ?? ''), self::WINDOW_DAYS);
+		if ($window === null) {
+			return null;
+		}
+
+		return ['temporary' => true, 'withinWindow' => $window['withinWindow'], 'hasSuccessor' => ($window['withinWindow'] === true && self::hasSuccessor($o, $context) === true)];
+
+	}//end expiryInputs()
+
+	/**
+	 * The notice table's inputs: whether the contract is temporary, whether
+	 * its monitored term has ended, whether today is past the notice deadline,
+	 * and whether the aanzegging was given by that deadline. Null for a
+	 * temporary contract whose term is unreadable or too short to monitor.
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return array{temporary: bool, ended: bool, pastDeadline: bool, notifiedInTime: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function noticeInputs(array $o): ?array {
+		if ((string)($o['type'] ?? '') !== 'temporary') {
+			return ['temporary' => false, 'ended' => false, 'pastDeadline' => false, 'notifiedInTime' => false];
+		}
+
+		$endDate = self::monitoredTermEnd($o);
+		if ($endDate === null) {
+			return null;
+		}
+
+		$today = (new DateTimeImmutable('today'))->getTimestamp();
+		$deadline = strtotime('-' . self::NOTICE_MONTHS . ' months', $endDate);
+
+		return ['temporary' => true, 'ended' => ($endDate < $today), 'pastDeadline' => ($today > $deadline), 'notifiedInTime' => self::aanzegdBy($o, $deadline)];
+
+	}//end noticeInputs()
 
 	/**
 	 * {@inheritDoc}
@@ -382,5 +505,28 @@ final class NlSignalChecks implements CheckProvider {
 
 		return ($geldigTot >= $today && $geldigTot <= $windowEnd) === false;
 	}//end bhvCertificaatVerloeptSatisfied()
+
+	/**
+	 * The four signal closures as the engine registered them until tables()
+	 * took over. NlSignalTableParityTest replays its matrix through both;
+	 * this list is never handed to the engine.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-signaal-contract-verloopt' => static fn (array $o, array $context): bool => self::contractVerloeptSatisfied($o, $context),
+				'nl-aanzegtermijn-bewaking' => static fn (array $o): bool => self::aanzegtermijnSatisfied($o),
+				'nl-signaal-proeftijd-eindigt' => static fn (array $o): bool => self::proeftijdEindigtSatisfied($o),
+			],
+			'BhvCertificering' => [
+				'nl-bhv-certificaat-verloopt' => static fn (array $o): bool => self::bhvCertificaatVerloeptSatisfied($o),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
