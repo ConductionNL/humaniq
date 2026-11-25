@@ -23,6 +23,13 @@
  * existing seeded Employee (`isDga` absent -> `false` default) stays
  * vacuously compliant with no seed backfill needed.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the gebruikelijkloon rule is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -44,24 +51,54 @@ use OCA\Humaniq\Payroll\TaxTables;
 /**
  * The gebruikelijkloon-norm self-check: a DGA's annualised salary vs the
  * sourced 2026 floor.
+ *
+ * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
  */
-final class NlDgaChecks implements CheckProvider {
+final class NlDgaChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
+		return [];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-gebruikelijkloon-norm` as derivation + FIRST-hit decision table: an
+	 * unjustified DGA with a salary whose annualised amount is below the
+	 * loaded norm fails. For such a DGA, no salary or no norm table derives
+	 * null and passes.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
+	 */
+	public static function tables(): array {
 		return [
 			'Employee' => [
-				'nl-gebruikelijkloon-norm' => static fn (array $o): bool => self::meetsGebruikelijkloonNorm($o),
+				'nl-gebruikelijkloon-norm' => [
+					'derive' => static fn (array $o): ?array => self::normInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'dga', 'type' => 'boolean'], ['name' => 'justified', 'type' => 'boolean'], ['name' => 'shortfallCents', 'type' => 'number']],
+						[['id' => 'dga-below-norm', 'inputEntries' => ['true', 'false', '> 0'], 'outputEntries' => [false]]]
+					),
+				],
 			],
 		];
 
-	}//end checks()
+	}//end tables()
 
 	/**
 	 * {@inheritDoc}
@@ -124,5 +161,61 @@ final class NlDgaChecks implements CheckProvider {
 
 		return $annualCents >= $norm;
 	}//end meetsGebruikelijkloonNorm()
+
+	/**
+	 * The norm table's inputs: whether this is a DGA, whether a justification
+	 * is recorded, and how far the annualised salary falls short of the norm
+	 * (cents, zero or less when it meets it). Null when there is no numeric
+	 * salary or no norm table is loaded.
+	 *
+	 * @param array<string, mixed> $o The Employee.
+	 *
+	 * @return array{dga: bool, justified: bool, shortfallCents: int}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function normInputs(array $o): ?array {
+		$inputs = [
+			'dga' => (($o['isDga'] ?? false) === true),
+			'justified' => (trim((string)($o['gebruikelijkloonJustification'] ?? '')) !== ''),
+			'shortfallCents' => 0,
+		];
+		if ($inputs['dga'] === false || $inputs['justified'] === true) {
+			// The norm is not in play: no table is loaded for it.
+			return $inputs;
+		}
+
+		$grossMonthly = ($o['grossMonthlySalary'] ?? null);
+		$ids = TaxTables::availableIds();
+		if (is_numeric($grossMonthly) === false || $ids === []) {
+			return null;
+		}
+
+		$norm = TaxTables::load(max($ids))->gebruikelijkloon()['jaarnormCents'];
+		$inputs['shortfallCents'] = ($norm - (int)round(((float)$grossMonthly) * 12 * 100));
+
+		return $inputs;
+
+	}//end normInputs()
+
+	/**
+	 * The gebruikelijkloon closure from before the table: the oracle
+	 * NlDgaTableParityTest compares tables() with. It is never registered;
+	 * meetsGebruikelijkloonNorm() itself stays, PayrollController::dgaStatus()
+	 * reads it.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/dga-payroll-mode/spec.md#REQ-DGA-004
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'Employee' => [
+				'nl-gebruikelijkloon-norm' => static fn (array $o): bool => self::meetsGebruikelijkloonNorm($o),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

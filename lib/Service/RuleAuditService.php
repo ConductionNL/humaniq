@@ -623,10 +623,9 @@ class RuleAuditService implements RuleAuditServiceInterface {
 	 *
 	 * loonbeslag (design.md D6): also builds `loonbeslagenById`, the FULL
 	 * Loonbeslag row keyed by id -- the SAME `runsById` shape, consumed by
-	 * `NlWageGarnishmentChecks::checks()['Payslip']
-	 * ['nl-loonbeslag-beslagvrije-voet-floor']` (resolving a payslip's
-	 * `loonbeslagId` reference) and `['Loonbeslag']
-	 * ['nl-loonbeslag-single-active']` (scanning every OTHER Loonbeslag for
+	 * NlWageGarnishmentChecks' table-declared
+	 * `nl-loonbeslag-beslagvrije-voet-floor` (resolving a payslip's
+	 * `loonbeslagId` reference) and `nl-loonbeslag-single-active` (scanning every OTHER Loonbeslag for
 	 * the same employee's overlapping effective range) without either
 	 * predicate re-querying the register. Degrades gracefully to an empty map
 	 * when the Loonbeslag schema does not exist yet in the register.
