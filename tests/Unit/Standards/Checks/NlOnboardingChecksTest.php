@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlOnboardingChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -50,7 +51,10 @@ class NlOnboardingChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlOnboardingChecks::checks()['Onboarding'];
+		$this->checks = array_map(
+			static fn (callable $predicate): callable => static fn (array $o, array $c = []): bool => $predicate($o, $c),
+			TableCheckRegistry::checks([NlOnboardingChecks::class])['Onboarding']
+		);
 
 	}//end setUp()
 

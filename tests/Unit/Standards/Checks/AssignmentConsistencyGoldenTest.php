@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlAssetChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use OCA\Humaniq\Standards\Checks\NlOrgChecks;
 use PHPUnit\Framework\TestCase;
 
@@ -55,7 +56,7 @@ class AssignmentConsistencyGoldenTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheAssetIssueVerdictForEveryShape(): void {
-		$check = $this->predicate(NlAssetChecks::checks(), 'nl-asset-assignment-consistency');
+		$check = $this->predicate(TableCheckRegistry::checks([NlAssetChecks::class]), 'nl-asset-assignment-consistency');
 		$context = ['related' => ['Asset' => ['byId' => ['as-1' => ['status' => 'issued'], 'as-2' => ['status' => 'available'], 'as-3' => 'x']], 'Employee' => ['byId' => ['emp-1' => []]]]];
 		$issue = ['assetId' => 'as-1', 'employeeId' => 'emp-1', 'issuedOn' => '2026-01-10'];
 		$cases = [

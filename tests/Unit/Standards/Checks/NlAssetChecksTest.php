@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlAssetChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -50,7 +51,10 @@ class NlAssetChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlAssetChecks::checks()['AssetAssignment'];
+		$this->checks = array_map(
+			static fn (callable $predicate): callable => static fn (array $o, array $c = []): bool => $predicate($o, $c),
+			TableCheckRegistry::checks([NlAssetChecks::class])['AssetAssignment']
+		);
 
 	}//end setUp()
 

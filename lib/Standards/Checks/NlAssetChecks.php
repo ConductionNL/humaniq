@@ -31,6 +31,13 @@
  * exercises `nl-asset-assignment-consistency` -- lives in
  * lib/Settings/register.d/hr-seed.json (ADR-001), the NlOrgChecks precedent.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): each of the two asset-issue rules is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -53,34 +60,79 @@ use DateTimeImmutable;
 /**
  * Asset-custody integrity executable checks (assignment consistency +
  * offboarding asset return).
+ *
+ * @spec openspec/specs/asset-management/spec.md#REQ-AST-005
  */
-final class NlAssetChecks implements CheckProvider {
+final class NlAssetChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			'AssetAssignment' => [
-				// Administration-integrity control (mandatory) — coherent
-				// dates + an open uitgifte must resolve to an issued asset
-				// and a known employee.
-				'nl-asset-assignment-consistency' => static fn (array $o, array $c): bool => self::assignmentConsistent($o, $c),
-				// Administration-integrity control (recommended) — an open
-				// uitgifte should not outlive the employee's planned
-				// offboarding completion.
-				'nl-asset-inname-bij-offboarding' => static fn (array $o, array $c): bool => self::innameBijOffboardingSatisfied($o, $c),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Both AssetAssignment rules as derivation + FIRST-hit decision tables.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-005
+	 */
+	public static function tables(): array {
+		return [
+			'AssetAssignment' => [
+				'nl-asset-assignment-consistency' => [
+					'derive' => static fn (array $o, array $c): array => [
+						'returned' => (trim((string)($o['returnedOn'] ?? '')) !== ''),
+						'datesInOrder' => self::datesInOrder(from: trim((string)($o['issuedOn'] ?? '')), to: trim((string)($o['returnedOn'] ?? ''))),
+						'holdsIssuedAsset' => self::holdsIssuedAsset(o: $o, c: $c),
+						'employeeResolves' => self::employeeResolves(o: $o, c: $c),
+					],
+					'table' => self::satisfiedTable(
+						[
+							['name' => 'returned', 'type' => 'boolean'],
+							['name' => 'datesInOrder', 'type' => 'boolean'],
+							['name' => 'holdsIssuedAsset', 'type' => 'boolean'],
+							['name' => 'employeeResolves', 'type' => 'boolean'],
+						],
+						[
+							['id' => 'returned-before-issued', 'inputEntries' => ['true', 'false', '-', '-'], 'outputEntries' => [false]],
+							['id' => 'open-without-issued-asset', 'inputEntries' => ['false', '-', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'open-without-employee', 'inputEntries' => ['false', '-', '-', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				'nl-asset-inname-bij-offboarding' => [
+					'derive' => static fn (array $o, array $c): ?array => self::innameInputs($o, $c),
+					'table' => self::satisfiedTable(
+						[['name' => 'returned', 'type' => 'boolean'], ['name' => 'completionPassed', 'type' => 'boolean']],
+						[['id' => 'held-past-offboarding', 'inputEntries' => ['false', 'true'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-005
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -238,5 +290,75 @@ final class NlAssetChecks implements CheckProvider {
 		$byEmployeeId = ($c['related']['Offboarding']['plannedCompletionByEmployeeId'] ?? []);
 		return is_array($byEmployeeId) === true ? $byEmployeeId : [];
 	}//end relatedPlannedCompletionByEmployeeId()
+
+	/**
+	 * Whether the issue names an employee the Employee index knows.
+	 *
+	 * @param array<string, mixed> $o The AssetAssignment.
+	 * @param array<string, mixed> $c Evaluation context; reads the Employee index.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function employeeResolves(array $o, array $c): bool {
+		$employeeId = trim((string)($o['employeeId'] ?? ''));
+
+		return $employeeId !== '' && array_key_exists($employeeId, self::relatedEmployeesById($c)) === true;
+
+	}//end employeeResolves()
+
+	/**
+	 * The inname table's inputs, or null when the issue names no employee,
+	 * no offboarding resolves for them, or its planned completion cannot be
+	 * read (vacuous, as before).
+	 *
+	 * @param array<string, mixed> $o The AssetAssignment.
+	 * @param array<string, mixed> $c Evaluation context; reads the Offboarding index.
+	 *
+	 * @return array{returned: bool, completionPassed: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function innameInputs(array $o, array $c): ?array {
+		$employeeId = trim((string)($o['employeeId'] ?? ''));
+		$plannedCompletion = (self::relatedPlannedCompletionByEmployeeId($c)[$employeeId] ?? null);
+		$completion = ($plannedCompletion === null) ? false : strtotime((string)$plannedCompletion);
+		if ($employeeId === '' || $completion === false) {
+			return null;
+		}
+
+		return [
+			'returned' => (trim((string)($o['returnedOn'] ?? '')) !== ''),
+			'completionPassed' => ($completion < (new DateTimeImmutable('today'))->getTimestamp()),
+		];
+
+	}//end innameInputs()
+
+	/**
+	 * The asset-issue closures as they ran before the tables: the reference
+	 * NlAssetTableParityTest compares tables() with. Not registered; removed
+	 * once the OpenRegister audit run confirms the tables.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-005
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'AssetAssignment' => [
+				// Administration-integrity control (mandatory) — coherent
+				// dates + an open uitgifte must resolve to an issued asset
+				// and a known employee.
+				'nl-asset-assignment-consistency' => static fn (array $o, array $c): bool => self::assignmentConsistent($o, $c),
+				// Administration-integrity control (recommended) — an open
+				// uitgifte should not outlive the employee's planned
+				// offboarding completion.
+				'nl-asset-inname-bij-offboarding' => static fn (array $o, array $c): bool => self::innameBijOffboardingSatisfied($o, $c),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
