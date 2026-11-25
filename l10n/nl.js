@@ -732,7 +732,7 @@ OC.L10N.register(
         "No hours recorded on this item this week": "Deze week nog geen uren op dit item",
         "Record hours": "Uren vastleggen",
         "The hours could not be recorded.": "De uren konden niet worden vastgelegd.",
-        "{hours} h": "{hours} u",
+        "{hours} h": "{hours} uur",
         "Week {week} · {from} to {to} · {hours} on this item": "Week {week} · {from} tot en met {to} · {hours} op dit item",
         "Hours logged": "Geboekte uren",
         "Hours not worked": "Uren niet gewerkt",
