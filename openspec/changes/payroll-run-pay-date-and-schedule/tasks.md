@@ -3,7 +3,7 @@
 - [x] 1.1 Land a pay-date field (`paymentDayOfMonth`) on the administration surface, then an
       `openregister.wait` (or run-scoped FlowTimer) between approve and glpost in the Loonrun
       flow. (Was `payroll-run-as-a-flow` 7.1.)
-      Progress: `hrAdministration.paymentDayOfMonth` (schema 1.9.0, en/nl), `PayDate::forPeriod()` and `payroll.payDate` on the calculate node's outcome are in (`PayDateTest`, `PayrollCalculateNodeTest`). Done: the Loonrun's `payday` step (`openregister.wait`, `until: "{{ payroll.payDate }}"`) sits between approve and glpost now ConductionNL/openregister#11043 is on OpenRegister main; an empty pay date passes through (`PayrollFlowDeclarationTest::testAnApprovedRunWaitsForItsPayDateBeforeItIsPosted`). The v1 repair splices the step back out to recognise an untouched v1 import (`FlowGraphKeypaths::withoutStep()`, `LoonrunFlowRepairServiceTest`). Docs: `docs/payroll/loonrun-flow.md`.
+      Progress: `hrAdministration.paymentDayOfMonth` (schema 1.9.0, en/nl), `PayDate::forPeriod()` and `payroll.payDate` on the calculate node's outcome are in (`PayDateTest`, `PayrollCalculateNodeTest`). Done: the Loonrun's `payday` step (`openregister.wait`, `until: "{{ payroll.payDate }}"`) sits between approve and glpost now ConductionNL/openregister#11043 is on OpenRegister main; an empty pay date passes through (`PayrollFlowDeclarationTest::testAnApprovedRunWaitsForItsPayDateBeforeItIsPosted`). The v1 repair splices the step back out to recognise an untouched v1 import (`FlowStepSplicer::withoutStep()`, `LoonrunFlowRepairServiceTest`). Docs: `docs/payroll/loonrun-flow.md`.
 
 ## 2. Schedule adoption
 

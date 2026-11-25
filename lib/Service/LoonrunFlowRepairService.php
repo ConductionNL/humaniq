@@ -268,7 +268,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 
 		// v1 had no pay-day wait between approve and glpost; that step came
 		// later (payroll-run-pay-date-and-schedule) and is spliced back out.
-		$v1Graph = $this->keypaths->withoutStep(
+		$v1Graph = (new FlowStepSplicer())->withoutStep(
 			(array)($declaration['nodes'] ?? []),
 			(array)($declaration['edges'] ?? []),
 			self::PAY_DAY_STEP

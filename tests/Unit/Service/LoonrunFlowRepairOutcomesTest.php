@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\FlowGraphKeypaths;
+use OCA\Humaniq\Service\FlowStepSplicer;
 use OCA\Humaniq\Service\LoonrunFlowRepairService;
 use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCP\App\IAppManager;
@@ -76,7 +77,7 @@ class LoonrunFlowRepairOutcomesTest extends TestCase {
 	private static function v1Graph(): array {
 		$keypaths = new FlowGraphKeypaths();
 		$shipped = self::declaration();
-		$graph = $keypaths->withoutStep((array)$shipped['nodes'], (array)$shipped['edges'], LoonrunFlowRepairService::PAY_DAY_STEP);
+		$graph = (new FlowStepSplicer())->withoutStep((array)$shipped['nodes'], (array)$shipped['edges'], LoonrunFlowRepairService::PAY_DAY_STEP);
 
 		return ['nodes' => $keypaths->withV1OutcomePaths($graph['nodes'], $keypaths->outcomeKeys($graph['nodes'])), 'edges' => $graph['edges']];
 	}//end v1Graph()

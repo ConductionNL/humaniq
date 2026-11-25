@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\FlowGraphKeypaths;
+use OCA\Humaniq\Service\FlowStepSplicer;
 use OCA\Humaniq\Service\LoonrunFlowRepairService;
 use PHPUnit\Framework\TestCase;
 
@@ -216,12 +217,12 @@ class LoonrunFlowRepairServiceTest extends TestCase {
 
 		$this->assertSame(
 			['nodes' => [['id' => 'approve'], ['id' => 'glpost']], 'edges' => [['id' => 'e-commit', 'from' => 'approve', 'to' => 'glpost']]],
-			$this->keypaths()->withoutStep($nodes, $edges, 'payday')
+			(new FlowStepSplicer())->withoutStep($nodes, $edges, 'payday')
 		);
-		$this->assertSame(['nodes' => $nodes, 'edges' => $edges], $this->keypaths()->withoutStep($nodes, $edges, 'missing'));
+		$this->assertSame(['nodes' => $nodes, 'edges' => $edges], (new FlowStepSplicer())->withoutStep($nodes, $edges, 'missing'));
 
 		$branching = array_merge($edges, [['id' => 'e-other', 'from' => 'payday', 'to' => 'approve']]);
-		$this->assertSame(['nodes' => $nodes, 'edges' => $branching], $this->keypaths()->withoutStep($nodes, $branching, 'payday'));
+		$this->assertSame(['nodes' => $nodes, 'edges' => $branching], (new FlowStepSplicer())->withoutStep($nodes, $branching, 'payday'));
 	}//end testWithoutStepSplicesAPassThroughStepOut()
 
 }//end class

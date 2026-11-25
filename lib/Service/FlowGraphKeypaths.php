@@ -202,53 +202,6 @@ class FlowGraphKeypaths {
 	}//end sameStructure()
 
 	/**
-	 * A graph with one pass-through step spliced out: the node is dropped,
-	 * the edge into it is pointed at where the node's own outgoing edge went,
-	 * and that outgoing edge is dropped. Reconstructs a graph as it was
-	 * before the step was inserted (the Loonrun's v1 had no pay-day wait
-	 * between approve and glpost).
-	 *
-	 * A node with no single outgoing edge, or not in the graph, leaves the
-	 * graph unchanged.
-	 *
-	 * @param array<int, mixed> $nodes  The graph's nodes.
-	 * @param array<int, mixed> $edges  The graph's edges.
-	 * @param string            $nodeId The step to splice out.
-	 *
-	 * @return array{nodes: array<int, mixed>, edges: array<int, mixed>} The graph without the step.
-	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
-	 */
-	public function withoutStep(array $nodes, array $edges, string $nodeId): array {
-		$outgoing = array_values(
-			array_filter($edges, static fn ($edge): bool => is_array($edge) === true && ($edge['from'] ?? null) === $nodeId)
-		);
-		$kept = array_values(
-			array_filter($nodes, static fn ($node): bool => is_array($node) === false || ($node['id'] ?? null) !== $nodeId)
-		);
-		if (count($outgoing) !== 1 || count($kept) === count($nodes)) {
-			return ['nodes' => $nodes, 'edges' => $edges];
-		}
-
-		$next = $outgoing[0]['to'] ?? null;
-		$spliced = [];
-		foreach ($edges as $edge) {
-			if (is_array($edge) === true && ($edge['from'] ?? null) === $nodeId) {
-				continue;
-			}
-
-			if (is_array($edge) === true && ($edge['to'] ?? null) === $nodeId) {
-				$edge['to'] = $next;
-			}
-
-			$spliced[] = $edge;
-		}
-
-		return ['nodes' => $kept, 'edges' => $spliced];
-
-	}//end withoutStep()
-
-	/**
 	 * Collect `var` keypaths from one JSONLogic expression, recursively.
 	 *
 	 * @param mixed $logic The expression.
