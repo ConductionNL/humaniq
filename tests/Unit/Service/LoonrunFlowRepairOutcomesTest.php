@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\FlowGraphKeypaths;
+use OCA\Humaniq\Service\FlowStepSplicer;
 use OCA\Humaniq\Service\LoonrunFlowRepairService;
 use OCA\Humaniq\Service\OpenRegisterAvailability;
 use OCP\App\IAppManager;
@@ -66,6 +67,20 @@ class LoonrunFlowRepairOutcomesTest extends TestCase {
 
 		return $keypaths->withV1OutcomePaths($nodes, $keypaths->outcomeKeys($nodes));
 	}//end v1Nodes()
+
+	/**
+	 * The v1 import as it was published: the shipped graph without the
+	 * pay-day wait (added later), outcome keypaths in the v1 form.
+	 *
+	 * @return array{nodes: array<int, mixed>, edges: array<int, mixed>}
+	 */
+	private static function v1Graph(): array {
+		$keypaths = new FlowGraphKeypaths();
+		$shipped = self::declaration();
+		$graph = (new FlowStepSplicer())->withoutStep((array)$shipped['nodes'], (array)$shipped['edges'], LoonrunFlowRepairService::PAY_DAY_STEP);
+
+		return ['nodes' => $keypaths->withV1OutcomePaths($graph['nodes'], $keypaths->outcomeKeys($graph['nodes'])), 'edges' => $graph['edges']];
+	}//end v1Graph()
 
 	/**
 	 * A flow entity double.
@@ -187,7 +202,7 @@ class LoonrunFlowRepairOutcomesTest extends TestCase {
 	 */
 	public function testEveryStopKeepsItsAnswer(): void {
 		$shipped = self::declaration();
-		$v1 = ['nodes' => self::v1Nodes(), 'edges' => $shipped['edges']];
+		$v1 = self::v1Graph();
 
 		self::assertSame(['status' => 'skipped', 'detail' => 'OpenRegister is not installed or enabled.'], $this->service(false, null, null)->repair());
 		self::assertSame(['status' => 'skipped', 'detail' => 'The shipped Loonrun flow is not imported on this instance.'], $this->service(true, null, null)->repair());
@@ -206,7 +221,7 @@ class LoonrunFlowRepairOutcomesTest extends TestCase {
 	 */
 	public function testAnUntouchedV1IsRepublished(): void {
 		$shipped = self::declaration();
-		$v1 = ['nodes' => self::v1Nodes(), 'edges' => $shipped['edges']];
+		$v1 = self::v1Graph();
 
 		$clean = $this->flow('published', $shipped['nodes']);
 		self::assertSame(['status' => 'republished', 'detail' => 'Published Loonrun v3 with the gate reading the record keypath.'], $this->service(true, $clean, $v1)->repair());

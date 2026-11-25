@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Service;
 
 use OCA\Humaniq\Service\FlowGraphKeypaths;
+use OCA\Humaniq\Service\FlowStepSplicer;
 use OCA\Humaniq\Service\LoonrunFlowRepairService;
 use PHPUnit\Framework\TestCase;
 
@@ -197,5 +198,31 @@ class LoonrunFlowRepairServiceTest extends TestCase {
 			'A changed value must read as a modified graph'
 		);
 	}//end testSameStructureIgnoresKeyOrderAndCatchesEdits()
+
+	/**
+	 * Splicing a pass-through step out rewires the edge into it to where it
+	 * went and drops its own edge; a step that is absent or branches leaves
+	 * the graph as it was.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
+	 */
+	public function testWithoutStepSplicesAPassThroughStepOut(): void {
+		$nodes = [['id' => 'approve'], ['id' => 'payday'], ['id' => 'glpost']];
+		$edges = [
+			['id' => 'e-commit', 'from' => 'approve', 'to' => 'payday'],
+			['id' => 'e-payday', 'from' => 'payday', 'to' => 'glpost'],
+		];
+
+		$this->assertSame(
+			['nodes' => [['id' => 'approve'], ['id' => 'glpost']], 'edges' => [['id' => 'e-commit', 'from' => 'approve', 'to' => 'glpost']]],
+			(new FlowStepSplicer())->withoutStep($nodes, $edges, 'payday')
+		);
+		$this->assertSame(['nodes' => $nodes, 'edges' => $edges], (new FlowStepSplicer())->withoutStep($nodes, $edges, 'missing'));
+
+		$branching = array_merge($edges, [['id' => 'e-other', 'from' => 'payday', 'to' => 'approve']]);
+		$this->assertSame(['nodes' => $nodes, 'edges' => $branching], (new FlowStepSplicer())->withoutStep($nodes, $branching, 'payday'));
+	}//end testWithoutStepSplicesAPassThroughStepOut()
 
 }//end class
