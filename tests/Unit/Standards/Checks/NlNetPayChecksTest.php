@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlNetPayChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -48,7 +49,7 @@ class NlNetPayChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlNetPayChecks::checks()['Payslip'];
+		$this->checks = TableCheckRegistry::checks([NlNetPayChecks::class])['Payslip'];
 
 	}//end setUp()
 
