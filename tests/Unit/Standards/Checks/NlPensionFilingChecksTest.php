@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlPensionFilingChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -56,9 +57,10 @@ class NlPensionFilingChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$checks = NlPensionFilingChecks::checks();
-		$this->filingChecks = $checks['PensionFiling'];
-		$this->runChecks = $checks['PayrollRun'];
+		// Closure and table-declared checks together, as the engine merges them.
+		$tables = TableCheckRegistry::checks([NlPensionFilingChecks::class]);
+		$this->filingChecks = array_merge(NlPensionFilingChecks::checks()['PensionFiling'], $tables['PensionFiling']);
+		$this->runChecks = $tables['PayrollRun'];
 
 	}//end setUp()
 

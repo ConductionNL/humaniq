@@ -205,8 +205,8 @@ class RuleAuditService implements RuleAuditServiceInterface {
 		$context['related'] = $this->buildRelatedContext();
 
 		// payroll-glpost-shillinq: a per-run active-PayrollGLPost-count index so
-		// NlGlPostChecks::checks()['PayrollGLPost']['nl-glpost-idempotent-per-run']
-		// stays a pure fn(array $o, array $context) instead of re-querying siblings.
+		// NlGlPostChecks' table-declared nl-glpost-idempotent-per-run derives from
+		// (array $o, array $context) alone instead of re-querying siblings.
 		$context['glpost'] = $this->buildGlPostContext();
 
 		// filings-ib47 D3: the administration|year keys of sent ThirdPartyReports and
