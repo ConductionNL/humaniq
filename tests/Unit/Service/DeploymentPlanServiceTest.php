@@ -127,7 +127,9 @@ class DeploymentPlanServiceTest extends TestCase {
 		$this->assertNull($this->service()->normFor([['startDate' => '2019-08-01', 'cao' => 'cao-onderwijs-po']], '2026-2027'));
 
 		CaoRegistry::reset();
-		$this->assertNull((new DeploymentPlanService())->normFor([self::contract(40.0, '2019-08-01')], '2026-2027'), 'the shipped CAO PO figure is unverified');
+		$this->assertNull((new DeploymentPlanService())->normFor([self::contract(40.0, '2019-08-01', null, 'cao-onderwijs-vo')], '2026-2027'), 'the shipped CAO VO figure is unverified');
+		// The shipped CAO PO normjaartaak is verified against the CAO text (task 1.3), so it is used.
+		$this->assertSame(['hours' => 1659.0, 'source' => 'cao'], (new DeploymentPlanService())->normFor([self::contract(40.0, '2019-08-01')], '2026-2027'));
 	}//end testAnUnverifiedCaoFigureIsNotUsed()
 
 	/**

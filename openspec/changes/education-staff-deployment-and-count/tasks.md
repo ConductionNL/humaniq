@@ -9,8 +9,13 @@
 - [x] 1.2 Add `CaoRegistry::annualNormHours()`, null for unverified or placeholder values.
       Verify: unit test that today's CAO PO file answers null and a verified fixture answers
       1659.
-- [ ] 1.3 Verify the CAO PO normjaartaak against the PO-Raad CAO text and record the source.
+- [x] 1.3 Verify the CAO PO normjaartaak against the PO-Raad CAO text and record the source.
       Verify: the leaf's `verified` flips only with a primary-source citation in `source`.
+      Done 2026-11-25 against the Cao primair onderwijs 2025-2027 pdf on poraad.nl (geactualiseerde
+      tekst 5 maart 2026): Begrippen "Jaartaak" 1659 uur, art. 2.2 lid 6, art. 2.3 lid 6 (940 uur
+      lesgevende taken), art. 9.4 lid 4 (123 PDI-uren, replacing the former 83 + 40). The CAO
+      sets no opslagfactor percentage, so the 35-45% range was dropped. `CaoAnnualNormTest`
+      asserts the citation and the 1659 answer.
 - [x] 1.4 Add `DeploymentPlanService::normFor()`. Verify: unit test for a full-time contract,
       a 0.6 contract, and a contract starting in January (half the school year).
       Done as `normFor(array $contracts, string $schoolYear)`: it takes the teacher's

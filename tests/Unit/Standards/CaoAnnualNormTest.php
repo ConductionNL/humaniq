@@ -41,19 +41,25 @@ class CaoAnnualNormTest extends TestCase {
 	}//end setUp()
 
 	/**
-	 * Today's CAO PO file marks the normjaartaak unverified, so it answers null; an unknown CAO answers null.
+	 * The CAO PO normjaartaak is verified against the CAO text with its citation, so it answers 1659;
+	 * an unverified CAO and an unknown CAO answer null.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/education-staff-deployment-and-count/tasks.md#task-1.3
 	 */
-	public function testTodaysCaoPoAnswersNull(): void {
+	public function testTodaysCaoPoAnswers1659FromItsCitedSource(): void {
 		$leaf = CaoRegistry::get('cao-onderwijs-po')['workingTime'];
 		$this->assertSame(1659, $leaf['value']['normjaartaakUrenPerJaar'], 'the figure is in the file');
-		$this->assertFalse($leaf['verified']);
+		$this->assertTrue($leaf['verified']);
+		$this->assertFalse($leaf['placeholder']);
+		$this->assertStringContainsString('poraad.nl', $leaf['source'], 'verified only with a primary-source citation');
+		$this->assertStringContainsString('1659 uur', $leaf['source']);
 
-		$this->assertNull(CaoRegistry::annualNormHours('cao-onderwijs-po'));
+		$this->assertSame(1659.0, CaoRegistry::annualNormHours('cao-onderwijs-po'));
 		$this->assertNull(CaoRegistry::annualNormHours('cao-onderwijs-vo'));
 		$this->assertNull(CaoRegistry::annualNormHours('cao-does-not-exist'));
-	}//end testTodaysCaoPoAnswersNull()
+	}//end testTodaysCaoPoAnswers1659FromItsCitedSource()
 
 	/**
 	 * A verified fixture of the same leaf answers 1659.
