@@ -1,12 +1,13 @@
 <?php
 
 /**
- * Table/legacy parity for the converted payroll Employee rules (REQ-RULE-009).
+ * Table/legacy parity for the payroll Employee rules (REQ-RULE-009).
  *
- * Next conversion wave of rules-onto-or-decision-tables: the seven Employee
- * rules of NlPayrollChecks are declared decision tables, and their
+ * Next conversion wave of rules-onto-or-decision-tables: the seven payroll
+ * Employee rules, moved out of NlPayrollChecks into NlPayrollEmployeeChecks,
+ * are declared decision tables, and their
  * pre-conversion closures stay as the parity oracle
- * (`NlPayrollChecks::legacyChecks()`). This suite drives both over one pinned
+ * (`NlPayrollEmployeeChecks::legacyChecks()`). This suite drives both over one pinned
  * matrix per rule (flags true, false, truthy or absent; retention dates
  * before, at and after the 5-year line, unreadable or blank, with and without
  * an employment end; ruling rates, caps, terms relative to today and salaries
@@ -32,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Tests\Unit\Standards;
 
-use OCA\Humaniq\Standards\Checks\NlPayrollChecks;
+use OCA\Humaniq\Standards\Checks\NlPayrollEmployeeChecks;
 use OCA\Humaniq\Standards\TableCheckEvaluator;
 use PHPUnit\Framework\TestCase;
 
@@ -114,8 +115,8 @@ class NlPayrollTableParityTest extends TestCase {
 	 * @return void
 	 */
 	public function testTableAndLegacyVerdictsAgreeOnEveryFixture(): void {
-		$tables = NlPayrollChecks::tables()['Employee'];
-		$legacy = NlPayrollChecks::legacyChecks()['Employee'];
+		$tables = NlPayrollEmployeeChecks::tables()['Employee'];
+		$legacy = NlPayrollEmployeeChecks::legacyChecks()['Employee'];
 		$fixtures = $this->fixtures();
 
 		$this->assertSame(array_keys($legacy), array_keys($tables), 'every legacy rule has a table form and vice versa');
@@ -136,12 +137,14 @@ class NlPayrollTableParityTest extends TestCase {
 	}//end testTableAndLegacyVerdictsAgreeOnEveryFixture()
 
 	/**
-	 * No Employee rule stays registered as a closure.
+	 * No Employee rule stays registered as a closure, here or in
+	 * NlPayrollChecks.
 	 *
 	 * @return void
 	 */
 	public function testTheEmployeeRulesAreTableDeclaredOnly(): void {
-		$this->assertArrayNotHasKey('Employee', NlPayrollChecks::checks());
+		$this->assertSame([], NlPayrollEmployeeChecks::checks());
+		$this->assertArrayNotHasKey('Employee', \OCA\Humaniq\Standards\Checks\NlPayrollChecks::checks());
 
 	}//end testTheEmployeeRulesAreTableDeclaredOnly()
 
