@@ -13,10 +13,11 @@
  * structured fields declared in lib/Settings/register.d/hr-objects.json; the
  * seedObjects() samples satisfy every predicate keyed to their type.
  *
- * The Employee rules (ID-copy and loonheffingenverklaring retention, the
- * 30%-ruling, the A1 certificate) live in the sibling provider
- * NlPayrollEmployeeChecks as decision tables (rules-onto-or-decision-tables);
- * the Employee seed stays here with the other payroll samples.
+ * The Employee rules live in two sibling providers as decision tables
+ * (rules-onto-or-decision-tables): NlEmployeeDocumentChecks (ID-copy and
+ * loonheffingenverklaring retention, the A1 certificate) and
+ * NlThirtyPercentRulingChecks (the 30%-ruling); the Employee seed stays here
+ * with the other payroll samples.
  *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks

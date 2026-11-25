@@ -35,24 +35,24 @@ trait ReadsRecordedFields {
 	/**
 	 * True when an object field holds a non-empty value.
 	 *
-	 * @param array<string, mixed> $o Object.
+	 * @param array<string, mixed> $object Object.
 	 * @param string $key Field.
 	 *
 	 * @return bool
 	 */
-	private static function present(array $o, string $key): bool {
-		return isset($o[$key]) === true && trim((string)$o[$key]) !== '';
+	private static function present(array $object, string $key): bool {
+		return isset($object[$key]) === true && trim((string)$object[$key]) !== '';
 	}//end present()
 
 	/**
 	 * True when an object field holds a present, numeric value.
 	 *
-	 * @param array<string, mixed> $o Object.
+	 * @param array<string, mixed> $object Object.
 	 * @param string $key Field.
 	 *
 	 * @return bool
 	 */
-	private static function numeric(array $o, string $key): bool {
-		return isset($o[$key]) === true && $o[$key] !== '' && is_numeric($o[$key]) === true;
+	private static function numeric(array $object, string $key): bool {
+		return isset($object[$key]) === true && $object[$key] !== '' && is_numeric($object[$key]) === true;
 	}//end numeric()
 }//end trait
