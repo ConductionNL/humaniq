@@ -575,8 +575,17 @@ function checkJsCatalogue(locale, translations, failures) {
 		);
 	}
 
+	// English ships only the entries that differ from their key
+	// (scripts/build-l10n-js.js): the browser answers a missing key with the
+	// key itself, so an identity entry is bytes for nothing.
+	const expected =
+		locale === "en" || locale.startsWith("en_")
+			? Object.fromEntries(
+					Object.entries(translations).filter(([key, value]) => value !== key),
+				)
+			: translations;
 	const jsKeys = Object.keys(registered.pairs).sort();
-	const jsonKeys = Object.keys(translations).sort();
+	const jsonKeys = Object.keys(expected).sort();
 	if (jsKeys.join("\u0000") !== jsonKeys.join("\u0000")) {
 		const onlyJson = jsonKeys.filter((k) => jsKeys.includes(k) === false);
 		const onlyJs = jsKeys.filter((k) => jsonKeys.includes(k) === false);
@@ -588,7 +597,7 @@ function checkJsCatalogue(locale, translations, failures) {
 	}
 
 	for (const key of jsonKeys) {
-		if (registered.pairs[key] !== translations[key]) {
+		if (registered.pairs[key] !== expected[key]) {
 			failures.push(
 				`l10n/${locale}: "${key}" differs between the JS and JSON catalogues.`,
 			);

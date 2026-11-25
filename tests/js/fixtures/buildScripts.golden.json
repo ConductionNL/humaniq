@@ -129,8 +129,22 @@
 		"files": {
 			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
 			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
-			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
 			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
+			"l10n/nl.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hallo\"\n    },\n    \"nplurals=2; plural=(n > 1);\"\n)\n",
+			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
+			"l10n/README.md": "not a catalogue"
+		}
+	},
+	"l10n-js: English keeps only what changes a string": {
+		"status": 0,
+		"stdout": "  ✎ l10n/en.js written (2 keys)\n  ✎ l10n/nl.js written (1 keys)\n",
+		"stderr": "",
+		"files": {
+			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
+			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"share_expired\": \"This share has expired\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"share_expired\": \"This share has expired\"\n  }\n}",
 			"l10n/nl.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hallo\"\n    },\n    \"nplurals=2; plural=(n > 1);\"\n)\n",
 			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
 			"l10n/README.md": "not a catalogue"
@@ -143,7 +157,7 @@
 		"files": {
 			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
 			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
-			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
 			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
 			"l10n/nl.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hallo\"\n    },\n    \"nplurals=2; plural=(n > 1);\"\n)\n",
 			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
@@ -170,7 +184,7 @@
 		"files": {
 			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
 			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
-			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
 			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
 			"l10n/nl.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hallo\"\n    },\n    \"nplurals=2; plural=(n > 1);\"\n)\n",
 			"l10n/nl.json": "{\n  \"translations\": {\n    \"Hello\": \"Hallo\"\n  },\n  \"pluralForm\": \"nplurals=2; plural=(n > 1);\"\n}",
@@ -197,7 +211,7 @@
 		"stderr": "",
 		"files": {
 			"appinfo/info.xml": "<id>humaniq</id>",
-			"l10n/de.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/de.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
 			"l10n/de.json": "{\n  \"translations\": {}\n}"
 		}
 	},
@@ -217,7 +231,7 @@
 		"files": {
 			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
 			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
-			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
 			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
 			"l10n/nl.json": "{ nope",
 			"l10n/README.md": "not a catalogue"
@@ -230,7 +244,7 @@
 		"files": {
 			"appinfo/info.xml": "<info>\n\t<id> humaniq </id>\n</info>\n",
 			"l10n/.schema-l10n-baseline.json": "{\n  \"uncovered\": 3\n}",
-			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n        \"Hello\": \"Hello\",\n        \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
+			"l10n/en.js": "OC.L10N.register(\n    \"humaniq\",\n    {\n    },\n    \"nplurals=2; plural=(n != 1);\"\n)\n",
 			"l10n/en.json": "{\n  \"translations\": {\n    \"Hello\": \"Hello\",\n    \"Say \\\"hi\\\"\": \"Say \\\"hi\\\"\"\n  }\n}",
 			"l10n/nl.json": "{\n  \"pluralForm\": \"x\"\n}",
 			"l10n/README.md": "not a catalogue"
