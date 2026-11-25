@@ -73,14 +73,16 @@ class NlOpeningBalanceChecksTest extends TestCase {
 	}//end testAMidYearStartWithoutABalanceIsFlaggedOnItsFirstPayslip()
 
 	/**
-	 * Both rules are registered on Payslip.
+	 * Both rules are table-declared on Payslip; no closure is registered.
 	 *
 	 * @return void
 	 */
-	public function testBothRulesAreRegisteredOnPayslip(): void {
-		self::assertSame(['nl-openingsbalans-overlap', 'nl-openingsbalans-ontbreekt'], array_keys(NlOpeningBalanceChecks::checks()['Payslip']));
+	public function testBothRulesAreTableDeclaredOnPayslip(): void {
+		self::assertSame(['nl-openingsbalans-overlap', 'nl-openingsbalans-ontbreekt'], array_keys(NlOpeningBalanceChecks::tables()['Payslip']));
+		self::assertSame(['nl-openingsbalans-overlap', 'nl-openingsbalans-ontbreekt'], array_keys(NlOpeningBalanceChecks::legacyChecks()['Payslip']));
+		self::assertSame([], NlOpeningBalanceChecks::checks());
 		self::assertSame([], NlOpeningBalanceChecks::seedSpec());
-	}//end testBothRulesAreRegisteredOnPayslip()
+	}//end testBothRulesAreTableDeclaredOnPayslip()
 
 	/**
 	 * A payslip of emp-1.
