@@ -289,10 +289,11 @@ class TimeEntryController extends Controller {
 	 * @return bool
 	 */
 	private static function isDay(string $day): bool {
-		$parts = [];
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $day, $parts) !== 1) {
+			return false;
+		}
 
-		return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $day, $parts) === 1
-			&& checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === true;
+		return checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === true;
 	}//end isDay()
 
 	/**
