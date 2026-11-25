@@ -24,3 +24,13 @@ test('keeps a line without the mark as one plain part, and an empty line as none
 	assert.deepEqual(weekLineParts('Week 41', '2 h'), [{ text: 'Week 41', strong: false }])
 	assert.deepEqual(weekLineParts('', '2 h'), [])
 })
+
+test('the Dutch catalogue writes the hours as "uur", as the board and the spec read', async () => {
+	const { readFile } = await import('node:fs/promises')
+	const nl = JSON.parse(await readFile(new URL('../../l10n/nl.json', import.meta.url), 'utf8'))
+	assert.equal(nl.translations['{hours} h'], '{hours} uur')
+	assert.equal(
+		nl.translations['Week {week} · {from} to {to} · {hours} on {object}'].endsWith('{hours} op {object}'),
+		true,
+	)
+})
