@@ -104,7 +104,7 @@ test.describe('the setup recap', () => {
 	let previous: string | null = null
 
 	test.beforeAll(async () => {
-		admin = await request.newContext({ httpCredentials: ADMIN_CREDENTIALS, storageState: { cookies: [], origins: [] } })
+		admin = await request.newContext({ httpCredentials: { ...ADMIN_CREDENTIALS, send: 'always' }, storageState: { cookies: [], origins: [] } })
 		const read = await admin.get(`${CONFIG_URL}?format=json`, { headers: OCS })
 		if (read.ok()) {
 			const data = (await read.json())?.ocs?.data

@@ -129,3 +129,17 @@
         button reads "Afronden" where REQ-FTS-011 and the board say "Inrichting afronden".
       - Seven steps with Welkom first and the example data second, the board's six without
         Welkom: decided in design D2 (hydra ADR-111 rule 4 outranks the board), not a defect.
+      Re-check 2026-11-25 on a sandbox Nextcloud 34.0.6 (MariaDB, OpenRegister main 0b78bd2c,
+      humaniq #1353 head 27002ac0, nextcloud-vue 2.232.1), reader language Dutch, every step walked
+      with an answer picked (screenshot `docs/static/img/screenshots/setup-wizard-klaar-nl.png`):
+      - Now matches the board: the health line "Controle geslaagd: register geïmporteerd met 109
+        schema's, achtergrondtaken draaien, loonpakket 2026 geladen." under the recap (the board's
+        54 is the schema count of its day), a full "Wijzigen" per row, and the finish button
+        "Inrichting afronden" between Annuleren and Terug.
+      - Still off: the recap rows are not columns. Every row sizes its own answer cell, so the
+        answers do not line up and a short cell breaks inside a word ("Niet ingestel d"); the board
+        draws label, answer, explanation and Wijzigen as aligned columns. nextcloud-vue
+        (`CnSetupWizard` summary rows), built as a dependency next.
+      - The Wijzigen spec (5.1) needed `send: 'always'` on its admin request context: Nextcloud's
+        OCS 401 carries no Basic challenge, so Playwright never sent the credentials and the
+        provisioning call to clear `default_language` failed with 401 before the walk began.
