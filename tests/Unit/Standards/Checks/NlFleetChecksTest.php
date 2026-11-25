@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlFleetChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
@@ -60,7 +61,8 @@ class NlFleetChecksTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		RuleEngine::reset();
-		$this->checks = NlFleetChecks::checks();
+		// Closure and table-declared checks together, as the engine merges them.
+		$this->checks = array_merge(NlFleetChecks::checks(), TableCheckRegistry::checks([NlFleetChecks::class]));
 
 	}//end setUp()
 

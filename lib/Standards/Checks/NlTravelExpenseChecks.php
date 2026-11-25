@@ -26,6 +26,13 @@
  * loonheffing on the bovenmatige (excess) vergoeding -- named as a follow-up
  * in design.md.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the onbelaste-kilometervergoeding rule is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -46,8 +53,12 @@ use OCA\Humaniq\Standards\RuleCatalogue;
 
 /**
  * Dutch onbelaste-kilometervergoeding executable check for Expense.
+ *
+ * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
  */
-final class NlTravelExpenseChecks implements CheckProvider {
+final class NlTravelExpenseChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * The corpus rule id this provider enforces.
@@ -59,24 +70,53 @@ final class NlTravelExpenseChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			'Expense' => [
-				// Wet LB 1964 art. 31a lid 2 -- a mileage claim reimbursed at more
-				// than the onbelaste kilometervergoeding per km is a violation;
-				// vacuous outside the mileage scope or when the rate is unreadable.
-				self::RULE_ID => static fn (array $o): bool => self::onbelastTariefSatisfied($o),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * The mileage rule as derivation + FIRST-hit decision table: a business
+	 * or commute travel claim paid tax-free above the per-km rate fails. A
+	 * claim without a usable distance and amount, or with no readable rate,
+	 * derives null and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
+	 */
+	public static function tables(): array {
+		return [
+			'Expense' => [
+				// Wet LB 1964 art. 31a lid 2 -- a mileage claim reimbursed at more
+				// than the onbelaste kilometervergoeding per km is a violation.
+				self::RULE_ID => [
+					'derive' => static fn (array $o): ?array => self::mileageInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'mileageClaim', 'type' => 'boolean'], ['name' => 'withinRate', 'type' => 'boolean']],
+						[['id' => 'mileage-above-rate', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -200,5 +240,50 @@ final class NlTravelExpenseChecks implements CheckProvider {
 	private static function perKmWithinRate(float $perKm, float $rate): bool {
 		return (int)round($perKm * 100) <= (int)round($rate * 100);
 	}//end perKmWithinRate()
+
+	/**
+	 * The mileage table's inputs, or null when the claim has no usable
+	 * distance and amount or the rate cannot be read.
+	 *
+	 * @param array<string, mixed> $o The Expense.
+	 *
+	 * @return array{mileageClaim: bool, withinRate: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function mileageInputs(array $o): ?array {
+		$rateEurPerKm = self::rateEurPerKm();
+		if (self::hasDistanceAndAmount(o: $o) === false || $rateEurPerKm === null) {
+			return null;
+		}
+
+		return [
+			'mileageClaim' => self::isMileageClaim(o: $o),
+			'withinRate' => self::perKmWithinRate((self::taxFreePaid(o: $o) / (float)$o['distanceKm']), $rateEurPerKm),
+		];
+
+	}//end mileageInputs()
+
+	/**
+	 * The mileage closure from before its table, held as the reference
+	 * NlTravelExpenseTableParityTest compares with; never registered, and
+	 * dropped after the OpenRegister audit run.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'Expense' => [
+				// Wet LB 1964 art. 31a lid 2 -- a mileage claim reimbursed at more
+				// than the onbelaste kilometervergoeding per km is a violation;
+				// vacuous outside the mileage scope or when the rate is unreadable.
+				self::RULE_ID => static fn (array $o): bool => self::onbelastTariefSatisfied($o),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
