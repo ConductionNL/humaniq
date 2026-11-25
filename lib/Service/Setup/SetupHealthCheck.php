@@ -66,7 +66,6 @@ class SetupHealthCheck {
 	 * @param SettingsService    $settings  Names humaniq's register and says whether OpenRegister is on.
 	 * @param IAppConfig         $appConfig Holds Nextcloud's last background job run.
 	 * @param ITimeFactory       $time      The current time.
-	 * @param IL10N              $l10n      Translates the check labels the Klaar step shows.
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 */
@@ -75,18 +74,19 @@ class SetupHealthCheck {
 		private readonly SettingsService $settings,
 		private readonly IAppConfig $appConfig,
 		private readonly ITimeFactory $time,
-		private readonly IL10N $l10n,
 	) {
 	}//end __construct()
 
 	/**
 	 * Run the check.
 	 *
+	 * @param IL10N $l10n Translates the check labels the Klaar step shows.
+	 *
 	 * @return array{passed:bool,ok:bool,schemas:int,backgroundJobs:bool,payrollTablesYear:int|null,failures:array<int,string>,checks:array<int,array{id:string,ok:bool,label:string}>,message:string}
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 */
-	public function check(): array {
+	public function check(IL10N $l10n): array {
 		$schemas = $this->schemaCount();
 		$jobs    = $this->backgroundJobsRun();
 		$year    = self::latestYear(ids: TaxTables::availableIds());
@@ -95,7 +95,7 @@ class SetupHealthCheck {
 			schemas: $schemas,
 			backgroundJobs: $jobs,
 			payrollTablesYear: $year,
-			translate: fn (string $text, array $params): string => $this->l10n->t($text, $params),
+			translate: static fn (string $text, array $params): string => $l10n->t($text, $params),
 		);
 	}//end check()
 

@@ -48,6 +48,7 @@ import CalendarMultiselectOutline from "vue-material-design-icons/CalendarMultis
 import CalendarRange from "vue-material-design-icons/CalendarRange.vue";
 import CalendarRemoveOutline from "vue-material-design-icons/CalendarRemoveOutline.vue";
 import CalendarStarOutline from "vue-material-design-icons/CalendarStarOutline.vue";
+import CalendarSync from "vue-material-design-icons/CalendarSync.vue";
 import CalendarSyncOutline from "vue-material-design-icons/CalendarSyncOutline.vue";
 import CalendarWeek from "vue-material-design-icons/CalendarWeek.vue";
 import CalendarWeekendOutline from "vue-material-design-icons/CalendarWeekendOutline.vue";
@@ -179,6 +180,7 @@ export default {
 	CalendarRange,
 	CalendarRemoveOutline,
 	CalendarStarOutline,
+	CalendarSync,
 	CalendarSyncOutline,
 	CalendarWeek,
 	CalendarWeekendOutline,

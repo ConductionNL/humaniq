@@ -39,11 +39,10 @@ class SetupHealthCheckTest extends TestCase {
 	 * @param integer               $lastCron  The epoch of the last background job run.
 	 * @param boolean               $available Whether OpenRegister is on.
 	 * @param array<int,mixed>      $asked     Collects the arguments `find` was called with.
-	 * @param array<string,string> $catalogue Translations by template.
 	 *
 	 * @return SetupHealthCheck
 	 */
-	private function check(?array $schemas, int $lastCron, bool $available = true, array &$asked = [], array $catalogue = []): SetupHealthCheck {
+	private function check(?array $schemas, int $lastCron, bool $available = true, array &$asked = []): SetupHealthCheck {
 		$mapper = new class ($schemas, $asked) {
 
 			/**
@@ -95,13 +94,15 @@ class SetupHealthCheckTest extends TestCase {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1_800_000_000);
 
-		return new SetupHealthCheck($container, $settings, $appConfig, $time, $this->l10n($catalogue));
+		return new SetupHealthCheck($container, $settings, $appConfig, $time);
 	}
 
 	/**
 	 * An IL10N that fills the template in English, as Nextcloud does without a catalogue entry.
 	 *
 	 * @param array<string,string> $catalogue Translations by template.
+	 *
+	 * @return IL10N
 	 */
 	private function l10n(array $catalogue = []): IL10N {
 		$l10n = $this->createMock(IL10N::class);
@@ -112,7 +113,7 @@ class SetupHealthCheckTest extends TestCase {
 
 	public function testAHealthyInstallPassesAndNamesWhatItFound(): void {
 		$asked = [];
-		$report = $this->check(array_fill(0, 54, 1), 1_800_000_000 - 300, true, $asked)->check();
+		$report = $this->check(array_fill(0, 54, 1), 1_800_000_000 - 300, true, $asked)->check($this->l10n());
 
 		$this->assertTrue($report['passed']);
 		$this->assertSame(54, $report['schemas']);
@@ -136,6 +137,8 @@ class SetupHealthCheckTest extends TestCase {
 	 * The rows the wizard's health line names carry the failing wording for what failed.
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/tasks.md#task-5.2
+	 *
+	 * @return void
 	 */
 	public function testEachCheckRowSaysWhatItFound(): void {
 		$report = SetupHealthCheck::report(schemas: 12, backgroundJobs: false, payrollTablesYear: null);
@@ -152,6 +155,8 @@ class SetupHealthCheckTest extends TestCase {
 	 * A Dutch reader reads the board's wording.
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/tasks.md#task-5.2
+	 *
+	 * @return void
 	 */
 	public function testTheCheckRowsAreTranslated(): void {
 		$catalogue = [
@@ -160,7 +165,7 @@ class SetupHealthCheckTest extends TestCase {
 			'payroll tables %1$s loaded'          => 'loonpakket %1$s geladen',
 		];
 		$asked  = [];
-		$report = $this->check(array_fill(0, 54, 1), 1_800_000_000 - 300, true, $asked, $catalogue)->check();
+		$report = $this->check(array_fill(0, 54, 1), 1_800_000_000 - 300, true, $asked)->check($this->l10n($catalogue));
 
 		$this->assertSame(
 			['register geïmporteerd met 54 schema\'s', 'achtergrondtaken draaien', 'loonpakket 2026 geladen'],
@@ -169,7 +174,7 @@ class SetupHealthCheckTest extends TestCase {
 	}
 
 	public function testAFailedImportIsReportedAsFailed(): void {
-		$report = $this->check(null, 1_800_000_000 - 300)->check();
+		$report = $this->check(null, 1_800_000_000 - 300)->check($this->l10n());
 
 		$this->assertFalse($report['passed']);
 		$this->assertSame(0, $report['schemas']);
@@ -179,7 +184,7 @@ class SetupHealthCheckTest extends TestCase {
 	}
 
 	public function testAnEmptyRegisterCountsAsAFailedImport(): void {
-		$report = $this->check([], 1_800_000_000)->check();
+		$report = $this->check([], 1_800_000_000)->check($this->l10n());
 
 		$this->assertFalse($report['passed']);
 		$this->assertContains('the register was not imported', $report['failures']);
@@ -187,7 +192,7 @@ class SetupHealthCheckTest extends TestCase {
 
 	public function testWithoutOpenRegisterTheImportFailsAndNoLookupIsMade(): void {
 		$asked = [];
-		$report = $this->check([1, 2], 1_800_000_000, false, $asked)->check();
+		$report = $this->check([1, 2], 1_800_000_000, false, $asked)->check($this->l10n());
 
 		$this->assertFalse($report['passed']);
 		$this->assertSame(0, $report['schemas']);
@@ -195,7 +200,7 @@ class SetupHealthCheckTest extends TestCase {
 	}
 
 	public function testStaleBackgroundJobsFailTheCheck(): void {
-		$report = $this->check([1], 1_800_000_000 - SetupHealthCheck::CRON_MAX_AGE - 1)->check();
+		$report = $this->check([1], 1_800_000_000 - SetupHealthCheck::CRON_MAX_AGE - 1)->check($this->l10n());
 
 		$this->assertFalse($report['passed']);
 		$this->assertFalse($report['backgroundJobs']);
@@ -203,13 +208,13 @@ class SetupHealthCheckTest extends TestCase {
 	}
 
 	public function testBackgroundJobsJustWithinTheHourStillRun(): void {
-		$report = $this->check([1], 1_800_000_000 - SetupHealthCheck::CRON_MAX_AGE)->check();
+		$report = $this->check([1], 1_800_000_000 - SetupHealthCheck::CRON_MAX_AGE)->check($this->l10n());
 
 		$this->assertTrue($report['backgroundJobs']);
 	}
 
 	public function testBackgroundJobsThatNeverRanFailTheCheck(): void {
-		$report = $this->check([1], 0)->check();
+		$report = $this->check([1], 0)->check($this->l10n());
 
 		$this->assertFalse($report['backgroundJobs']);
 	}
@@ -271,7 +276,7 @@ class SetupHealthCheckTest extends TestCase {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1_800_000_000);
 
-		$report = (new SetupHealthCheck($container, $settings, $appConfig, $time, $this->l10n()))->check();
+		$report = (new SetupHealthCheck($container, $settings, $appConfig, $time))->check($this->l10n());
 
 		$this->assertFalse($report['passed']);
 		$this->assertSame(0, $report['schemas']);

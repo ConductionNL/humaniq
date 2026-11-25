@@ -43,7 +43,7 @@ class SetupControllerTest extends TestCase {
 			$this->demoData,
 			$this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class),
 			$this->createMock(\OCP\IUserSession::class),
-			new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class))
+			new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class), $this->createMock(\OCP\IL10N::class))
 		);
 	}
 
@@ -76,7 +76,7 @@ class SetupControllerTest extends TestCase {
 			$this->demoData,
 			$this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class),
 			$this->createMock(\OCP\IUserSession::class),
-			new \OCA\Humaniq\Service\Setup\SetupStepServices($health, $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class))
+			new \OCA\Humaniq\Service\Setup\SetupStepServices($health, $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class), $this->createMock(\OCP\IL10N::class))
 		);
 
 		$data = $controller->status()->getData();
@@ -219,7 +219,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParam')->willReturn('no-such-set');
 		$this->demoData->method('listChoices')->willReturn([['id' => 'none'], ['id' => 'humaniq-demo']]);
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class)));
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class), $this->createMock(\OCP\IL10N::class)));
 		$this->appConfig->expects($this->never())->method('setValueString');
 
 		$res = $controller->saveConfig();
@@ -246,7 +246,7 @@ class SetupControllerTest extends TestCase {
                 return true;
             });
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class)));
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class), $this->createMock(\OCP\IL10N::class)));
 		$res = $controller->saveConfig();
 
 		$this->assertTrue($res->getData()['success']);
@@ -263,7 +263,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParams')->willReturn(['some_other_key' => 'value']);
 		$this->demoData->expects($this->never())->method('listChoices');
 
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class)));
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class), $this->createMock(\OCP\IL10N::class)));
 
 		$this->assertTrue($controller->saveConfig()->getData()['success']);
 	}
@@ -348,7 +348,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParam')
 			->willReturnCallback(static fn (string $key) => ($params[$key] ?? null));
 
-		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class)));
+		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class), $this->createMock(\OCP\IL10N::class)));
 	}
 
 	/**
@@ -427,7 +427,7 @@ class SetupControllerTest extends TestCase {
 			$session->method('getUser')->willReturn($user);
 		}
 
-		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $setup, $session, new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class)));
+		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $setup, $session, new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $this->createMock(\OCA\Humaniq\Service\Setup\SetupTemplates::class), $this->createMock(\OCP\IL10N::class)));
 	}
 
 	public function testCreateAdministrationsCreatesForTheSignedInAdministrator(): void {
@@ -709,7 +709,7 @@ class SetupControllerTest extends TestCase {
 		$request->method('getParam')
 			->willReturnCallback(static fn (string $key) => ($params[$key] ?? null));
 
-		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $templates));
+		return new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->createMock(\OCA\Humaniq\Service\Setup\SetupAdministrations::class), $this->createMock(\OCP\IUserSession::class), new \OCA\Humaniq\Service\Setup\SetupStepServices($this->createMock(SetupHealthCheck::class), $templates, $this->createMock(\OCP\IL10N::class)));
 	}
 
 	/**

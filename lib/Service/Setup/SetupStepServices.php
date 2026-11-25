@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Service\Setup;
 
+use OCP\IL10N;
+
 /**
  * The Sjablonen step and the Klaar step's health check.
  *
@@ -35,12 +37,14 @@ final class SetupStepServices {
 	 *
 	 * @param SetupHealthCheck $healthCheck The Klaar step's health check.
 	 * @param SetupTemplates   $templates   The Sjablonen step.
+	 * @param IL10N            $l10n        Translates what the steps report, such as the health check rows.
 	 *
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-setup-wizard-shall-offer-a-sjablonen-step-that-installs-chosen-sets-req-fts-007
 	 */
 	public function __construct(
 		public readonly SetupHealthCheck $healthCheck,
 		public readonly SetupTemplates $templates,
+		public readonly IL10N $l10n,
 	) {
 	}//end __construct()
 }//end class
