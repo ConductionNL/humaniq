@@ -26,6 +26,13 @@
  * compares with. The GL reconciliation recomputes the run totals and
  * compares cents, so it stays a closure.
  *
+ * Nine Payslip rules live in sibling providers as decision tables:
+ * NlPayslipWithholdingChecks (loonheffing, volksverzekeringen,
+ * werknemersverzekeringen, both Zvw rates) and NlPayslipStatementChecks
+ * (anoniementarief, the two WKR rules, the loonstrook content). The Awf
+ * hours review, the vakantiebijslag reservation and the 30%-exemption
+ * amount recompute a figure and compare, so they stay closures here.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -160,17 +167,6 @@ final class NlPayrollChecks implements CheckProvider, ProvidesTables, SeedsObjec
 			// contracted hours a week or less, paid more than 30% above the contract
 			// this year so far, is heading for the review (filings-premium-differentiation).
 			'nl-awf-herziening-uren-signaal' => self::awfHoursWithinLine(...),
-			// Wet LB 1964 art. 27 — a loonheffing must be withheld at each payment.
-			'nl-loonheffingen-inhouding' => self::loonheffingWithheld(...),
-			// Wfsv / art. 27b — premie volksverzekeringen is levied inside the combined
-			// loonheffing, so it must be present and not exceed the total loonheffing.
-			'nl-loonheffingen-volksverzekeringen' => self::volksverzekeringenWithinLoonheffing(...),
-			// Wfsv — employer-borne werknemersverzekeringen (WW/WIA/ZW) over the wage.
-			'nl-werknemersverzekeringen-werkgever' => self::werknemersverzekeringenPresent(...),
-			// Zvw werkgeversheffing — when the employer-levy mode applies, the 2026 rate is 6,10%.
-			'nl-zvw-werkgeversheffing' => self::zvwWerkgeversheffingAtRate(...),
-			// Zvw ingehouden bijdrage — when the withheld mode applies, the 2026 rate is 4,85%.
-			'nl-zvw-inhouding' => self::zvwInhoudingAtRate(...),
 		];
 
 	}//end payslipWithholdingChecks()
@@ -182,21 +178,9 @@ final class NlPayrollChecks implements CheckProvider, ProvidesTables, SeedsObjec
 	 */
 	private static function payslipStatementChecks(): array {
 		return [
-			// Wet LB 1964 art. 26b — the anoniementarief is exactly 52% when applied, and
-			// the effective applied rate must be consistent with that flag.
-			'nl-anoniementarief' => self::anoniementariefConsistent(...),
 			// WML art. 15 — vakantiebijslag is at least 8% of gross, and the reserved
 			// amount reconciles to that rate applied to the gross pay (to the cent).
 			'nl-vakantiebijslag-8procent' => self::vakantiebijslagReserved(...),
-			// Werkkostenregeling — designated allowances charged to the vrije ruimte may
-			// not push the remaining ruimte negative without recording the excess.
-			'nl-wkr-vrije-ruimte' => self::wkrVrijeRuimteCovered(...),
-			// Wet LB 1964 art. 31a — any WKR excess over the vrije ruimte carries an
-			// 80% eindheffing; no excess means no eindheffing is owed.
-			'nl-wkr-eindheffing-80' => self::wkrEindheffingAtRate(...),
-			// BW 7:626 lid 1 — the payslip must state gross wage, deduction basis, the
-			// applicable minimum wage, and employer/employee identification.
-			'nl-loonstrook-inhoud' => self::loonstrookComplete(...),
 			// Wet LB 1964 art. 31a (aftopping WNT-norm) — the recorded 30%-ruling
 			// exemption re-derives cents-exact from the WNT-capped formula
 			// (30-procent-regeling): the NUMERIC enforcement the boolean-only
@@ -246,87 +230,6 @@ final class NlPayrollChecks implements CheckProvider, ProvidesTables, SeedsObjec
 	}//end payrollRunChecks()
 
 	/**
-	 * Whether a non-negative loonheffing is withheld.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function loonheffingWithheld(array $o): bool {
-		return self::numeric($o, 'loonheffing') && ((float)$o['loonheffing']) >= 0.0;
-
-	}//end loonheffingWithheld()
-
-	/**
-	 * Whether the volksverzekeringen premium is present and within the loonheffing.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function volksverzekeringenWithinLoonheffing(array $o): bool {
-		return self::numeric($o, 'volksverzekeringen')
-			&& self::numeric($o, 'loonheffing')
-			&& ((float)$o['volksverzekeringen']) >= 0.0
-			&& ((float)$o['volksverzekeringen']) <= ((float)$o['loonheffing']);
-
-	}//end volksverzekeringenWithinLoonheffing()
-
-	/**
-	 * Whether a non-negative employer werknemersverzekeringen amount is present.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function werknemersverzekeringenPresent(array $o): bool {
-		return self::numeric($o, 'werknemersverzekeringen')
-			&& ((float)$o['werknemersverzekeringen']) >= 0.0;
-
-	}//end werknemersverzekeringenPresent()
-
-	/**
-	 * Whether the employer-levy Zvw mode, when it applies, uses the 6,10% rate.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function zvwWerkgeversheffingAtRate(array $o): bool {
-		return ((string)($o['zvwMode'] ?? '') !== 'werkgeversheffing')
-			|| (self::numeric($o, 'zvwRate') && self::ratesEqual((float)$o['zvwRate'], 6.10) && self::numeric($o, 'zvw'));
-
-	}//end zvwWerkgeversheffingAtRate()
-
-	/**
-	 * Whether the withheld Zvw mode, when it applies, uses the 4,85% rate.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function zvwInhoudingAtRate(array $o): bool {
-		return ((string)($o['zvwMode'] ?? '') !== 'inhouding')
-			|| (self::numeric($o, 'zvwRate') && self::ratesEqual((float)$o['zvwRate'], 4.85) && self::numeric($o, 'zvw'));
-
-	}//end zvwInhoudingAtRate()
-
-	/**
-	 * Whether the applied tax rate agrees with the anoniementarief flag.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function anoniementariefConsistent(array $o): bool {
-		return self::numeric($o, 'appliedTaxRate')
-			&& ((($o['anoniementariefApplied'] ?? false) === true)
-			? self::ratesEqual((float)$o['appliedTaxRate'], 52.0)
-			: ((float)$o['appliedTaxRate']) < 52.0);
-
-	}//end anoniementariefConsistent()
-
-	/**
 	 * Whether the vakantiebijslag rate is at least 8% and the reserve matches it.
 	 *
 	 * @param array<string, mixed> $o The Payslip.
@@ -339,47 +242,6 @@ final class NlPayrollChecks implements CheckProvider, ProvidesTables, SeedsObjec
 			&& self::centsEqual((float)($o['vakantiegeldReserved'] ?? 0), (((float)($o['grossPay'] ?? 0)) * ((float)$o['vakantiegeldRate']) / 100));
 
 	}//end vakantiebijslagReserved()
-
-	/**
-	 * Whether the remaining vrije ruimte is non-negative or the excess is recorded.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function wkrVrijeRuimteCovered(array $o): bool {
-		return self::numeric($o, 'wkrVrijeRuimteRemaining')
-			&& (((float)$o['wkrVrijeRuimteRemaining']) >= 0.0 || self::numeric($o, 'wkrExcess'));
-
-	}//end wkrVrijeRuimteCovered()
-
-	/**
-	 * Whether a WKR excess carries the 80% eindheffing.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function wkrEindheffingAtRate(array $o): bool {
-		return (((float)($o['wkrExcess'] ?? 0)) <= 0.0)
-			|| (self::numeric($o, 'wkrEindheffingRate') && self::ratesEqual((float)$o['wkrEindheffingRate'], 80.0));
-
-	}//end wkrEindheffingAtRate()
-
-	/**
-	 * Whether the payslip states every mandatory item.
-	 *
-	 * @param array<string, mixed> $o The Payslip.
-	 *
-	 * @return bool
-	 */
-	private static function loonstrookComplete(array $o): bool {
-		return (($o['showsGrossWage'] ?? false) === true)
-			&& (($o['showsDeductionBasis'] ?? false) === true)
-			&& (($o['showsMinimumWage'] ?? false) === true)
-			&& (($o['showsEmployerEmployeeIds'] ?? false) === true);
-
-	}//end loonstrookComplete()
 
 	/**
 	 * Whether the contract carries the Awf tariff its terms call for.
@@ -708,18 +570,6 @@ final class NlPayrollChecks implements CheckProvider, ProvidesTables, SeedsObjec
 	private static function centsEqual(float $a, float $b): bool {
 		return (int)round($a * 100) === (int)round($b * 100);
 	}//end centsEqual()
-
-	/**
-	 * Compare two rate percentages at basis-point precision.
-	 *
-	 * @param float $a Left rate.
-	 * @param float $b Right rate.
-	 *
-	 * @return bool
-	 */
-	private static function ratesEqual(float $a, float $b): bool {
-		return (int)round($a * 100) === (int)round($b * 100);
-	}//end ratesEqual()
 
 	/**
 	 * The `nl-30-regeling-aftoppingsgrens-bedrag` predicate (30-procent-regeling

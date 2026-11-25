@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Table/legacy parity for the payroll Employee, contract and run rules (REQ-RULE-009).
+ * Table/legacy parity for the payroll rules declared as tables (REQ-RULE-009).
  *
  * Next conversion wave of rules-onto-or-decision-tables: the seven payroll
  * Employee rules, moved out of NlPayrollChecks into NlEmployeeDocumentChecks
@@ -13,7 +13,9 @@
  * around both norms; A1 certificates around 24 months) and asserts identical
  * verdicts on every fixture. The EmploymentContract rules and the
  * withholding-liability clearing on PayrollRun, declared as tables by
- * NlPayrollChecks itself, get the same treatment.
+ * NlPayrollChecks itself, and the nine Payslip rules of
+ * NlPayslipWithholdingChecks and NlPayslipStatementChecks get the same
+ * treatment.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Standards
@@ -36,6 +38,8 @@ namespace OCA\Humaniq\Tests\Unit\Standards;
 
 use OCA\Humaniq\Standards\Checks\NlEmployeeDocumentChecks;
 use OCA\Humaniq\Standards\Checks\NlPayrollChecks;
+use OCA\Humaniq\Standards\Checks\NlPayslipStatementChecks;
+use OCA\Humaniq\Standards\Checks\NlPayslipWithholdingChecks;
 use OCA\Humaniq\Standards\Checks\NlThirtyPercentRulingChecks;
 use OCA\Humaniq\Standards\TableCheckEvaluator;
 use PHPUnit\Framework\TestCase;
@@ -201,5 +205,50 @@ class NlPayrollTableParityTest extends TestCase {
 		$this->assertArrayNotHasKey('EmploymentContract', NlPayrollChecks::checks());
 
 	}//end testTheContractAndRunTablesAgreeWithTheirClosures()
+
+	/**
+	 * The nine Payslip rules NlPayslipWithholdingChecks and
+	 * NlPayslipStatementChecks declare as tables answer identically to their
+	 * closures, and each matrix reaches both verdicts.
+	 *
+	 * @return void
+	 */
+	public function testThePayslipTablesAgreeWithTheirClosures(): void {
+		$amounts = ['zero' => 0, 'positive' => 412.5, 'string' => '99.99', 'negative' => -0.01, 'blank' => '', 'text' => 'geen', 'absent' => null];
+		$fixtures = [
+			'nl-loonheffingen-inhouding' => self::combinations(['loonheffing' => $amounts]),
+			'nl-werknemersverzekeringen-werkgever' => self::combinations(['werknemersverzekeringen' => $amounts]),
+			'nl-loonheffingen-volksverzekeringen' => self::combinations(['loonheffing' => ['500' => 500, '100' => '100', 'negative' => -1, 'text' => 'x', 'absent' => null], 'volksverzekeringen' => ['100' => 100, '500' => 500, '500.01' => 500.01, 'negative' => -5, 'absent' => null]]),
+			'nl-anoniementarief' => self::combinations(['anoniementariefApplied' => ['applied' => true, 'not applied' => false, 'truthy' => 1, 'absent' => null], 'appliedTaxRate' => ['52' => 52, '52.004' => 52.004, '51.99' => 51.99, '60' => '60', '36.97' => 36.97, 'blank' => '', 'absent' => null]]),
+			'nl-wkr-vrije-ruimte' => self::combinations(['wkrVrijeRuimteRemaining' => ['positive' => 120, 'zero' => 0, 'negative' => -40, 'text' => 'op', 'absent' => null], 'wkrExcess' => ['40' => 40, 'zero' => 0, 'text' => 'x', 'absent' => null]]),
+			'nl-wkr-eindheffing-80' => self::combinations(['wkrExcess' => ['40' => 40, 'zero' => 0, 'negative' => -1, 'text' => 'veel', 'absent' => null], 'wkrEindheffingRate' => ['80' => 80, '80.004' => '80.004', '75' => 75, 'blank' => '', 'absent' => null]]),
+			'nl-loonstrook-inhoud' => self::combinations(['showsGrossWage' => ['yes' => true, 'no' => false], 'showsDeductionBasis' => ['yes' => true, 'truthy' => 1], 'showsMinimumWage' => ['yes' => true, 'absent' => null], 'showsEmployerEmployeeIds' => ['yes' => true, 'no' => false]]),
+		];
+		foreach (['nl-zvw-werkgeversheffing', 'nl-zvw-inhouding'] as $ruleId) {
+			$fixtures[$ruleId] = self::combinations(['zvwMode' => ['werkgeversheffing' => 'werkgeversheffing', 'inhouding' => 'inhouding', 'absent' => null], 'zvwRate' => ['6.10' => 6.1, '4.85' => '4.85', '6.11' => 6.11, 'text' => 'x', 'absent' => null], 'zvw' => ['amount' => 120.5, 'blank' => '', 'absent' => null]]);
+		}
+
+		$tables = NlPayslipWithholdingChecks::tables()['Payslip'] + NlPayslipStatementChecks::tables()['Payslip'];
+		$legacy = NlPayslipWithholdingChecks::legacyChecks()['Payslip'] + NlPayslipStatementChecks::legacyChecks()['Payslip'];
+		$this->assertSame(array_keys($legacy), array_keys($tables), 'every legacy rule has a table form and vice versa');
+		$this->assertSame([], array_diff(array_keys($tables), array_keys($fixtures)), 'every rule has a fixture matrix');
+
+		foreach ($tables as $ruleId => $spec) {
+			$seen = [];
+			foreach ($fixtures[$ruleId] as $label => $object) {
+				$inputs = ($spec['derive'])($object, []);
+				$verdict = ($inputs === null || TableCheckEvaluator::satisfied($spec['table'], $inputs) === true);
+				$seen[$verdict === true ? 'pass' : 'fail'] = true;
+				$this->assertSame((bool)($legacy[$ruleId])($object), $verdict, sprintf('%s: table and legacy verdicts diverge on fixture "%s"', $ruleId, $label));
+			}
+
+			$this->assertSame(['fail' => true, 'pass' => true], ['fail' => ($seen['fail'] ?? false), 'pass' => ($seen['pass'] ?? false)], $ruleId . ': the matrix must reach both verdicts');
+		}
+
+		$this->assertSame([], NlPayslipWithholdingChecks::checks());
+		$this->assertSame([], NlPayslipStatementChecks::checks());
+		$this->assertSame(['nl-awf-herziening-uren-signaal', 'nl-vakantiebijslag-8procent', 'nl-30-regeling-aftoppingsgrens-bedrag'], array_keys(NlPayrollChecks::checks()['Payslip']), 'the three recomputing Payslip rules stay closures');
+
+	}//end testThePayslipTablesAgreeWithTheirClosures()
 
 }//end class

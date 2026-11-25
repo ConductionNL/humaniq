@@ -80,6 +80,8 @@ use PHPUnit\Framework\TestCase;
  * @uses \OCA\Humaniq\Standards\Checks\EngineInputSnapshot
  * @uses \OCA\Humaniq\Standards\Checks\NlEmployeeDocumentChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlThirtyPercentRulingChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlPayslipWithholdingChecks
+ * @uses \OCA\Humaniq\Standards\Checks\NlPayslipStatementChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlOrgChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlPayrollChecks
  * @uses \OCA\Humaniq\Standards\Checks\NlPensionFilingChecks
