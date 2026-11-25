@@ -19,6 +19,13 @@
  * NlThirtyPercentRulingChecks (the 30%-ruling); the Employee seed stays here
  * with the other payroll samples.
  *
+ * The three EmploymentContract rules (Awf tariff, minimum hourly wage,
+ * contracted hours) and the withholding-liability clearing on PayrollRun are
+ * declared here as decision tables too (tables()); their closures stay as
+ * contractChecks() and legacyChecks(), the oracle NlPayrollTableParityTest
+ * compares with. The GL reconciliation recomputes the run totals and
+ * compares cents, so it stays a closure.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -48,7 +55,8 @@ use OCA\Humaniq\Support\RoundsToCents;
  *
  * @spec openspec/specs/hrm-rule-engine/spec.md
  */
-final class NlPayrollChecks implements CheckProvider, SeedsObjects {
+final class NlPayrollChecks implements CheckProvider, ProvidesTables, SeedsObjects {
+	use BuildsSatisfiedTables;
 	use PayrollSampleFields;
 	use ReadsRecordedFields;
 	use RoundsToCents;
@@ -63,11 +71,83 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 	public static function checks(): array {
 		return [
 			'Payslip' => [...self::payslipWithholdingChecks(), ...self::payslipStatementChecks()],
-			'EmploymentContract' => self::contractChecks(),
 			'PayrollRun' => self::payrollRunChecks(),
 		];
 
 	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * EmploymentContract: the recorded Awf tariff is the one the contract
+	 * implies; a numeric hourly wage of at least EUR 14,71; a numeric, positive
+	 * weekly hours figure with a numeric hourly wage. PayrollRun: a posted or
+	 * paid run has its withholdings cleared, with a numeric zero balance.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function tables(): array {
+		return [
+			'EmploymentContract' => [
+				// Wfsv (Wab), Handboek Loonheffingen 2026 par. 7.2 — the applied Awf tariff matches the contract.
+				'nl-awf-laag-hoog-tarief' => [
+					'derive' => static fn (array $o): array => ['tariffRecorded' => self::present($o, 'awfTariff'), 'tariffAsExpected' => ((string)($o['awfTariff'] ?? '') === self::expectedAwfTariff($o))],
+					'table' => self::satisfiedTable(
+						[['name' => 'tariffRecorded', 'type' => 'boolean'], ['name' => 'tariffAsExpected', 'type' => 'boolean']],
+						[
+							['id' => 'awf-tariff-missing', 'inputEntries' => ['false', '-'], 'outputEntries' => [false]],
+							['id' => 'awf-tariff-not-the-contracts', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				// WML art. 8 — from 1 Jan 2026 the minimum hourly wage is EUR 14,71 (21+).
+				'nl-minimumloon-2026' => [
+					'derive' => static fn (array $o): array => ['wageRecorded' => self::numeric($o, 'hourlyWage'), 'hourlyWage' => (float)($o['hourlyWage'] ?? 0)],
+					'table' => self::satisfiedTable(
+						[['name' => 'wageRecorded', 'type' => 'boolean'], ['name' => 'hourlyWage', 'type' => 'number']],
+						[
+							['id' => 'hourly-wage-missing', 'inputEntries' => ['false', '-'], 'outputEntries' => [false]],
+							['id' => 'hourly-wage-below-minimum', 'inputEntries' => ['true', '< 14.71'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				// Wet invoering minimumuurloon — contracted hours are a positive number, beside an hourly wage.
+				'nl-minimumuurloon-wet' => [
+					'derive' => static fn (array $o): array => ['hoursRecorded' => self::numeric($o, 'hoursPerWeek'), 'hoursPerWeek' => (float)($o['hoursPerWeek'] ?? 0), 'wageRecorded' => self::numeric($o, 'hourlyWage')],
+					'table' => self::satisfiedTable(
+						[['name' => 'hoursRecorded', 'type' => 'boolean'], ['name' => 'hoursPerWeek', 'type' => 'number'], ['name' => 'wageRecorded', 'type' => 'boolean']],
+						[
+							['id' => 'contracted-hours-missing', 'inputEntries' => ['false', '-', '-'], 'outputEntries' => [false]],
+							['id' => 'contracted-hours-not-positive', 'inputEntries' => ['true', '<= 0', '-'], 'outputEntries' => [false]],
+							['id' => 'hourly-wage-missing', 'inputEntries' => ['-', '-', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+			'PayrollRun' => [
+				// Liability-clearing control — a posted or paid run carries a zero residual withholding liability.
+				'xc-withholding-liability-clearing' => [
+					'derive' => static fn (array $o): array => [
+						'posted' => self::isGlPosted($o),
+						'cleared' => (($o['withholdingsClearedToZero'] ?? false) === true),
+						'balanceRecorded' => self::numeric($o, 'withholdingLiabilityBalance'),
+						'balanceCents' => (int)round(((float)($o['withholdingLiabilityBalance'] ?? 0)) * 100),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'posted', 'type' => 'boolean'], ['name' => 'cleared', 'type' => 'boolean'], ['name' => 'balanceRecorded', 'type' => 'boolean'], ['name' => 'balanceCents', 'type' => 'number']],
+						[
+							['id' => 'withholdings-not-cleared', 'inputEntries' => ['true', 'false', '-', '-'], 'outputEntries' => [false]],
+							['id' => 'liability-balance-missing', 'inputEntries' => ['true', '-', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'liability-balance-not-zero', 'inputEntries' => ['true', '-', '-', '!= 0'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+		];
+
+	}//end tables()
 
 	/**
 	 * Payslip checks on the withheld loonheffing and the insurance premiums.
@@ -161,10 +241,6 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 			// GL postings yet by definition, so checking it would be a false positive —
 			// never surfaced before because the only seeded run is `posted`.
 			'xc-payroll-gl-reconciliation' => self::glPostingsReconcile(...),
-			// Liability-clearing control — each withholding liability is cleared to zero on
-			// remittance, so a cleared run carries a zero residual liability balance.
-			// Same posted/paid scoping: remittance clearing only exists once posted.
-			'xc-withholding-liability-clearing' => self::withholdingLiabilityCleared(...),
 		];
 
 	}//end payrollRunChecks()
@@ -722,4 +798,20 @@ final class NlPayrollChecks implements CheckProvider, SeedsObjects {
 
 	}//end tablesFor()
 
+	/**
+	 * The contract closures and the liability-clearing closure as registered
+	 * before tables(); NlPayrollTableParityTest compares the tables with them.
+	 * The engine does not register them.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'EmploymentContract' => self::contractChecks(),
+			'PayrollRun' => ['xc-withholding-liability-clearing' => self::withholdingLiabilityCleared(...)],
+		];
+
+	}//end legacyChecks()
 }//end class

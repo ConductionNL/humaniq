@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Table/legacy parity for the payroll Employee rules (REQ-RULE-009).
+ * Table/legacy parity for the payroll Employee, contract and run rules (REQ-RULE-009).
  *
  * Next conversion wave of rules-onto-or-decision-tables: the seven payroll
  * Employee rules, moved out of NlPayrollChecks into NlEmployeeDocumentChecks
@@ -11,7 +11,9 @@
  * before, at and after the 5-year line, unreadable or blank, with and without
  * an employment end; ruling rates, caps, terms relative to today and salaries
  * around both norms; A1 certificates around 24 months) and asserts identical
- * verdicts on every fixture.
+ * verdicts on every fixture. The EmploymentContract rules and the
+ * withholding-liability clearing on PayrollRun, declared as tables by
+ * NlPayrollChecks itself, get the same treatment.
  *
  * @category Test
  * @package  OCA\Humaniq\Tests\Unit\Standards
@@ -152,5 +154,52 @@ class NlPayrollTableParityTest extends TestCase {
 		$this->assertArrayNotHasKey('Employee', NlPayrollChecks::checks());
 
 	}//end testTheEmployeeRulesAreTableDeclaredOnly()
+
+	/**
+	 * The EmploymentContract and PayrollRun rules NlPayrollChecks declares as
+	 * tables answer identically to their closures, and each matrix reaches
+	 * both verdicts.
+	 *
+	 * @return void
+	 */
+	public function testTheContractAndRunTablesAgreeWithTheirClosures(): void {
+		$fixtures = [
+			'EmploymentContract' => self::combinations([
+				'type' => ['permanent' => 'permanent', 'bbl' => 'bbl', 'temporary' => 'temporary', 'absent' => null],
+				'writtenContract' => ['written' => true, 'not written' => false],
+				'bpvOvereenkomstOndertekend' => ['signed' => true, 'absent' => null],
+				'awfTariff' => ['low' => 'low', 'high' => 'high', 'blank' => ' ', 'absent' => null],
+				'hourlyWage' => ['14.71' => 14.71, '14.70' => '14.70', '25' => 25, 'text' => 'veel', 'absent' => null],
+				'hoursPerWeek' => ['36' => 36, 'zero' => 0, 'negative' => -4, 'text' => 'fulltime', 'absent' => null],
+			]),
+			'PayrollRun' => self::combinations([
+				'status' => ['posted' => 'posted', 'paid' => 'paid', 'approved' => 'approved', 'absent' => null],
+				'withholdingsClearedToZero' => ['cleared' => true, 'not cleared' => false, 'truthy' => 1, 'absent' => null],
+				'withholdingLiabilityBalance' => ['zero' => 0, 'half cent' => 0.004, 'cent' => 0.01, 'negative' => '-12.50', 'text' => 'nul', 'absent' => null],
+			]),
+		];
+		$tables = NlPayrollChecks::tables();
+		$legacy = NlPayrollChecks::legacyChecks();
+
+		$this->assertSame(array_map('array_keys', $legacy), array_map('array_keys', $tables), 'every legacy rule has a table form and vice versa');
+
+		foreach ($tables as $objectType => $specs) {
+			foreach ($specs as $ruleId => $spec) {
+				$seen = [];
+				foreach ($fixtures[$objectType] as $label => $object) {
+					$inputs = ($spec['derive'])($object, []);
+					$verdict = ($inputs === null || TableCheckEvaluator::satisfied($spec['table'], $inputs) === true);
+					$seen[$verdict === true ? 'pass' : 'fail'] = true;
+					$this->assertSame((bool)($legacy[$objectType][$ruleId])($object), $verdict, sprintf('%s/%s: table and legacy verdicts diverge on fixture "%s"', $objectType, $ruleId, $label));
+				}
+
+				$this->assertSame(['fail' => true, 'pass' => true], ['fail' => ($seen['fail'] ?? false), 'pass' => ($seen['pass'] ?? false)], $ruleId . ': the matrix must reach both verdicts');
+			}
+		}
+
+		$this->assertSame(['xc-payroll-gl-reconciliation'], array_keys(NlPayrollChecks::checks()['PayrollRun']), 'the GL reconciliation stays a closure');
+		$this->assertArrayNotHasKey('EmploymentContract', NlPayrollChecks::checks());
+
+	}//end testTheContractAndRunTablesAgreeWithTheirClosures()
 
 }//end class
