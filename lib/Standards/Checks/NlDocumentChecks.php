@@ -63,6 +63,8 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Written-permanent-contract document-evidence executable check.
+ *
+ * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-004
  */
 final class NlDocumentChecks implements CheckProvider, ProvidesTables {
 
@@ -152,6 +154,8 @@ final class NlDocumentChecks implements CheckProvider, ProvidesTables {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function seedSpec(): array {
 		return [];

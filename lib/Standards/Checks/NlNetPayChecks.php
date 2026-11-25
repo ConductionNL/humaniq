@@ -51,6 +51,8 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Payslip-to-employee-IBAN-presence executable check.
+ *
+ * @spec openspec/changes/payroll-sepa-netpay-shillinq/specs/payroll-sepa-netpay-shillinq/spec.md#REQ-PNP-008
  */
 final class NlNetPayChecks implements CheckProvider, ProvidesTables {
 
@@ -123,6 +125,8 @@ final class NlNetPayChecks implements CheckProvider, ProvidesTables {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function seedSpec(): array {
 		return [];
