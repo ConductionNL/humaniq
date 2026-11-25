@@ -39,9 +39,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Controller;
 
 use OCA\Humaniq\Controller\PageController;
+use OCA\Humaniq\Controller\SetupController;
 use OCA\Humaniq\Service\AdministrationService;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -142,7 +145,8 @@ class PageControllerTest extends TestCase {
 			$userSession,
 			$initialState,
 			$container,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(IGroupManager::class)
 		);
 
 		$response = $controller->index();
@@ -279,9 +283,92 @@ class PageControllerTest extends TestCase {
 	 *
 	 * @return PageController
 	 */
+	/**
+	 * An administrator's page carries the setup status the endpoint answers,
+	 * under `setup_status`, so the shell needs no `GET /api/setup/status`.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-page-carries-the-setup-status-for-an-administrator-req-fts-008
+	 */
+	public function testIndexCarriesTheSetupStatusForAnAdministrator(): void {
+		$document = ['version' => 1, 'completed' => true, 'steps' => ['welcome' => ['done' => true]]];
+		$setup    = $this->createMock(SetupController::class);
+		$setup->expects($this->once())->method('status')->willReturn(new JSONResponse(data: $document));
+
+		$controller = $this->buildController(
+			$this->createMock(AdministrationService::class),
+			'admin',
+			isAdmin: true,
+			setupController: $setup
+		);
+		$controller->index();
+
+		$this->assertSame($document, $this->stamped['setup_status'] ?? null);
+	}//end testIndexCarriesTheSetupStatusForAnAdministrator()
+
+	/**
+	 * Anyone else gets no setup status carried and the endpoint is not even
+	 * resolved: the shell asks it, and the endpoint's own access check answers.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-page-carries-the-setup-status-for-an-administrator-req-fts-008
+	 */
+	public function testIndexCarriesNoSetupStatusForANonAdministrator(): void {
+		$setup = $this->createMock(SetupController::class);
+		$setup->expects($this->never())->method('status');
+
+		$controller = $this->buildController(
+			$this->createMock(AdministrationService::class),
+			'alice',
+			isAdmin: false,
+			setupController: $setup
+		);
+		$controller->index();
+
+		$this->assertArrayNotHasKey('setup_status', $this->stamped);
+	}//end testIndexCarriesNoSetupStatusForANonAdministrator()
+
+	/**
+	 * A setup status that cannot be built (OpenRegister missing or broken)
+	 * carries nothing, and the page still renders (ADR-083 rule 3).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-page-carries-the-setup-status-for-an-administrator-req-fts-008
+	 */
+	public function testAFailingSetupStatusCarriesNothingAndThePageRenders(): void {
+		$setup = $this->createMock(SetupController::class);
+		$setup->method('status')->willThrowException(new \RuntimeException('OpenRegister is not installed'));
+
+		$controller = $this->buildController(
+			$this->createMock(AdministrationService::class),
+			'admin',
+			isAdmin: true,
+			setupController: $setup
+		);
+		$response = $controller->index();
+
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertArrayNotHasKey('setup_status', $this->stamped);
+	}//end testAFailingSetupStatusCarriesNothingAndThePageRenders()
+
+	/**
+	 * Build the controller with a signed-in user.
+	 *
+	 * @param AdministrationService $administrationService What the container hands out for it.
+	 * @param string                $userId                The signed-in user.
+	 * @param bool                  $isAdmin               Whether that user is an administrator.
+	 * @param SetupController|null  $setupController       What the container hands out for SetupController.
+	 *
+	 * @return PageController
+	 */
 	private function buildController(
 		AdministrationService $administrationService,
 		string $userId,
+		bool $isAdmin = false,
+		?SetupController $setupController = null,
 	): PageController {
 		$this->stamped = [];
 
@@ -300,14 +387,25 @@ class PageControllerTest extends TestCase {
 		$userSession->method('getUser')->willReturn($user);
 
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($administrationService);
+		$container->method('get')->willReturnCallback(
+			function (string $id) use ($administrationService, $setupController): object {
+				if ($id === SetupController::class) {
+					return $setupController ?? throw new \RuntimeException('no SetupController in this test');
+				}
+				return $administrationService;
+			}
+		);
+
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->with($userId)->willReturn($isAdmin);
 
 		return new PageController(
 			$request,
 			$userSession,
 			$initialState,
 			$container,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$groupManager
 		);
 	}//end buildController()
 
