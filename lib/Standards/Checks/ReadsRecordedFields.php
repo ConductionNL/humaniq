@@ -3,8 +3,9 @@
 /**
  * Reads Recorded Fields
  *
- * The two field readers the payroll check providers share: whether a field
- * holds a non-blank value, and whether it holds a number.
+ * The field readers the payroll check providers share: whether a field
+ * holds a non-blank value, whether it holds a number, and whether two
+ * percentages agree to the hundredth.
  *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
@@ -55,4 +56,15 @@ trait ReadsRecordedFields {
 	private static function numeric(array $object, string $key): bool {
 		return isset($object[$key]) === true && $object[$key] !== '' && is_numeric($object[$key]) === true;
 	}//end numeric()
+	/**
+	 * Compare two rate percentages at basis-point precision.
+	 *
+	 * @param float $first Left rate.
+	 * @param float $second Right rate.
+	 *
+	 * @return bool
+	 */
+	private static function ratesEqual(float $first, float $second): bool {
+		return (int)round($first * 100) === (int)round($second * 100);
+	}//end ratesEqual()
 }//end trait

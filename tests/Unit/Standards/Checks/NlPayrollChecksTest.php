@@ -34,6 +34,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlPayrollChecks;
+use OCA\Humaniq\Standards\Checks\NlPayslipStatementChecks;
+use OCA\Humaniq\Standards\Checks\NlPayslipWithholdingChecks;
 use OCA\Humaniq\Standards\Checks\NlEmployeeDocumentChecks;
 use OCA\Humaniq\Standards\Checks\NlThirtyPercentRulingChecks;
 use OCA\Humaniq\Standards\RuleEngine;
@@ -58,7 +60,7 @@ class NlPayrollChecksTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		RuleEngine::reset();
-		$this->checks = array_replace_recursive(NlEmployeeDocumentChecks::legacyChecks(), NlThirtyPercentRulingChecks::legacyChecks(), NlPayrollChecks::legacyChecks(), NlPayrollChecks::checks());
+		$this->checks = array_replace_recursive(NlEmployeeDocumentChecks::legacyChecks(), NlThirtyPercentRulingChecks::legacyChecks(), NlPayslipWithholdingChecks::legacyChecks(), NlPayslipStatementChecks::legacyChecks(), NlPayrollChecks::legacyChecks(), NlPayrollChecks::checks());
 
 	}//end setUp()
 

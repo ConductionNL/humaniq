@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlPayrollChecks;
+use OCA\Humaniq\Standards\Checks\NlPayslipStatementChecks;
+use OCA\Humaniq\Standards\Checks\NlPayslipWithholdingChecks;
 use OCA\Humaniq\Standards\Checks\NlEmployeeDocumentChecks;
 use OCA\Humaniq\Standards\Checks\NlThirtyPercentRulingChecks;
 use OCA\Humaniq\Standards\TableCheckRegistry;
@@ -171,7 +173,7 @@ class NlPayrollChecksFingerprintTest extends TestCase {
 		$actual = [];
 		// The registered checks: closures and table-declared rules, the latter
 		// through the engine's own table wrapper, in the corpus order pinned below.
-		$registered = array_merge_recursive(NlPayrollChecks::checks(), TableCheckRegistry::checks([NlPayrollChecks::class, NlEmployeeDocumentChecks::class, NlThirtyPercentRulingChecks::class]));
+		$registered = array_merge_recursive(NlPayrollChecks::checks(), TableCheckRegistry::checks([NlPayrollChecks::class, NlEmployeeDocumentChecks::class, NlThirtyPercentRulingChecks::class, NlPayslipWithholdingChecks::class, NlPayslipStatementChecks::class]));
 		foreach (self::EXPECTED as $type => $expectedRules) {
 			$grid = PredicateFingerprint::grid(PredicateFingerprint::rebase($seeds[$type] ?? [], self::SELECTORS), self::FIELDS);
 			$actual[$type] = [];
