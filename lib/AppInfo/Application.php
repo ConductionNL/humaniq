@@ -65,7 +65,6 @@ use OCA\Humaniq\Listener\HandoffIntakeListener;
 use OCA\Humaniq\Listener\HrLifecycleEventListener;
 use OCA\Humaniq\Listener\LearniqCredentialListener;
 use OCA\Humaniq\Listener\OfferHrAssistantListener;
-use OCA\Humaniq\Listener\SetupStatusInitialStateListener;
 use OCA\Humaniq\Listener\LeaveApprovalListener;
 use OCA\Humaniq\Listener\FilteredObjectSubscriptions;
 use OCA\Humaniq\Listener\ManagerDeputyListener;
@@ -176,8 +175,6 @@ class Application extends App implements IBootstrap {
 		// self-service-policy-assistant D2: offer Hermiq the HR-vraagbaak template.
 		// The event is named by string, so humaniq installs without Hermiq.
 		$context->registerEventListener(OfferHrAssistantListener::EVENT, OfferHrAssistantListener::class);
-		// ADR-124: an administrator's page carries the setup status, so the shell asks no endpoint for it.
-		$context->registerEventListener(\OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent::class, SetupStatusInitialStateListener::class);
 		$context->registerService(RulesAuditCommand::class, static fn ($c): RulesAuditCommand => new RulesAuditCommand($c->get(\OCA\Humaniq\Kernel\Contracts\RuleAuditServiceInterface::class)));
 		$context->registerService(RulesSeedTestDataCommand::class, static fn ($c): RulesSeedTestDataCommand => new RulesSeedTestDataCommand($c->get(\OCA\Humaniq\Service\RuleTestDataSeeder::class)));
 		(new ContractBindings())->register(context: $context);

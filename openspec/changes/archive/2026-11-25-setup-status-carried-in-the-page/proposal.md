@@ -22,6 +22,6 @@ nextcloud-vue#2378 lets a page carry the status as initial state `setup_status`.
 
 ## Impact
 
-- `lib/Listener/SetupStatusInitialStateListener.php` (registered in `lib/AppInfo/Application.php`),
+- `lib/Listener/SetupStatusInitialStateListener.php` (registered in `lib/AppInfo/ShellRegistrations.php`),
   `tests/Unit/Listener/SetupStatusInitialStateListenerTest.php`.
 - Spec `first-time-setup`: REQ-FTS-008.
