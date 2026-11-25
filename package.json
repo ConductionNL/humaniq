@@ -85,7 +85,7 @@
     "sass-loader": "^17.0.1",
     "style-loader": "~4.0.0",
     "stylelint": "^17.15.0",
-    "vue-eslint-parser": "^10.3.0",
+    "vue-eslint-parser": "^10.4.2",
     "vue-loader": "^17.4.2",
     "webpack": "^5.112.2",
     "webpack-cli": "^6.0.1"
