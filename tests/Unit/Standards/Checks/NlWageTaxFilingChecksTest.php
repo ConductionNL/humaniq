@@ -52,7 +52,7 @@ class NlWageTaxFilingChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlWageTaxFilingChecks::checks()['LoonaangifteFiling'];
+		$this->checks = NlWageTaxFilingChecks::legacyChecks()['LoonaangifteFiling'] + NlWageTaxFilingChecks::checks()['LoonaangifteFiling'];
 
 	}//end setUp()
 

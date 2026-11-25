@@ -15,6 +15,18 @@
  * approaching or past its deadline (nl-loonaangifte-deadline-alert). Each
  * predicate is side-effect free; the seedObjects() sample satisfies them all.
  *
+ * Converted in part to the table-backed check form
+ * (rules-onto-or-decision-tables, next conversion wave):
+ * `nl-loonaangifte-tijdvak` (electronic filing x a recognised tijdvak) and
+ * `nl-loonaangifte-tijdvakcode` (the code LH 210 expects for the period) are
+ * declared as OpenRegister decision tables via the ProvidesTables
+ * capability; their closures stay as legacyChecks(), the oracle
+ * NlWageTaxFilingTableParityTest compares with, never registered in the
+ * engine. The termijn and bewaarplicht rules only delegate to the shared
+ * FilingDates arithmetic, the deadline derivation recomputes the deadline,
+ * the alert counts days to it and the drift rule compares the message with
+ * its run: those stay closures.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -42,8 +54,9 @@ use OCA\Humaniq\Support\ChecksFilingDeadlines;
 /**
  * Dutch loonaangifte filing + payroll-record-retention executable checks.
  */
-final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
+final class NlWageTaxFilingChecks implements CheckProvider, ProvidesTables, SeedsObjects {
 
+	use BuildsSatisfiedTables;
 	use ChecksFilingDeadlines;
 
 	/**
@@ -62,17 +75,12 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 	public static function checks(): array {
 		return [
 			'LoonaangifteFiling' => [
-				// Wet LB 1964 art. 28 / AWR art. 19 — the loonaangifte is filed
-				// electronically for each wage period (a recognised NL tijdvak).
-				'nl-loonaangifte-tijdvak' => self::forLoonaangifte(self::filedElectronicallyForNlTijdvak(...)),
 				// AWR art. 19 — the loonaangifte is filed and paid no later than the
 				// deadline (last working day of the month following the wage period).
 				'nl-loonaangifte-termijn' => self::forLoonaangifte(self::submittedByDeadline(...)),
 				// AWR art. 52 lid 4 — payroll administration is retained at least 7 years
 				// after the end of the relevant financial year of the period.
 				'nl-loonadministratie-bewaarplicht' => self::forLoonaangifte(self::retainedSevenYears(...)),
-				// Belastingdienst LH 210 (2026) — the tijdvakcode matches the period + tijdvak.
-				'nl-loonaangifte-tijdvakcode' => self::forNlLoonaangifte(self::tijdvakcodeConsistent(...)),
 				// AWR art. 19 / LH 210 — the deadline is period end + 1 calendar month, no
 				// weekend/holiday extension.
 				'nl-loonaangifte-deadline-derivation' => self::forNlLoonaangifte(self::deadlineDerivationCorrect(...)),
@@ -87,6 +95,79 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 		];
 
 	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-loonaangifte-tijdvak`: a loonaangifte not filed electronically, or
+	 * for a tijdvak outside maand/vierweken/kwartaal/jaar, fails.
+	 * `nl-loonaangifte-tijdvakcode`: an NL loonaangifte past concept without a
+	 * tijdvakcode, or with one other than LH 210 expects for its period, fails.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function tables(): array {
+		return [
+			'LoonaangifteFiling' => [
+				// Wet LB 1964 art. 28 / AWR art. 19 — the loonaangifte is filed
+				// electronically for each wage period (a recognised NL tijdvak).
+				'nl-loonaangifte-tijdvak' => [
+					'derive' => static fn (array $o): array => [
+						'loonaangifte' => (($o['filingType'] ?? '') === 'loonaangifte'),
+						'electronic' => (($o['electronicallyFiled'] ?? false) === true),
+						'tijdvak' => (string)($o['tijdvak'] ?? ''),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'loonaangifte', 'type' => 'boolean'], ['name' => 'electronic', 'type' => 'boolean'], ['name' => 'tijdvak', 'type' => 'string']],
+						[
+							['id' => 'electronic-for-a-known-tijdvak', 'inputEntries' => ['true', 'true', 'in ("maand","vierweken","kwartaal","jaar")'], 'outputEntries' => [true]],
+							['id' => 'not-electronic-or-unknown-tijdvak', 'inputEntries' => ['true', '-', '-'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				// Belastingdienst LH 210 (2026) — the tijdvakcode matches the period + tijdvak.
+				'nl-loonaangifte-tijdvakcode' => [
+					'derive' => static fn (array $o): array => self::tijdvakcodeInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'nlLoonaangifte', 'type' => 'boolean'], ['name' => 'codeRecorded', 'type' => 'boolean'], ['name' => 'concept', 'type' => 'boolean'], ['name' => 'codeAsExpected', 'type' => 'boolean']],
+						[
+							['id' => 'code-missing-after-concept', 'inputEntries' => ['true', 'false', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'code-not-the-expected', 'inputEntries' => ['true', 'true', '-', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * The tijdvakcode table's inputs: whether this is an NL loonaangifte,
+	 * whether a code is recorded, whether the filing is still a concept, and
+	 * whether the code is the one expected (also true when the corpus has no
+	 * code parameters or no code is expected for the period).
+	 *
+	 * @param array<string, mixed> $o The LoonaangifteFiling.
+	 *
+	 * @return array{nlLoonaangifte: bool, codeRecorded: bool, concept: bool, codeAsExpected: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function tijdvakcodeInputs(array $o): array {
+		$tijdvakcode = trim((string)($o['tijdvakcode'] ?? ''));
+		$parameters = self::tijdvakcodeParameters();
+		$expected = ($parameters === null ? null : self::expectedTijdvakcode($o, $parameters));
+
+		return [
+			'nlLoonaangifte' => self::isNlLoonaangifte($o),
+			'codeRecorded' => ($tijdvakcode !== ''),
+			'concept' => ((string)($o['status'] ?? 'concept') === 'concept'),
+			'codeAsExpected' => ($expected === null || $tijdvakcode === $expected),
+		];
+
+	}//end tijdvakcodeInputs()
 
 	/**
 	 * A predicate that holds for every filing that is not a loonaangifte and applies the rule to one.
@@ -367,4 +448,23 @@ final class NlWageTaxFilingChecks implements CheckProvider, SeedsObjects {
 		$lastDay = (int)date('t', mktime(0, 0, 0, $followingMonth, 1, $followingYear));
 		return sprintf('%04d-%02d-%02d', $followingYear, $followingMonth, $lastDay);
 	}//end expectedDeadline()
+
+	/**
+	 * The tijdvak and tijdvakcode closures, wrapped as the engine registered
+	 * them before tables(). NlWageTaxFilingTableParityTest compares the
+	 * tables with them; the engine does not register them.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'LoonaangifteFiling' => [
+				'nl-loonaangifte-tijdvak' => self::forLoonaangifte(self::filedElectronicallyForNlTijdvak(...)),
+				'nl-loonaangifte-tijdvakcode' => self::forNlLoonaangifte(self::tijdvakcodeConsistent(...)),
+			],
+		];
+
+	}//end legacyChecks()
 }//end class
