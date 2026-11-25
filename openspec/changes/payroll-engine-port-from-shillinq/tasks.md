@@ -85,7 +85,21 @@
       `@e2e exclude` naming the unit test under each server-side scenario; the two scenarios
       with a page step in `tests/e2e/spec-coverage/payroll-engine-port-from-shillinq.spec.ts`
       (written, runs in nightly).
-- [ ] 5.2 Live check on the dev instance: one run with a participant and a starter; note the
+- [x] 5.2 Live check on the dev instance: one run with a participant and a starter; note the
       payslips in the PR body.
-- [ ] 5.3 Tell the shillinq lane that humaniq covers the engine, so shillinq can run the
+      Done 2026-11-25 on a sandbox Nextcloud 34.0.6 (MariaDB 10.11, OpenRegister main, humaniq
+      development 89e5e1bf, pack nl-2026@1.3.0): ADM-001's 2026-04 run, recalculated through
+      `POST /api/payroll/calculate` as an administrator, with a pfab participant (4200.00 a month,
+      participation from 2026-01-01) and a starter from 2026-04-15 (3100.00 a month). Participant:
+      gross 4200.00, pensionBase 2660.42, employee premium 186.23 (7%), employer 372.46 (14%),
+      loonheffing 825.50, net 3188.27. Starter: periodFactor 0.5333 (2026-04-15 to 2026-04-30),
+      gross 1653.33, no pension fields, loonheffing 44.75, net 1608.58. Run totals: gross 5853.33,
+      pension employee 186.23 / employer 372.46, net 4796.85. Found on the way: `occ
+      humaniq:payroll:run` runs without a user, so the field authorization on
+      `grossMonthlySalary` hides every salary and the run skips all salaried employees
+      (`no-salary-and-no-hourly-wage`), recalculating a draft to zero payslips; fixed separately.
+- [x] 5.3 Tell the shillinq lane that humaniq covers the engine, so shillinq can run the
       schema-retirement checklist and remove `bookkeeping-payroll-engine-nl` (row 65 b).
+      Done 2026-11-25: told in the lanes' shared log (builders-idle.md on the pipeline state
+      branch), naming this live check; the removal itself retires schemas and so deletes data,
+      which stays with Ruben.
