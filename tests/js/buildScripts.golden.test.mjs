@@ -169,7 +169,9 @@ const CASES = {
 	'schema-l10n: no lib/Settings': { script: 'check-schema-l10n.js', files: { 'l10n/.schema-l10n-baseline.json': json({ uncovered: 0 }) } },
 
 	'l10n-js: writes every catalogue': { script: 'build-l10n-js.js', files: L10N },
-	'l10n-js: --check when current': { script: 'build-l10n-js.js', args: ['--check'], files: { ...L10N, 'l10n/en.js': 'OC.L10N.register(\n    "humaniq",\n    {\n        "Hello": "Hello",\n        "Say \\"hi\\"": "Say \\"hi\\""\n    },\n    "nplurals=2; plural=(n != 1);"\n)\n', 'l10n/nl.js': 'OC.L10N.register(\n    "humaniq",\n    {\n        "Hello": "Hallo"\n    },\n    "nplurals=2; plural=(n > 1);"\n)\n' } },
+	// English keeps only the entries that differ from their key: a renamed message id stays, Hello goes.
+	'l10n-js: English keeps only what changes a string': { script: 'build-l10n-js.js', files: { ...L10N, 'l10n/en.json': json({ translations: { Hello: 'Hello', share_expired: 'This share has expired' } }) } },
+	'l10n-js: --check when current': { script: 'build-l10n-js.js', args: ['--check'], files: { ...L10N, 'l10n/en.js': 'OC.L10N.register(\n    "humaniq",\n    {\n    },\n    "nplurals=2; plural=(n != 1);"\n)\n', 'l10n/nl.js': 'OC.L10N.register(\n    "humaniq",\n    {\n        "Hello": "Hallo"\n    },\n    "nplurals=2; plural=(n > 1);"\n)\n' } },
 	'l10n-js: --check when stale': { script: 'build-l10n-js.js', args: ['--check'], files: { ...L10N, 'l10n/en.js': 'old\n' } },
 	'l10n-js: rewrites only the stale one': { script: 'build-l10n-js.js', files: { ...L10N, 'l10n/nl.js': 'OC.L10N.register(\n    "humaniq",\n    {\n        "Hello": "Hallo"\n    },\n    "nplurals=2; plural=(n > 1);"\n)\n', 'l10n/en.js': 'old\n' } },
 	'l10n-js: --check with one stale': { script: 'build-l10n-js.js', args: ['--check'], files: { ...L10N, 'l10n/nl.js': 'OC.L10N.register(\n    "humaniq",\n    {\n        "Hello": "Hallo"\n    },\n    "nplurals=2; plural=(n > 1);"\n)\n', 'l10n/en.js': 'old\n' } },
