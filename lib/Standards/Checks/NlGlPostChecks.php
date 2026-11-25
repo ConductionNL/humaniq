@@ -50,6 +50,8 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Payroll-to-GL posting idempotency executable check.
+ *
+ * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
  */
 final class NlGlPostChecks implements CheckProvider, ProvidesTables {
 
@@ -126,6 +128,8 @@ final class NlGlPostChecks implements CheckProvider, ProvidesTables {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-007
 	 */
 	public static function seedSpec(): array {
 		return [];

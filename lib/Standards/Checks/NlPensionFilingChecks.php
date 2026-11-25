@@ -54,6 +54,8 @@ use OCA\Humaniq\Support\ChecksFilingDeadlines;
 
 /**
  * Dutch sector-pension (UPA) filing executable checks.
+ *
+ * @spec openspec/specs/pension-filing-upa-mvp/spec.md
  */
 final class NlPensionFilingChecks implements CheckProvider, ProvidesTables {
 
@@ -155,6 +157,8 @@ final class NlPensionFilingChecks implements CheckProvider, ProvidesTables {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/pension-filing-upa-mvp/spec.md
 	 */
 	public static function seedSpec(): array {
 		return [];
