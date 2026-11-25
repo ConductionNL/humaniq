@@ -27,7 +27,12 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Command;
 
 use OCA\Humaniq\Command\DocumentsGenerateCommand;
+use OCA\Humaniq\Command\PrivilegedSessionResolver;
 use OCA\Humaniq\Service\HrDocumentService;
+use OCP\IGroupManager;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -123,15 +128,68 @@ class DocumentsGenerateCommandTest extends TestCase {
 	}//end testCleanOutcomesExitZero()
 
 	/**
+	 * `--as-user` names an administrator: the session is set before the
+	 * service renders, so docudesk reads its templates as that user.
+	 *
+	 * @return void
+	 */
+	public function testAsUserSetsTheSessionBeforeRendering(): void {
+		$user = $this->createMock(IUser::class);
+		$users = $this->createMock(IUserManager::class);
+		$users->method('get')->with('admin')->willReturn($user);
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->with('admin')->willReturn(true);
+		$session = $this->createMock(IUserSession::class);
+		$order = [];
+		$session->expects($this->once())->method('setUser')->with($user)->willReturnCallback(static function () use (&$order): void {
+			$order[] = 'session';
+		});
+		$service = $this->createMock(HrDocumentService::class);
+		$service->expects($this->once())->method('generateBacklog')->willReturnCallback(static function () use (&$order): array {
+			$order[] = 'render';
+			return [];
+		});
+
+		[$exit] = $this->runCommand($service, ['--type' => 'werkgeversverklaring', '--employee' => 'e-1', '--as-user' => 'admin'], new PrivilegedSessionResolver($users, $groups, $session));
+
+		$this->assertSame(0, $exit);
+		$this->assertSame(['session', 'render'], $order);
+
+	}//end testAsUserSetsTheSessionBeforeRendering()
+
+	/**
+	 * An `--as-user` that is not an administrator is refused before any
+	 * rendering; without the option the command runs as before.
+	 *
+	 * @return void
+	 */
+	public function testANonAdminAsUserIsRefusedBeforeRendering(): void {
+		$users = $this->createMock(IUserManager::class);
+		$users->method('get')->willReturn($this->createMock(IUser::class));
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->willReturn(false);
+		$service = $this->createMock(HrDocumentService::class);
+		$service->expects($this->never())->method('generateBacklog');
+
+		[$exit, $text] = $this->runCommand($service, ['--as-user' => 'clerk'], new PrivilegedSessionResolver($users, $groups, $this->createMock(IUserSession::class)));
+
+		$this->assertSame(1, $exit);
+		$this->assertStringContainsString('geen Nextcloud-beheerder', $text);
+
+	}//end testANonAdminAsUserIsRefusedBeforeRendering()
+
+	/**
 	 * Run the command and return its exit code and output.
 	 *
 	 * @param HrDocumentService     $service The mocked service.
-	 * @param array<string, string> $options The command options.
+	 * @param array<string, string>          $options  The command options.
+	 * @param PrivilegedSessionResolver|null $resolver The --as-user resolver; a fresh one when null.
 	 *
 	 * @return array{0: int, 1: string}
 	 */
-	private function runCommand(HrDocumentService $service, array $options): array {
-		$command = new DocumentsGenerateCommand($service);
+	private function runCommand(HrDocumentService $service, array $options, ?PrivilegedSessionResolver $resolver = null): array {
+		$resolver ??= new PrivilegedSessionResolver($this->createMock(IUserManager::class), $this->createMock(IGroupManager::class), $this->createMock(IUserSession::class));
+		$command  = new DocumentsGenerateCommand($service, $resolver);
 		$output  = new BufferedOutput();
 		$exit    = $command->run(new ArrayInput($options, $command->getDefinition()), $output);
 
