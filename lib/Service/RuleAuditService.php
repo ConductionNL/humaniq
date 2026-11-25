@@ -222,15 +222,14 @@ class RuleAuditService implements RuleAuditServiceInterface {
 		// payroll-sepa-netpay-shillinq: an employee-IBAN-presence index (keyed by
 		// id, slug, AND employeeNumber -- the same three-way resolution
 		// PayrollNetPayService uses) plus the set of periods with a payable
-		// (approved/posted) PayrollRun, so NlNetPayChecks::checks()['Payslip']
-		// ['nl-netpay-iban-present'] stays a pure fn(array $o, array $context)
+		// (approved/posted) PayrollRun, so NlNetPayChecks' table-declared
+		// nl-netpay-iban-present derives from (array $o, array $context) alone
 		// instead of re-querying siblings.
 		$context['netpay'] = $this->buildNetPayContext();
 
 		// humaniq-docudesk-documents: a per-contract index of contracts with an
 		// active generated arbeidsovereenkomst GeneratedDocument, so
-		// NlDocumentChecks::checks()['EmploymentContract']
-		// ['nl-contract-schriftelijk'] can resolve document evidence for a
+		// NlDocumentChecks' table-declared nl-contract-schriftelijk can resolve document evidence for a
 		// permanent written contract without re-querying the register.
 		$context['documents'] = $this->buildDocumentsContext();
 

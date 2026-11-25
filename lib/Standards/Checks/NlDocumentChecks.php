@@ -37,6 +37,13 @@
  * same pattern NlGlPostChecks/NlPensionFilingChecks document for cross-object
  * predicates whose sample would otherwise need a resolvable sibling reference.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): both rules are declared as OpenRegister decision tables via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicates remain
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -56,34 +63,103 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Written-permanent-contract document-evidence executable check.
+ *
+ * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-004
  */
-final class NlDocumentChecks implements CheckProvider {
+final class NlDocumentChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: every check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			'EmploymentContract' => [
-				'nl-contract-schriftelijk' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
-			],
-			'Payslip' => [
-				'nl-loonstrook-verplicht' => static fn (array $o, array $context): bool => self::isLoonstrookDocumented($o, $context),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Both document-evidence rules as derivation + FIRST-hit decision table.
+	 * An object without an id derives null and passes: the document index
+	 * cannot be keyed, and a violation is never fabricated.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function tables(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-contract-schriftelijk' => [
+					'derive' => static fn (array $o, array $context): ?array => self::documentInputs(
+						$o,
+						(array)($context['documents']['generatedArbeidsovereenkomstByContract'] ?? []),
+						['permanentWritten' => ((string)($o['type'] ?? '') === 'permanent' && ($o['writtenContract'] ?? false) === true)]
+					),
+					'table' => self::satisfiedTable(
+						[['name' => 'permanentWritten', 'type' => 'boolean'], ['name' => 'documented', 'type' => 'boolean']],
+						[['id' => 'written-permanent-without-document', 'inputEntries' => ['true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+			'Payslip' => [
+				'nl-loonstrook-verplicht' => [
+					'derive' => static fn (array $o, array $context): ?array => self::documentInputs(
+						$o,
+						(array)($context['documents']['generatedLoonstrookByPayslip'] ?? []),
+						[]
+					),
+					'table' => self::satisfiedTable(
+						[['name' => 'documented', 'type' => 'boolean']],
+						[['id' => 'payslip-without-loonstrook', 'inputEntries' => ['false'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function seedSpec(): array {
 		return [];
 	}//end seedSpec()
+
+	/**
+	 * The table inputs for a document-evidence rule: the given leading
+	 * inputs, then whether the object's id has a generated document in the
+	 * index. Null when the object has no id.
+	 *
+	 * @param array<string, mixed> $o       The object.
+	 * @param array<string, mixed> $index   The generated-document index, keyed by object id.
+	 * @param array<string, bool>  $leading The inputs before `documented`.
+	 *
+	 * @return array<string, bool>|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function documentInputs(array $o, array $index, array $leading): ?array {
+		$objectId = (string)($o['id'] ?? $o['@self']['id'] ?? '');
+		if ($objectId === '') {
+			return null;
+		}
+
+		return array_merge($leading, ['documented' => (bool)($index[$objectId] ?? false)]);
+
+	}//end documentInputs()
 
 	/**
 	 * The `nl-contract-schriftelijk` predicate (spec.md REQ-HDD-009): a
@@ -134,5 +210,28 @@ final class NlDocumentChecks implements CheckProvider {
 
 		return (bool)($context['documents']['generatedLoonstrookByPayslip'][$payslipId] ?? false);
 	}//end isLoonstrookDocumented()
+
+	/**
+	 * Parity oracle for the two document-evidence rules: their closures from
+	 * before the conversion, read only by NlDocumentTableParityTest and
+	 * dropped once an OpenRegister audit run has shown the tables give the
+	 * same verdicts (REQ-RULE-009).
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-004
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-contract-schriftelijk' => static fn (array $o, array $context): bool => self::isCompliant($o, $context),
+			],
+			'Payslip' => [
+				'nl-loonstrook-verplicht' => static fn (array $o, array $context): bool => self::isLoonstrookDocumented($o, $context),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
