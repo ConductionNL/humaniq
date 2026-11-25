@@ -49,20 +49,6 @@ final class NlPayslipStatementChecks implements CheckProvider, ProvidesTables {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * Empty: the four statement rules are table-declared (see tables()).
-	 *
-	 * @return array<string, array<string, callable>>
-	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
-	 */
-	public static function checks(): array {
-		return [];
-
-	}//end checks()
-
-	/**
-	 * {@inheritDoc}
-	 *
 	 * A numeric applied rate of exactly 52% with the anoniementarief flag, or
 	 * below 52% without it; a numeric remaining vrije ruimte that is not
 	 * negative unless an excess is recorded; any WKR excess at a numeric 80%
@@ -120,23 +106,7 @@ final class NlPayslipStatementChecks implements CheckProvider, ProvidesTables {
 					),
 				],
 				// BW 7:626 lid 1 — the payslip states gross wage, deduction basis, minimum wage and identification.
-				'nl-loonstrook-inhoud' => [
-					'derive' => static fn (array $payslip): array => [
-						'grossWage' => (($payslip['showsGrossWage'] ?? false) === true),
-						'deductionBasis' => (($payslip['showsDeductionBasis'] ?? false) === true),
-						'minimumWage' => (($payslip['showsMinimumWage'] ?? false) === true),
-						'identification' => (($payslip['showsEmployerEmployeeIds'] ?? false) === true),
-					],
-					'table' => self::satisfiedTable(
-						[['name' => 'grossWage', 'type' => 'boolean'], ['name' => 'deductionBasis', 'type' => 'boolean'], ['name' => 'minimumWage', 'type' => 'boolean'], ['name' => 'identification', 'type' => 'boolean']],
-						[
-							['id' => 'gross-wage-not-shown', 'inputEntries' => ['false', '-', '-', '-'], 'outputEntries' => [false]],
-							['id' => 'deduction-basis-not-shown', 'inputEntries' => ['-', 'false', '-', '-'], 'outputEntries' => [false]],
-							['id' => 'minimum-wage-not-shown', 'inputEntries' => ['-', '-', 'false', '-'], 'outputEntries' => [false]],
-							['id' => 'identification-not-shown', 'inputEntries' => ['-', '-', '-', 'false'], 'outputEntries' => [false]],
-						]
-					),
-				],
+				'nl-loonstrook-inhoud' => self::loonstrookContent(),
 			],
 		];
 
@@ -145,16 +115,45 @@ final class NlPayslipStatementChecks implements CheckProvider, ProvidesTables {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * No seed of its own; NlPayrollChecks seeds the sample Payslip.
+	 * Empty: the four statement rules are table-declared (see tables()).
 	 *
-	 * @return array<string, array<string, mixed>>
+	 * @return array<string, array<string, callable>>
 	 *
 	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
-	public static function seedSpec(): array {
+	public static function checks(): array {
 		return [];
 
-	}//end seedSpec()
+	}//end checks()
+
+	/**
+	 * The loonstrook-content check: every one of the four statements BW 7:626
+	 * lid 1 requires is shown.
+	 *
+	 * @return array{derive: callable, table: array<string, mixed>}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function loonstrookContent(): array {
+		return [
+			'derive' => static fn (array $payslip): array => [
+				'grossWage' => (($payslip['showsGrossWage'] ?? false) === true),
+				'deductionBasis' => (($payslip['showsDeductionBasis'] ?? false) === true),
+				'minimumWage' => (($payslip['showsMinimumWage'] ?? false) === true),
+				'identification' => (($payslip['showsEmployerEmployeeIds'] ?? false) === true),
+			],
+			'table' => self::satisfiedTable(
+				[['name' => 'grossWage', 'type' => 'boolean'], ['name' => 'deductionBasis', 'type' => 'boolean'], ['name' => 'minimumWage', 'type' => 'boolean'], ['name' => 'identification', 'type' => 'boolean']],
+				[
+					['id' => 'gross-wage-not-shown', 'inputEntries' => ['false', '-', '-', '-'], 'outputEntries' => [false]],
+					['id' => 'deduction-basis-not-shown', 'inputEntries' => ['-', 'false', '-', '-'], 'outputEntries' => [false]],
+					['id' => 'minimum-wage-not-shown', 'inputEntries' => ['-', '-', 'false', '-'], 'outputEntries' => [false]],
+					['id' => 'identification-not-shown', 'inputEntries' => ['-', '-', '-', 'false'], 'outputEntries' => [false]],
+				]
+			),
+		];
+
+	}//end loonstrookContent()
 
 	/**
 	 * Whether the applied tax rate agrees with the anoniementarief flag.
@@ -231,4 +230,18 @@ final class NlPayslipStatementChecks implements CheckProvider, ProvidesTables {
 		];
 
 	}//end legacyChecks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * No seed of its own; NlPayrollChecks seeds the sample Payslip.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function seedSpec(): array {
+		return [];
+
+	}//end seedSpec()
 }//end class
