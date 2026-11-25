@@ -196,6 +196,23 @@ class LoonrunFlowRepairOutcomesTest extends TestCase {
 	}//end record()
 
 	/**
+	 * Without OpenRegister the repair looks none of its classes up.
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenRegisterNothingIsLookedUp(): void {
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('isInstalled')->willReturn(false);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects(self::never())->method('get');
+
+		$service = new LoonrunFlowRepairService(new OpenRegisterAvailability($apps), $container, new FlowGraphKeypaths(), new NullLogger());
+
+		self::assertSame(['status' => 'skipped', 'detail' => 'OpenRegister is not installed or enabled.'], $service->repair());
+
+	}//end testWithoutOpenRegisterNothingIsLookedUp()
+
+	/**
 	 * Each way the repair stops before it publishes.
 	 *
 	 * @return void

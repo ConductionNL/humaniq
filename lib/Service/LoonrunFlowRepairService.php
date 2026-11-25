@@ -124,7 +124,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
 	 */
 	public function repair(): array {
-		if ($this->openRegister->isAvailable() === false) {
+		if ($this->isOpenRegisterAvailable() === false) {
 			return ['status' => 'skipped', 'detail' => 'OpenRegister is not installed or enabled.'];
 		}
 
@@ -136,6 +136,23 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 		return $this->repairFlow(flow: $flow);
 
 	}//end repair()
+
+	/**
+	 * Whether OpenRegister is installed, asked before any lookup of its classes.
+	 *
+	 * Every container lookup of OpenRegister in this class is reached only after
+	 * this answered true at the public entry point, so the dependency stays
+	 * optional (hydra ADR-083 rule 1, the guarded-lookup shape) instead of making
+	 * this service unconstructable without OpenRegister.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
+	 */
+	private function isOpenRegisterAvailable(): bool {
+		return $this->openRegister->isAvailable();
+
+	}//end isOpenRegisterAvailable()
 
 	/**
 	 * Republish the flow's corrected head when its published v1 is untouched;
