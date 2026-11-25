@@ -70,10 +70,12 @@ class DocumentsGenerateCommand extends Command {
 	private const FAILURE_STATUSES = ['failed', 'usage-error'];
 
 	/**
-	 * @param HrDocumentServiceInterface $service The document-generation service.
+	 * @param HrDocumentServiceInterface $service         The document-generation service.
+	 * @param PrivilegedSessionResolver  $sessionResolver Establishes the --as-user session the run renders as.
 	 */
 	public function __construct(
 		private readonly HrDocumentServiceInterface $service,
+		private readonly PrivilegedSessionResolver $sessionResolver,
 	) {
 		parent::__construct();
 
@@ -92,7 +94,8 @@ class DocumentsGenerateCommand extends Command {
 			->addOption('type', null, InputOption::VALUE_REQUIRED, 'Document type (arbeidsovereenkomst|aanbiedingsbrief|werkgeversverklaring|getuigschrift|loonstrook|jaaropgaaf).')
 			->addOption('employee', null, InputOption::VALUE_REQUIRED, 'Restrict to one Employee id (required for employee-level letter types).')
 			->addOption('period', null, InputOption::VALUE_REQUIRED, 'Restrict the loonstrook backlog to one YYYY-MM period (--type loonstrook only).')
-			->addOption('year', null, InputOption::VALUE_REQUIRED, 'The year to aggregate/render (--type jaaropgaaf only; required for that type).');
+			->addOption('year', null, InputOption::VALUE_REQUIRED, 'The year to aggregate/render (--type jaaropgaaf only; required for that type).')
+			->addOption('as-user', null, InputOption::VALUE_REQUIRED, 'The Nextcloud administrator uid the run renders as. A console process has no user, and docudesk\'s templates are readable only by a signed-in user.');
 
 	}//end configure()
 
@@ -110,6 +113,13 @@ class DocumentsGenerateCommand extends Command {
 
 		if ($type !== null && in_array($type, self::DOCUMENT_TYPES, true) === false) {
 			$output->writeln('<error>Onbekend documenttype "' . $type . '".</error>');
+			return 1;
+		}
+
+		// A console process has no user, and docudesk refuses its templates to
+		// an anonymous reader: without a session every attempt fails. The
+		// option stays optional so the command line REQ-HDD-007 names still runs.
+		if ($input->getOption('as-user') !== null && $this->sessionResolver->refuses($input, $output) === true) {
 			return 1;
 		}
 
