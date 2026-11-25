@@ -24,6 +24,13 @@
  * precedent) — the Onboarding seed data instead lives in
  * lib/Settings/register.d/hr-seed.json (ADR-001).
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): each of the three onboarding rules is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -44,8 +51,12 @@ use DateTimeImmutable;
 
 /**
  * Dutch onboarding (WID / proeftijd / loonheffingenverklaring) executable checks.
+ *
+ * @spec openspec/specs/onboarding-wizard/spec.md
  */
-final class NlOnboardingChecks implements CheckProvider {
+final class NlOnboardingChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * Onboarding statuses at/past "ready for the first workday" — the MVP proxy
@@ -57,30 +68,87 @@ final class NlOnboardingChecks implements CheckProvider {
 	private const READY_OR_LATER = ['gereed_eerste_werkdag', 'proeftijd_lopend', 'afgerond'];
 
 	/**
+	 * READY_OR_LATER as a decision-table input entry.
+	 *
+	 * @var string
+	 */
+	private const READY_OR_LATER_TEST = 'in ("gereed_eerste_werkdag","proeftijd_lopend","afgerond")';
+
+	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			'Onboarding' => [
-				// Wet op de identificatieplicht art. 15 jo. Wet LB 1964 art. 28 lid 1
-				// onder f — the WID check must precede the first workday.
-				'nl-onboarding-wid-check' => static fn (array $o): bool => self::widCheckSatisfied($o),
-				// BW art. 7:652 — proeftijd contract-type caps, plus overdue-unclosed.
-				'nl-onboarding-proeftijd-bewaking' => static fn (array $o, array $c): bool => self::proeftijdSatisfied($o, $c),
-				// Wet LB 1964 art. 29 jo. 28 — loonheffingenverklaring on file before
-				// the first payroll run (proxied by status, D3).
-				'nl-onboarding-loonheffingenverklaring' => static fn (array $o, array $c): bool => self::loonheffingenverklaringSatisfied($o, $c),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * The three Onboarding rules as derivation + FIRST-hit decision tables.
+	 * The date arithmetic (start date passed, proeftijd cap, overdue end)
+	 * stays in the derivations; the tables decide over the flags.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/onboarding-wizard/spec.md
+	 */
+	public static function tables(): array {
+		return [
+			'Onboarding' => [
+				'nl-onboarding-wid-check' => [
+					'derive' => static fn (array $o): array => self::widInputs($o),
+					'table' => self::satisfiedTable(
+						[
+							['name' => 'cancelled', 'type' => 'boolean'],
+							['name' => 'widCheckDone', 'type' => 'boolean'],
+							['name' => 'startDatePassed', 'type' => 'boolean'],
+							['name' => 'status', 'type' => 'string'],
+						],
+						[
+							['id' => 'started-without-wid-check', 'inputEntries' => ['false', 'false', 'true', '-'], 'outputEntries' => [false]],
+							['id' => 'ready-without-wid-check', 'inputEntries' => ['false', 'false', '-', self::READY_OR_LATER_TEST], 'outputEntries' => [false]],
+						]
+					),
+				],
+				'nl-onboarding-proeftijd-bewaking' => [
+					'derive' => static fn (array $o, array $c): array => [
+						'withinContractCap' => self::proeftijdWithinContractCap($o, $c),
+						'overdueUnclosed' => (self::proeftijdNotOverdueUnclosed($o) === false),
+					],
+					'table' => self::satisfiedTable(
+						[['name' => 'withinContractCap', 'type' => 'boolean'], ['name' => 'overdueUnclosed', 'type' => 'boolean']],
+						[
+							['id' => 'proeftijd-over-cap', 'inputEntries' => ['false', '-'], 'outputEntries' => [false]],
+							['id' => 'proeftijd-overdue', 'inputEntries' => ['-', 'true'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				'nl-onboarding-loonheffingenverklaring' => [
+					'derive' => static fn (array $o, array $c): array => self::verklaringInputs($o, $c),
+					'table' => self::satisfiedTable(
+						[['name' => 'status', 'type' => 'string'], ['name' => 'verklaringOnFile', 'type' => 'boolean']],
+						[['id' => 'ready-without-verklaring', 'inputEntries' => [self::READY_OR_LATER_TEST, 'false'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/onboarding-wizard/spec.md
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -264,5 +332,74 @@ final class NlOnboardingChecks implements CheckProvider {
 		$byEmployeeId = ($c['related']['EmploymentContract']['byEmployeeId'] ?? []);
 		return is_array($byEmployeeId) === true ? $byEmployeeId : [];
 	}//end relatedContractByEmployeeId()
+
+	/**
+	 * The WID-check table's inputs.
+	 *
+	 * @param array<string, mixed> $o The Onboarding.
+	 *
+	 * @return array{cancelled: bool, widCheckDone: bool, startDatePassed: bool, status: string}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function widInputs(array $o): array {
+		$startDate = strtotime((string)($o['startDate'] ?? ''));
+
+		return [
+			'cancelled' => ((string)($o['status'] ?? 'aangenomen') === 'geannuleerd'),
+			'widCheckDone' => (($o['widCheckDone'] ?? false) === true),
+			'startDatePassed' => ($startDate !== false && $startDate < (new DateTimeImmutable('today'))->getTimestamp()),
+			'status' => (string)($o['status'] ?? ''),
+		];
+
+	}//end widInputs()
+
+	/**
+	 * The loonheffingenverklaring table's inputs: the status, and whether the
+	 * employee resolves with a verklaring on file (a missing employee counts
+	 * as none on file).
+	 *
+	 * @param array<string, mixed> $o The Onboarding.
+	 * @param array<string, mixed> $c Evaluation context; reads the Employee index.
+	 *
+	 * @return array{status: string, verklaringOnFile: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function verklaringInputs(array $o, array $c): array {
+		$employee = (self::relatedEmployeesById($c)[(string)($o['employeeId'] ?? '')] ?? null);
+
+		return [
+			'status' => (string)($o['status'] ?? ''),
+			'verklaringOnFile' => (is_array($employee) === true && ($employee['loonheffingenVerklaringOnFile'] ?? false) === true),
+		];
+
+	}//end verklaringInputs()
+
+	/**
+	 * Reference closures for the three onboarding tables, from before the
+	 * conversion. NlOnboardingTableParityTest holds them against tables();
+	 * nothing registers them, and the OpenRegister audit run retires them.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/onboarding-wizard/spec.md
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'Onboarding' => [
+				// Wet op de identificatieplicht art. 15 jo. Wet LB 1964 art. 28 lid 1
+				// onder f — the WID check must precede the first workday.
+				'nl-onboarding-wid-check' => static fn (array $o): bool => self::widCheckSatisfied($o),
+				// BW art. 7:652 — proeftijd contract-type caps, plus overdue-unclosed.
+				'nl-onboarding-proeftijd-bewaking' => static fn (array $o, array $c): bool => self::proeftijdSatisfied($o, $c),
+				// Wet LB 1964 art. 29 jo. 28 — loonheffingenverklaring on file before
+				// the first payroll run (proxied by status, D3).
+				'nl-onboarding-loonheffingenverklaring' => static fn (array $o, array $c): bool => self::loonheffingenverklaringSatisfied($o, $c),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

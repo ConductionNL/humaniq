@@ -191,8 +191,8 @@ final class RelatedContextIndexer {
 	private function employees(): array {
 		// onboarding-wizard-mvp: an Employee index (loonheffingenVerklaringOnFile +
 		// startDate, keyed by id/slug — the Timesheet/Onboarding employeeId
-		// reference mechanism) so NlOnboardingChecks::checks()['Onboarding']
-		// ['nl-onboarding-loonheffingenverklaring'] can resolve the hire's Employee
+		// reference mechanism) so NlOnboardingChecks' table-declared
+		// nl-onboarding-loonheffingenverklaring can resolve the hire's Employee
 		// without re-querying the register.
 		$employeesById = [];
 		foreach ($this->rows('Employee') as $employee) {
@@ -366,8 +366,8 @@ final class RelatedContextIndexer {
 	 */
 	private function assets(): array {
 		// asset-management-mvp: an Asset index (id, status, active), keyed by
-		// id, so NlAssetChecks::checks()['AssetAssignment']
-		// ['nl-asset-assignment-consistency'] can resolve an open assignment's
+		// id, so NlAssetChecks' table-declared
+		// nl-asset-assignment-consistency can resolve an open assignment's
 		// asset status without re-querying the register. humaniq-asset-fleet-merge
 		// (design.md D4) extends it with category/listPrice/fuelType/
 		// companyCarTaxCategory -- the fields NlFleetChecks::checks()['Payslip']
@@ -440,8 +440,8 @@ final class RelatedContextIndexer {
 		// plannedCompletionByEmployeeId index -- the latest `lastWorkingDay`
 		// among an employee's non-cancelled (status !== geannuleerd)
 		// Offboarding cases, keyed by employeeId -- consumed by
-		// NlAssetChecks::checks()['AssetAssignment']
-		// ['nl-asset-inname-bij-offboarding']. Entries with a missing
+		// NlAssetChecks' table-declared nl-asset-inname-bij-offboarding.
+		// Entries with a missing
 		// employeeId/lastWorkingDay, or an unparseable date, are skipped
 		// (skipping degrades to vacuous pass, never to a false violation).
 		// Degrades to an empty map when the Offboarding schema does not exist
