@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlTravelExpenseChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use OCA\Humaniq\Standards\RuleCatalogue;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
@@ -46,6 +47,19 @@ class NlTravelExpenseChecksTest extends TestCase {
 
 	private const RULE_ID = 'nl-reiskosten-onbelast-tarief';
 
+
+	/**
+	 * The rule as the engine runs it (the table path), with the context
+	 * optional as it was for the object-local closure.
+	 *
+	 * @return callable
+	 */
+	private static function tablePredicate(): callable {
+		$predicate = TableCheckRegistry::checks([NlTravelExpenseChecks::class])['Expense'][self::RULE_ID];
+
+		return static fn (array $o, array $c = []): bool => $predicate($o, $c);
+
+	}//end tablePredicate()
 	/**
 	 * Reset every statically-memoised layer so each test loads the real
 	 * catalogue/corpus fresh.
@@ -73,7 +87,7 @@ class NlTravelExpenseChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheVerdictForEveryShapeOfExpense(): void {
-		$check = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$check = self::tablePredicate();
 		$trip = ['category' => 'travel', 'travelType' => 'business', 'distanceKm' => 100, 'amount' => 23];
 		$cases = [
 			'at-rate' => $trip,
@@ -166,7 +180,7 @@ class NlTravelExpenseChecksTest extends TestCase {
 	 * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
 	 */
 	public function testRuleIsReachableFromTheEngine(): void {
-		$this->assertArrayHasKey(self::RULE_ID, (NlTravelExpenseChecks::checks()['Expense'] ?? []));
+		$this->assertArrayHasKey(self::RULE_ID, (NlTravelExpenseChecks::tables()['Expense'] ?? []));
 		$this->assertContains(self::RULE_ID, RuleEngine::checkedRuleIds());
 		$this->assertContains('Expense', RuleEngine::supportedTypes());
 
@@ -397,7 +411,7 @@ class NlTravelExpenseChecksTest extends TestCase {
 	 * @spec openspec/changes/mileage-rules/specs/mileage-rules/spec.md#REQ-MILE-003
 	 */
 	public function testPredicateContractToleratesMissingContext(): void {
-		$checks = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$checks = self::tablePredicate();
 		$expense = [
 			'category' => 'travel',
 			'travelType' => 'business',
@@ -419,7 +433,7 @@ class NlTravelExpenseChecksTest extends TestCase {
 	 * @spec openspec/specs/expenses-travel-calculation/spec.md#REQ-TRV-001
 	 */
 	public function testTheRateIsReadFromTheCorpusOnEveryCall(): void {
-		$check = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$check = self::tablePredicate();
 		$claim = ['category' => 'travel', 'travelType' => 'business', 'distanceKm' => 100, 'amount' => 30];
 
 		$this->assertSame(0.23, NlTravelExpenseChecks::taxFreeRatePerKm());
@@ -446,7 +460,7 @@ class NlTravelExpenseChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnreadableCorpusRateMakesTheCheckVacuous(): void {
-		$check = NlTravelExpenseChecks::checks()['Expense'][self::RULE_ID];
+		$check = self::tablePredicate();
 		$overRate = ['category' => 'travel', 'travelType' => 'commute', 'distanceKm' => 10, 'amount' => 50];
 		$shapes = [
 			'missing' => null,

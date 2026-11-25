@@ -38,6 +38,14 @@
  * `related.AssetAssignment.byId` indexes carry everything this predicate
  * needs instead.
  *
+ * Converted in part to the table-backed check form (rules-onto-or-decision-
+ * tables, next conversion wave): `nl-asset-voertuig-fiscale-velden-compleet`
+ * is an OpenRegister decision table via the ProvidesTables capability, its
+ * closure kept as legacyChecks() -- the parity oracle, NOT registered --
+ * until staged retirement (REQ-RULE-009). `nl-bijtelling-auto-privegebruik`
+ * stays a closure: it recomputes the statutory bijtelling formula, not a
+ * table shape.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -62,9 +70,12 @@ use OCA\Humaniq\Support\RoundsToCents;
 /**
  * Fleet bijtelling arithmetic-consistency + vehicle-fiscal-completeness
  * executable checks.
+ *
+ * @spec openspec/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
  */
-final class NlFleetChecks implements CheckProvider {
+final class NlFleetChecks implements CheckProvider, ProvidesTables {
 
+	use BuildsSatisfiedTables;
 	use RoundsToCents;
 
 	/**
@@ -80,9 +91,6 @@ final class NlFleetChecks implements CheckProvider {
 			'Payslip' => [
 				'nl-bijtelling-auto-privegebruik' => static fn (array $o, array $context): bool => self::bijtellingMatchesFormula($o, $context),
 			],
-			'Asset' => [
-				'nl-asset-voertuig-fiscale-velden-compleet' => static fn (array $o, array $context): bool => self::vehicleFiscalFieldsComplete($o),
-			],
 		];
 
 	}//end checks()
@@ -90,7 +98,50 @@ final class NlFleetChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * The vehicle fiscal-fields rule as derivation + FIRST-hit decision
+	 * table: a vehicle asset missing its list price, fuel type or bijtelling
+	 * category fails.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-001
+	 */
+	public static function tables(): array {
+		return [
+			'Asset' => [
+				'nl-asset-voertuig-fiscale-velden-compleet' => [
+					'derive' => static fn (array $o): array => [
+						'vehicle' => ((string)($o['category'] ?? '') === 'vehicle'),
+						'listPriceRecorded' => self::fieldRecorded($o, 'listPrice'),
+						'fuelTypeRecorded' => self::fieldRecorded($o, 'fuelType'),
+						'taxCategoryRecorded' => self::fieldRecorded($o, 'companyCarTaxCategory'),
+					],
+					'table' => self::satisfiedTable(
+						[
+							['name' => 'vehicle', 'type' => 'boolean'],
+							['name' => 'listPriceRecorded', 'type' => 'boolean'],
+							['name' => 'fuelTypeRecorded', 'type' => 'boolean'],
+							['name' => 'taxCategoryRecorded', 'type' => 'boolean'],
+						],
+						[
+							['id' => 'vehicle-without-list-price', 'inputEntries' => ['true', 'false', '-', '-'], 'outputEntries' => [false]],
+							['id' => 'vehicle-without-fuel-type', 'inputEntries' => ['true', '-', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'vehicle-without-tax-category', 'inputEntries' => ['true', '-', '-', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/fleet-bijtelling/spec.md#REQ-FLEET-004
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -242,4 +293,39 @@ final class NlFleetChecks implements CheckProvider {
 
 		return max(0, ((int)round($baseCents / 12)) - $employeeContributionCents);
 	}//end monthlyBijtellingCents()
+
+	/**
+	 * Whether a field is present, non-null and not blank.
+	 *
+	 * @param array<string, mixed> $o     The Asset.
+	 * @param string               $field The field name.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function fieldRecorded(array $o, string $field): bool {
+		return array_key_exists($field, $o) === true && $o[$field] !== null && trim((string)$o[$field]) !== '';
+
+	}//end fieldRecorded()
+
+	/**
+	 * The vehicle fiscal-fields closure from before its table, which
+	 * NlFleetTableParityTest checks the table against. Not registered, and
+	 * removed after the OpenRegister audit run confirms the table.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/asset-management/spec.md#REQ-AST-001
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'Asset' => [
+				'nl-asset-voertuig-fiscale-velden-compleet' => static fn (array $o): bool => self::vehicleFiscalFieldsComplete($o),
+			],
+		];
+
+	}//end legacyChecks()
+
 }//end class
