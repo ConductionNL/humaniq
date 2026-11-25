@@ -35,6 +35,15 @@
  * an expected value from, so this provider does not register a check for
  * them — nothing to compare against, not merely "not yet implemented".
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the rule is declared as an OpenRegister decision
+ * table on every registered type via the ProvidesTables capability. Resolving
+ * the parent's administratie stays here as the derivation (null when either
+ * side is missing, so the rule stays vacuous there); the shared
+ * Dmn\DecisionTableEvaluator decides. The pre-table closures stay as
+ * legacyChecks(), the oracle NlAdministratieTableParityTest compares with,
+ * never registered in the engine, until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -54,7 +63,9 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * Cross-object administratie-scope consistency checks.
  */
-final class NlAdministratieChecks implements CheckProvider {
+final class NlAdministratieChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * The shared rule id every registration below evaluates.
@@ -64,31 +75,107 @@ final class NlAdministratieChecks implements CheckProvider {
 	private const RULE_ID = 'nl-administratie-scope-consistency';
 
 	/**
+	 * The Employee-anchored types the rule is registered on, besides Payslip.
+	 *
+	 * @var array<int, string>
+	 */
+	private const EMPLOYEE_ANCHORED = [
+		'EmploymentContract',
+		'Timesheet',
+		'Expense',
+		'LeaveRequest',
+		'LeaveBalance',
+		'SickLeaveCase',
+		'Onboarding',
+		'OrgAssignment',
+		'AttendanceRecord',
+		'AssetAssignment',
+		'PerformanceReview',
+	];
+
+	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the rule this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		$viaEmployee = static fn (array $o, array $c): bool => self::consistentViaEmployee($o, $c);
-
-		return [
-			'Payslip' => [
-				self::RULE_ID => static fn (array $o, array $c): bool => self::consistentViaPayrollRun($o, $c),
-			],
-			'EmploymentContract' => [self::RULE_ID => $viaEmployee],
-			'Timesheet' => [self::RULE_ID => $viaEmployee],
-			'Expense' => [self::RULE_ID => $viaEmployee],
-			'LeaveRequest' => [self::RULE_ID => $viaEmployee],
-			'LeaveBalance' => [self::RULE_ID => $viaEmployee],
-			'SickLeaveCase' => [self::RULE_ID => $viaEmployee],
-			'Onboarding' => [self::RULE_ID => $viaEmployee],
-			'OrgAssignment' => [self::RULE_ID => $viaEmployee],
-			'AttendanceRecord' => [self::RULE_ID => $viaEmployee],
-			'AssetAssignment' => [self::RULE_ID => $viaEmployee],
-			'PerformanceReview' => [self::RULE_ID => $viaEmployee],
-		];
+		return [];
 
 	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-administratie-scope-consistency` on Payslip (against its PayrollRun)
+	 * and on every Employee-anchored type (against its Employee): a record
+	 * whose administratie differs from its parent's fails. A missing own
+	 * value, reference, parent or parent value derives null and passes.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
+	 */
+	public static function tables(): array {
+		$table = self::satisfiedTable(
+			[['name' => 'sameAdministration', 'type' => 'boolean']],
+			[['id' => 'administratie-differs-from-parent', 'inputEntries' => ['false'], 'outputEntries' => [false]]]
+		);
+		$viaEmployee = [
+			'derive' => static fn (array $o, array $c): ?array => self::scopeInputs($o, 'employeeId', self::employeesById($c)),
+			'table' => $table,
+		];
+
+		$tables = [
+			'Payslip' => [
+				self::RULE_ID => [
+					'derive' => static fn (array $o, array $c): ?array => self::scopeInputs($o, 'payrollRunId', self::runsById($c)),
+					'table' => $table,
+				],
+			],
+		];
+		foreach (self::EMPLOYEE_ANCHORED as $type) {
+			$tables[$type] = [self::RULE_ID => $viaEmployee];
+		}
+
+		return $tables;
+
+	}//end tables()
+
+	/**
+	 * The scope table's input: whether the record's own administratie equals
+	 * its parent's. Null when the record has no administratie or no parent
+	 * reference, the parent is not in the index, or the parent has no
+	 * administratie.
+	 *
+	 * @param array<string, mixed>                $o        The record.
+	 * @param string                              $refField The field naming the parent.
+	 * @param array<string, array<string, mixed>> $parents  The parent index, by id.
+	 *
+	 * @return array{sameAdministration: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function scopeInputs(array $o, string $refField, array $parents): ?array {
+		$own = trim((string)($o['administrationId'] ?? ''));
+		$ref = trim((string)($o[$refField] ?? ''));
+		$parent = ($parents[$ref] ?? null);
+		if ($own === '' || $ref === '' || is_array($parent) === false) {
+			return null;
+		}
+
+		$parentAdministration = trim((string)($parent['administrationId'] ?? ''));
+		if ($parentAdministration === '') {
+			return null;
+		}
+
+		return ['sameAdministration' => ($own === $parentAdministration)];
+
+	}//end scopeInputs()
 
 	/**
 	 * {@inheritDoc}
@@ -196,5 +283,26 @@ final class NlAdministratieChecks implements CheckProvider {
 		$byId = ($c['related']['Employee']['byId'] ?? []);
 		return is_array($byId) === true ? $byId : [];
 	}//end employeesById()
+
+	/**
+	 * The scope closures as registered before the tables: Payslip against
+	 * its run, the rest against their Employee. Kept only so
+	 * NlAdministratieTableParityTest can compare tables() with them.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
+	 */
+	public static function legacyChecks(): array {
+		$viaEmployee = static fn (array $o, array $c): bool => self::consistentViaEmployee($o, $c);
+		$checks = ['Payslip' => [self::RULE_ID => static fn (array $o, array $c): bool => self::consistentViaPayrollRun($o, $c)]];
+		foreach (self::EMPLOYEE_ANCHORED as $type) {
+			$checks[$type] = [self::RULE_ID => $viaEmployee];
+		}
+
+		return $checks;
+
+	}//end legacyChecks()
 
 }//end class

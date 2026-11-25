@@ -61,7 +61,7 @@ class NlAdministratieChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$checks = NlAdministratieChecks::checks();
+		$checks = NlAdministratieChecks::legacyChecks();
 		$this->payslipChecks = $checks['Payslip'];
 		$this->timesheetChecks = $checks['Timesheet'];
 
@@ -74,7 +74,9 @@ class NlAdministratieChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testEveryEmployeeAnchoredSchemaIsRegistered(): void {
-		$checks = NlAdministratieChecks::checks();
+		$checks = NlAdministratieChecks::tables();
+		$this->assertSame([], NlAdministratieChecks::checks());
+		$this->assertSame(array_keys(NlAdministratieChecks::legacyChecks()), array_keys($checks));
 
 		foreach (
 			[
