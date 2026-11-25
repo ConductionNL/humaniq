@@ -40,6 +40,16 @@
  * `recommended` severity, the deliberate inverse posture of the two
  * `mandatory` predicates above.
  *
+ * Converted in part to the table-backed check form
+ * (rules-onto-or-decision-tables, next conversion wave):
+ * `nl-org-assignment-consistency` is declared as an OpenRegister decision
+ * table via the ProvidesTables capability, the date and unit lookups staying
+ * here as its derivation; its closure stays as legacyChecks(), the oracle
+ * NlOrgTableParityTest compares with, never registered in the engine.
+ * `nl-org-unit-cycle` (a walk up the parent chain) and
+ * `nl-mss-manager-consistency` (OrgResolutionService's manager-chain
+ * resolution) are graph algorithms, not tables, and stay closures.
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -67,7 +77,9 @@ use OCA\Humaniq\Service\OrgResolutionService;
  * @spec openspec/changes/org-chart-basic/specs/org-chart-basic/spec.md#REQ-ORG-005
  * @spec openspec/specs/mss-team-scope/spec.md#REQ-MSS-005
  */
-final class NlOrgChecks implements CheckProvider {
+final class NlOrgChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * {@inheritDoc}
@@ -79,12 +91,6 @@ final class NlOrgChecks implements CheckProvider {
 	 */
 	public static function checks(): array {
 		return [
-			'OrgAssignment' => [
-				// Administration-integrity control — coherent dates + the
-				// placement must resolve to an active unit while it is itself
-				// active.
-				'nl-org-assignment-consistency' => static fn (array $o, array $c): bool => self::assignmentConsistent($o, $c),
-			],
 			'OrgUnit' => [
 				// Administration-integrity control — the parentUnitId chain
 				// must never re-enter a unit already walked.
@@ -108,6 +114,58 @@ final class NlOrgChecks implements CheckProvider {
 		];
 
 	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-org-assignment-consistency`: a placement ending before it starts
+	 * fails; a placement still active today fails unless it resolves to an
+	 * active unit. An ended, coherently dated placement passes.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	public static function tables(): array {
+		return [
+			'OrgAssignment' => [
+				'nl-org-assignment-consistency' => [
+					'derive' => static fn (array $o, array $c): array => self::placementInputs(o: $o, c: $c),
+					'table' => self::satisfiedTable(
+						[['name' => 'endsBeforeStart', 'type' => 'boolean'], ['name' => 'active', 'type' => 'boolean'], ['name' => 'inActiveUnit', 'type' => 'boolean']],
+						[
+							['id' => 'ends-before-start', 'inputEntries' => ['true', '-', '-'], 'outputEntries' => [false]],
+							['id' => 'active-outside-an-active-unit', 'inputEntries' => ['false', 'true', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * The placement table's inputs: whether the end date (when given) lies
+	 * before the start, whether the placement is still active today, and
+	 * whether it resolves to an active unit.
+	 *
+	 * @param array<string, mixed> $o The OrgAssignment.
+	 * @param array<string, mixed> $c Evaluation context; reads `related.OrgUnit.byId`.
+	 *
+	 * @return array{endsBeforeStart: bool, active: bool, inActiveUnit: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function placementInputs(array $o, array $c): array {
+		$endDate = trim((string)($o['endDate'] ?? ''));
+
+		return [
+			'endsBeforeStart' => ($endDate !== '' && self::endsBeforeStart(startDate: trim((string)($o['startDate'] ?? '')), endDate: $endDate) === true),
+			'active' => self::isCurrentlyActive($endDate),
+			'inActiveUnit' => self::placedInActiveUnit(o: $o, c: $c),
+		];
+
+	}//end placementInputs()
 
 	/**
 	 * {@inheritDoc}
@@ -351,5 +409,22 @@ final class NlOrgChecks implements CheckProvider {
 		$byId = ($c['related']['Employee']['byId'] ?? []);
 		return is_array($byId) === true ? $byId : [];
 	}//end relatedEmployeesById()
+
+	/**
+	 * The placement closure the engine ran before tables() declared the rule;
+	 * NlOrgTableParityTest holds the table to it. Not registered.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'OrgAssignment' => [
+				'nl-org-assignment-consistency' => static fn (array $o, array $c): bool => self::assignmentConsistent($o, $c),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

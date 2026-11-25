@@ -107,7 +107,7 @@ class AssignmentConsistencyGoldenTest extends TestCase {
 	 * @return void
 	 */
 	public function testThePlacementVerdictForEveryShape(): void {
-		$check = $this->predicate(NlOrgChecks::checks(), 'nl-org-assignment-consistency');
+		$check = $this->predicate(TableCheckRegistry::checks([NlOrgChecks::class]), 'nl-org-assignment-consistency');
 		$context = ['related' => ['OrgUnit' => ['byId' => ['u-1' => ['active' => true], 'u-2' => ['active' => false], 'u-3' => ['active' => 'yes'], 'u-4' => 'x']]]];
 		$placement = ['orgUnitId' => 'u-1', 'startDate' => '2025-01-01'];
 		$cases = [
