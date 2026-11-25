@@ -581,9 +581,6 @@
     </MissingOverrideAttribute>
   </file>
   <file src="lib/Payroll/TaxTables.php">
-    <TaintedFile>
-      <code><![CDATA[file_get_contents($path)]]></code>
-    </TaintedFile>
     <TaintedSSRF>
       <code><![CDATA[file_get_contents($path)]]></code>
     </TaintedSSRF>

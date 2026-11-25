@@ -91,7 +91,7 @@ class ShippedFlowPublisher implements ShippedFlowPublisherInterface {
 	 * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
 	 */
 	public function publishAll(): array {
-		if ($this->openRegister->isAvailable() === false) {
+		if ($this->isOpenRegisterAvailable() === false) {
 			return [['flow' => '*', 'status' => 'skipped', 'detail' => 'OpenRegister is not installed or enabled.']];
 		}
 
@@ -104,6 +104,23 @@ class ShippedFlowPublisher implements ShippedFlowPublisherInterface {
 		return $reports;
 
 	}//end publishAll()
+
+	/**
+	 * Whether OpenRegister is installed, asked before any lookup of its classes.
+	 *
+	 * Every container lookup of OpenRegister in this class is reached only after
+	 * this answered true at the public entry point, so the dependency stays
+	 * optional (hydra ADR-083 rule 1, the guarded-lookup shape) instead of making
+	 * this service unconstructable without OpenRegister.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
+	 */
+	private function isOpenRegisterAvailable(): bool {
+		return $this->openRegister->isAvailable();
+
+	}//end isOpenRegisterAvailable()
 
 	/**
 	 * Every flow this app declares, with the schema it is declared on.
