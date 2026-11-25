@@ -4328,7 +4328,11 @@ OC.L10N.register(
         "The payroll administration this participation belongs to.": "De loonadministratie waar deze deelname bij hoort.",
         "The pension fund whose scheme the employee takes part in.": "Het pensioenfonds aan wiens regeling de werknemer deelneemt.",
         "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.": "Welke werknemer deelneemt aan de pensioenregeling van welk fonds, en vanaf wanneer. De salarisverwerking houdt de werknemerspremie in en legt de werkgeverspremie vast zolang een deelname loopt. Een werknemer kan niet twee keer op dezelfde dag deelnemen.",
-        "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.": "Het lidmaatschap van een werknemer van de pensioenregeling van een fonds over een periode. De salarisverwerking houdt de premies in en legt ze vast zolang het loopt."
+        "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.": "Het lidmaatschap van een werknemer van de pensioenregeling van een fonds over een periode. De salarisverwerking houdt de premies in en legt ze vast zolang het loopt.",
+        "None, I will set this up myself": "Geen, ik richt het zelf in",
+        "Nothing is imported. You start with an empty app and add your own data.": "Er wordt niets geïmporteerd. Je begint met een lege app en voegt je eigen gegevens toe.",
+        "Example data": "Voorbeeldgegevens",
+        "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Voorbeeldmedewerkers, -contracten, -verlofaanvragen en -salarisgegevens voor elk schema dat deze app levert, gemaakt uit de schema's zelf. Zo zie je de lijsten, detailpagina's en dashboards werken; het vertelt geen verhaal. Je kunt het vaker draaien en het daarna weer verwijderen."
     },
     "nplurals=2; plural=(n != 1);"
 )

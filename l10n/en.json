@@ -4330,7 +4330,11 @@
         "The payroll administration this participation belongs to.": "The payroll administration this participation belongs to.",
         "The pension fund whose scheme the employee takes part in.": "The pension fund whose scheme the employee takes part in.",
         "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.": "Which employee takes part in which fund's pension scheme, and from when. The payroll withholds the employee premium and records the employer premium while a participation is in force. One employee cannot take part twice on the same day.",
-        "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.": "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force."
+        "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.": "An employee's membership of a fund's pension scheme for a date range. The payroll withholds and records the premiums while it is in force.",
+        "None, I will set this up myself": "None, I will set this up myself",
+        "Nothing is imported. You start with an empty app and add your own data.": "Nothing is imported. You start with an empty app and add your own data.",
+        "Example data": "Example data",
+        "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
