@@ -12,7 +12,7 @@
  * `humaniq-main.js`; at 512 KB it is still more than thirty times smaller, so
  * the SPA leaking in through an import trips it long before that ratio is lost.
  *
- * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-humaniq-ships-a-leaves-bundle-req-hld-001
+ * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-humaniq-ships-a-leaves-bundle-req-hld-001
  */
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'

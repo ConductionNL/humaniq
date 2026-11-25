@@ -41,7 +41,7 @@
  *
  * @spec openspec/specs/leave-management/spec.md
  * @spec openspec/specs/leave-buy-sell/spec.md#REQ-BUYSELL-003
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -64,7 +64,7 @@ final class NlLeaveChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, mixed> The decision table.
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function gateTable(string $inputName, string $inputType, string $passCell): array {
 		return [
@@ -103,7 +103,7 @@ final class NlLeaveChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function tables(): array {
 		return [

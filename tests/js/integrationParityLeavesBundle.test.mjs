@@ -7,7 +7,7 @@
  * only, or kept out of that bundle, fails the parity check naming its id.
  * The repository itself passes; small fixture trees show each refusal.
  *
- * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-every-registered-leaf-is-reachable-from-the-bundle-req-hld-002
+ * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-every-registered-leaf-is-reachable-from-the-bundle-req-hld-002
  */
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'

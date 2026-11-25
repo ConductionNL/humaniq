@@ -21,7 +21,7 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
  */
 class PensionParticipationOverlapListener implements IEventListener {
 
@@ -78,7 +78,7 @@ class PensionParticipationOverlapListener implements IEventListener {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) PreSaveEvents::refuse is the shared, stateless way every pre-save guard here stops a write.
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public function handle(Event $event): void {
 		$isUpdate = ($event instanceof ObjectUpdatingEvent);
@@ -119,7 +119,7 @@ class PensionParticipationOverlapListener implements IEventListener {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public static function firstOverlap(array $incoming, array $stored, ?string $uuid=null): ?array {
 		$range = self::rangeOf($incoming);
@@ -157,7 +157,7 @@ class PensionParticipationOverlapListener implements IEventListener {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public static function refusal(array $clash): string {
 		$end = trim((string)($clash['endDate'] ?? ''));

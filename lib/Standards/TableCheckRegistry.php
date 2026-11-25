@@ -25,7 +25,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ final class TableCheckRegistry {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(array $providers): array {
 		$merged = [];
@@ -74,7 +74,7 @@ final class TableCheckRegistry {
 	 *
 	 * @return callable The predicate the registry serves.
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) TableCheckEvaluator is the engine's
 	 * one static door to OpenRegister's shared evaluator, mirroring the fully

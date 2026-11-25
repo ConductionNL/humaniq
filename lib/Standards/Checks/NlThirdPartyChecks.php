@@ -35,7 +35,7 @@
  * engine -- until staged retirement (REQ-RULE-009).
  *
  * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-002
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -60,7 +60,7 @@ final class NlThirdPartyChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -75,7 +75,7 @@ final class NlThirdPartyChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-002
 	 */
 	public static function tables(): array {
@@ -124,7 +124,7 @@ final class NlThirdPartyChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/third-party-payments/spec.md#REQ-UBD-002
 	 */
 	public static function legacyChecks(): array {
@@ -163,7 +163,7 @@ final class NlThirdPartyChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{deadlinePassed: bool, reportSent: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function deadlineInputs(array $object, array $context): ?array {
 		$paidOn = (string)($object['paidOn'] ?? '');

@@ -81,7 +81,7 @@ final class NlAtsChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -98,7 +98,7 @@ final class NlAtsChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/recruiting-applications/spec.md
 	 */
 	public static function tables(): array {
@@ -247,7 +247,7 @@ final class NlAtsChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{rejected: bool, datesReadable: bool, clockMatches: bool}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function derivatieInputs(array $o): array {
 		$rejectedDate = trim((string)($o['rejectedDate'] ?? ''));
@@ -272,7 +272,7 @@ final class NlAtsChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{expired: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function verlopenInputs(array $o): ?array {
 		$expiryDate = trim((string)($o['retentionExpiryDate'] ?? ''));
@@ -292,7 +292,7 @@ final class NlAtsChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/recruiting-applications/spec.md
 	 */
 	public static function legacyChecks(): array {

@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Participation in force, the fund's scheme, and the period's base.
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
  */
 class PensionPremiumLookupTest extends TestCase {
 
@@ -42,7 +42,7 @@ class PensionPremiumLookupTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testAFullTimeParticipantHasTheFranchiseOffTheirWage(): void {
 		$premium = $this->premium(objects: $this->register(), slip: ['grossCents' => 400000]);
@@ -58,7 +58,7 @@ class PensionPremiumLookupTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testASalaryBelowTheFranchiseHasAZeroBase(): void {
 		$premium = $this->premium(objects: $this->register(), slip: ['grossCents' => 120000]);
@@ -73,7 +73,7 @@ class PensionPremiumLookupTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testTheFactorsScaleTheWageAndTheFranchise(): void {
 		$objects = $this->register();
@@ -91,7 +91,7 @@ class PensionPremiumLookupTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public function testAParticipationCountsFromTheMonthItStarts(): void {
 		$objects = $this->register();
@@ -107,7 +107,7 @@ class PensionPremiumLookupTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testNoParticipationOrNoSchemeMeansNoPremium(): void {
 		$objects = $this->register();
@@ -127,7 +127,7 @@ class PensionPremiumLookupTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public function testTheRowsInForceOnTheLastDayApply(): void {
 		$objects = $this->register();
@@ -144,7 +144,7 @@ class PensionPremiumLookupTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testAFourWeeklyPeriodSpreadsTheFranchiseOverThirteen(): void {
 		// 4,000.00 - 18,000 / 13 = 2,615.38.

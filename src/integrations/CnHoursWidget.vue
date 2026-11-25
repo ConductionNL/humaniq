@@ -691,7 +691,7 @@ export default {
 		 *
 		 * @return {boolean} True when the host named an object.
 		 *
-		 * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
+		 * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
 		 */
 		hostResolvable() {
 			return isResolvableHost({ register: this.register, schema: this.schema, objectId: this.objectId })

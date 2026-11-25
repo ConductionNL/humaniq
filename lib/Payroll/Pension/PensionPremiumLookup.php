@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use OCA\Humaniq\Payroll\PensionPremium;
  *
  * @SuppressWarnings(PHPMD.StaticAccess) PensionBase is pure and static by design, the PensionMessageService precedent.
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
 final class PensionPremiumLookup {
 
@@ -57,7 +57,7 @@ final class PensionPremiumLookup {
 	 *
 	 * @return array{participations: array<string, list<array<string, mixed>>>, schemes: array<string, list<array<string, mixed>>>}
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public function inputs(array $rows, string $administrationId): array {
 		$inputs = ['participations' => [], 'schemes' => []];
@@ -84,8 +84,8 @@ final class PensionPremiumLookup {
 	 *
 	 * @return PensionPremium|null
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
 	 */
 	public function premiumFor(array $inputs, array $slip): ?PensionPremium {
 		$participation = self::inForce(rows: ($inputs['participations'][$slip['employeeId']] ?? []), span: ['startDate', 'endDate', $slip['lastDay']]);

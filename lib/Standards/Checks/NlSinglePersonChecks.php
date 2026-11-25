@@ -73,7 +73,7 @@ final class NlSinglePersonChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -90,7 +90,7 @@ final class NlSinglePersonChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-005
 	 */
 	public static function tables(): array {
@@ -202,7 +202,7 @@ final class NlSinglePersonChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{singlePersonMode: bool, activeEmployees: int, soleEmployeeIsDga: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function employeeCountInputs(array $object, array $context): ?array {
 		$administrationId = trim((string)($object['administrationId'] ?? ''));
@@ -234,7 +234,7 @@ final class NlSinglePersonChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-005
 	 */
 	public static function legacyChecks(): array {

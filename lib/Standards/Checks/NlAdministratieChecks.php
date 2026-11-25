@@ -100,7 +100,7 @@ final class NlAdministratieChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -117,7 +117,7 @@ final class NlAdministratieChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
 	 */
 	public static function tables(): array {
@@ -158,7 +158,7 @@ final class NlAdministratieChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{sameAdministration: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function scopeInputs(array $o, string $refField, array $parents): ?array {
 		$own = trim((string)($o['administrationId'] ?? ''));
@@ -291,7 +291,7 @@ final class NlAdministratieChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/changes/multi-administratie/specs/multi-administratie/spec.md#REQ-MULTI-007
 	 */
 	public static function legacyChecks(): array {

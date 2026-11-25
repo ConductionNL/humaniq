@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The pension premium reduces net and the taxable wage and is an employer charge.
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
 class PensionPremiumCalculationTest extends TestCase {
 
@@ -50,7 +50,7 @@ class PensionPremiumCalculationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testAFullTimeParticipantPaysTheEmployeePremium(): void {
 		$without = $this->calculate(gross: 400000, pension: null);
@@ -73,7 +73,7 @@ class PensionPremiumCalculationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testASalaryBelowTheFranchisePaysNoPremium(): void {
 		$without = $this->calculate(gross: 120000, pension: null);
@@ -91,7 +91,7 @@ class PensionPremiumCalculationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testNoParticipationNoPremium(): void {
 		$input = $this->input(gross: 400000, pension: null);
@@ -109,7 +109,7 @@ class PensionPremiumCalculationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testTheSnapshotCarriesThePensionPart(): void {
 		$input = $this->input(gross: 400000, pension: new PensionPremium(pensionBaseCents: 250000, employeePercentage: 7.5, employerPercentage: 15.0));

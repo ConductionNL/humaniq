@@ -49,7 +49,7 @@
  * engine -- until staged retirement (REQ-RULE-009).
  *
  * @spec openspec/specs/stagiair-bbl-admin/spec.md
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -72,7 +72,7 @@ final class NlStagiairChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -88,7 +88,7 @@ final class NlStagiairChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/stagiair-bbl-admin/spec.md
 	 */
 	public static function tables(): array {
@@ -128,7 +128,7 @@ final class NlStagiairChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{bpvSigned: bool, placementStarted: bool}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function bpvInputs(array $object): array {
 		$startDate = strtotime((string)($object['startDate'] ?? ''));
@@ -148,7 +148,7 @@ final class NlStagiairChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{contractType: string, bpvSigned: bool, placementStarted: bool}
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function bblBpvInputs(array $object): array {
 		return ['contractType' => (string)($object['type'] ?? '')] + self::bpvInputs($object);
@@ -164,7 +164,7 @@ final class NlStagiairChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/stagiair-bbl-admin/spec.md
 	 */
 	public static function legacyChecks(): array {

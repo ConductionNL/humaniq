@@ -348,7 +348,7 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 	 * @spec openspec/changes/payroll-glpost-shillinq/specs/payroll-glpost-shillinq/spec.md#REQ-PGP-002
 	 * @spec openspec/specs/payroll-expenses-and-allowances/spec.md#REQ-PEA-004
 	 * @spec openspec/specs/payroll-cost-allocation/spec.md#REQ-PCA-002
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	public function buildLines(array $run, array $allocations = [], int $vatCents = 0): array {
 		$totals = new PayrollJournalTotals($run);
@@ -438,7 +438,7 @@ class PayrollGLPostService implements PayrollGLPostServiceInterface {
 	 *
 	 * @return array{cents: int, account: string, error: string|null}
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	private function pensionLiability(PayrollJournalTotals $totals, int $remainderCents): array {
 		$cents = (max(0, $totals->cents('totalPensionEmployee')) + max(0, $totals->cents('totalPensionEmployer')));

@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-002
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-002
  */
 
 declare(strict_types=1);

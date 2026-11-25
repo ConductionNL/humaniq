@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use InvalidArgumentException;
 /**
  * Part of a {@see CalculationInput}: the pension base and the two premium percentages.
  *
- * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+ * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
  */
 final class PensionPremium {
 
@@ -44,7 +44,7 @@ final class PensionPremium {
 	 *
 	 * @throws InvalidArgumentException When the base or a percentage is negative.
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function __construct(
 		public readonly int $pensionBaseCents = 0,
@@ -61,7 +61,7 @@ final class PensionPremium {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function isEmpty(): bool {
 		return $this->pensionBaseCents === 0 && $this->employeePercentage === 0.0 && $this->employerPercentage === 0.0;

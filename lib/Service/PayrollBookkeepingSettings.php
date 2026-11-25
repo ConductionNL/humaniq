@@ -120,7 +120,7 @@ final class PayrollBookkeepingSettings {
 	 *
 	 * @return string The account number, or '' when unset.
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-003
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-003
 	 */
 	public function getGlPostAccountPensionPayable(): string {
 		return trim($this->appConfig->getAppValueString('glpost_account_pension_payable', ''));

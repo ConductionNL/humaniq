@@ -119,7 +119,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -138,7 +138,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function tables(): array {
 		$windowTable = self::satisfiedTable(
@@ -186,7 +186,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{withinWindow: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function windowInputs(string $date, int $days): ?array {
 		$within = (new DateWindow())->contains($date, $days);
@@ -205,7 +205,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{temporary: bool, withinWindow: bool, hasSuccessor: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function expiryInputs(array $o, array $context): ?array {
 		$window = self::windowInputs((string)($o['endDate'] ?? ''), self::WINDOW_DAYS);
@@ -227,7 +227,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{temporary: bool, ended: bool, pastDeadline: bool, notifiedInTime: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function noticeInputs(array $o): ?array {
 		$endDate = self::monitoredTermEnd($o);
@@ -484,7 +484,7 @@ final class NlSignalChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 */
 	public static function legacyChecks(): array {
 		return [

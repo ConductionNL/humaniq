@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-demo-data-lets-the-leaf-be-seen-working-req-hld-004
+ * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-demo-data-lets-the-leaf-be-seen-working-req-hld-004
  */
 
 declare(strict_types=1);

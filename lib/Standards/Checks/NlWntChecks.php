@@ -72,7 +72,7 @@ final class NlWntChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
 		return [];
@@ -89,7 +89,7 @@ final class NlWntChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 * @spec openspec/specs/wnt-disclosure/spec.md#REQ-WNT-003
 	 */
 	public static function tables(): array {
@@ -221,7 +221,7 @@ final class NlWntChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array{topfunctionaris: bool, exempt: bool, overNorm: bool}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	private static function normInputs(array $disclosure, array $context): ?array {
 		$employee = ($context['related']['Employee']['byId'][trim((string)($disclosure['employeeId'] ?? ''))] ?? null);
@@ -245,7 +245,7 @@ final class NlWntChecks implements CheckProvider, ProvidesTables {
 	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
 	 * @spec openspec/specs/wnt-disclosure/spec.md#REQ-WNT-003
 	 */
 	public static function legacyChecks(): array {

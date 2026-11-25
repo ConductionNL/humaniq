@@ -247,7 +247,7 @@ final class CalculationResult {
 	 * @spec openspec/specs/payroll-core-engine/spec.md#REQ-PCE-001
 	 * @spec openspec/specs/loonaangifte-message/spec.md#REQ-LAM-001
 	 * @spec openspec/specs/jurisdiction-packs/spec.md#REQ-JP-003
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function __construct(PackRunResult|array $out) {
 		[$this->pensionBaseCents, $this->pensionEmployeeCents, $this->pensionEmployerCents] = self::pensionOf(out: $out);
@@ -320,7 +320,7 @@ final class CalculationResult {
 	 *
 	 * @return array{0: int, 1: int, 2: int} The base, the employee and the employer premium.
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	private static function pensionOf(PackRunResult|array $out): array {
 		if (is_array($out) === true) {

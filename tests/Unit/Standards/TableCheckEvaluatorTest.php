@@ -22,7 +22,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for the shared-evaluator delegate.
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 class TableCheckEvaluatorTest extends TestCase {
 

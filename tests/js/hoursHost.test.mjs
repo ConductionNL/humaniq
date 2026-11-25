@@ -7,7 +7,7 @@
  * against that object; with fewer it names the gap and draws no total, no
  * controls and no booking dialog.
  *
- * @spec openspec/changes/hours-leaf-loads-on-a-consuming-page/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
+ * @spec openspec/specs/hours-leaf-delivery/spec.md#requirement-the-leaf-states-what-a-host-page-must-pass-req-hld-003
  */
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'

@@ -16,8 +16,8 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-001
- * @spec openspec/changes/platform-hr-workflows/specs/hr-workflows/spec.md#REQ-HWF-002
+ * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-001
+ * @spec openspec/specs/hr-workflows/spec.md#REQ-HWF-002
  */
 
 declare(strict_types=1);

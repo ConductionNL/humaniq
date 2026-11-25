@@ -153,7 +153,7 @@ class NlPackTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-engine-port-from-shillinq/specs/payroll-pension-premium/spec.md#REQ-PPP-001
+	 * @spec openspec/specs/payroll-pension-premium/spec.md#REQ-PPP-001
 	 */
 	public function testLoonheffingIsTheOnlyStepThatReducesNet(): void {
 		$reducers = [];

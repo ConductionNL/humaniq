@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Parity between the table-declared BPV checks and their legacy predicates.
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-009
  */
 class NlStagiairTableParityTest extends TestCase {
 

@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * The sick-pay floor of one payslip, in cents.
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 final class SickPayFloor {
 
@@ -46,7 +46,7 @@ final class SickPayFloor {
 	 *
 	 * @return array{figuresRecorded: bool, shortfallCents: int}|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public function inputs(array $payslip, ?array $parameters): ?array {
 		if (trim((string)($payslip['sickLeaveCaseId'] ?? '')) === '' || $parameters === null) {
@@ -71,7 +71,7 @@ final class SickPayFloor {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public function cents(array $payslip, array $parameters): int {
 		$statutoryFloorCents = (int)round((self::toCents((float)$payslip['sickPayReferenceWage']) * (float)($parameters['statutoryPercentage'] ?? 70)) / 100);

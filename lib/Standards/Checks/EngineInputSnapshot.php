@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Humaniq\Standards\Checks;
 /**
  * Decoder for the engine input snapshot.
  *
- * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+ * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
  */
 final class EngineInputSnapshot {
 
@@ -50,7 +50,7 @@ final class EngineInputSnapshot {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public function decode(mixed $snapshot): ?array {
 		if ($snapshot === null || $snapshot === '' || $snapshot === []) {

@@ -9,7 +9,7 @@
  * 3.2, where "Make employer statement" never reached humaniq. Every api-call url
  * must name the app (`/apps/humaniq/...`) or be absolute.
  *
- * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
+ * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
  */
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'

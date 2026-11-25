@@ -98,7 +98,7 @@ class DocumentController extends Controller {
 	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
 	 * @spec openspec/specs/payslip-pdf-docudesk/spec.md#REQ-PPD-002
 	 * @spec openspec/specs/payroll-annual-statement-action/spec.md#REQ-JAO-001
-	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
+	 * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
 	 */
 	#[NoAdminRequired]
 	public function generate(
@@ -169,7 +169,7 @@ class DocumentController extends Controller {
 	 * @return string|JSONResponse The employeeId, or the refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-07-13-hrmq-docudesk-documents/specs/hrmq-docudesk-documents/spec.md#REQ-HDD-008
-	 * @spec openspec/changes/documents-employer-statement-from-the-contract/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
+	 * @spec openspec/specs/humaniq-docudesk-documents/spec.md#REQ-HDD-011
 	 */
 	private function letterEmployeeId(string $contractId): string|JSONResponse {
 		if ($contractId === '') {
