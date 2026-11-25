@@ -388,11 +388,11 @@ class RuleAuditService implements RuleAuditServiceInterface {
 	 * (`administrationId` -> set of periods with at least one `fund: "abp"`
 	 * filing), kept separate from the existing, unchanged, fund-blind global
 	 * `filedPeriods` set -- consumed by
-	 * NlAbpChecks::checks()['PayrollRun']['nl-abp-fund-required'].
+	 * NlAbpChecks' table-declared nl-abp-fund-required.
 	 * wnt-disclosure further extends the Employee index with
 	 * `wntTopfunctionaris` + `wntUitzonderingReden` (the incremental-field
-	 * precedent, design.md D5), consumed by NlWntChecks::checks()
-	 * ['WntDisclosure']['nl-wnt-norm-overschrijding'] to resolve the referenced
+	 * precedent, design.md D5), consumed by NlWntChecks'
+	 * table-declared nl-wnt-norm-overschrijding to resolve the referenced
 	 * topfunctionaris's exemption ground without re-querying the register.
 	 * Loads independently of the main per-type loop (a small, side-effect-free
 	 * reload) so the index is ready before any object of either type is

@@ -30,6 +30,13 @@
  * returns [] -- the NlPayrollChecks/NlDgaChecks precedent for a check whose
  * fixtures live in the register seed, not in a provider seed-object.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the WNT-norm rule is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -52,23 +59,55 @@ use OCA\Humaniq\Payroll\TaxTables;
  * The WNT norm-overschrijding self-check: a topfunctionaris's annual
  * bezoldiging vs the sourced WNT-norm, cleared by a recorded exemption.
  */
-final class NlWntChecks implements CheckProvider {
+final class NlWntChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/wnt-disclosure/spec.md#REQ-WNT-003
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
+		return [];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-wnt-norm-overschrijding` as derivation + FIRST-hit decision table:
+	 * a topfunctionaris without a recorded exemption whose compensation is
+	 * over the WNT norm fails. A dangling employee or an unreadable norm
+	 * derives null and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/wnt-disclosure/spec.md#REQ-WNT-003
+	 */
+	public static function tables(): array {
 		return [
 			'WntDisclosure' => [
-				'nl-wnt-norm-overschrijding' => static fn (array $disclosure, array $context): bool => self::withinWntNorm($disclosure, $context),
+				'nl-wnt-norm-overschrijding' => [
+					'derive' => static fn (array $disclosure, array $context): ?array => self::normInputs($disclosure, $context),
+					'table' => self::satisfiedTable(
+						[
+							['name' => 'topfunctionaris', 'type' => 'boolean'],
+							['name' => 'exempt', 'type' => 'boolean'],
+							['name' => 'overNorm', 'type' => 'boolean'],
+						],
+						[['id' => 'topfunctionaris-over-norm', 'inputEntries' => ['true', 'false', 'true'], 'outputEntries' => [false]]]
+					),
+				],
 			],
 		];
 
-	}//end checks()
+	}//end tables()
 
 	/**
 	 * {@inheritDoc}
@@ -170,5 +209,50 @@ final class NlWntChecks implements CheckProvider {
 
 		return $jaarCents;
 	}//end wntNormJaarCents()
+
+	/**
+	 * The WNT table's inputs, or null when the employee does not resolve or
+	 * the norm cannot be read (never a fabricated violation).
+	 *
+	 * @param array<string, mixed> $disclosure The WntDisclosure.
+	 * @param array<string, mixed> $context    Evaluation context; reads `related.Employee.byId`.
+	 *
+	 * @return array{topfunctionaris: bool, exempt: bool, overNorm: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function normInputs(array $disclosure, array $context): ?array {
+		$employee = ($context['related']['Employee']['byId'][trim((string)($disclosure['employeeId'] ?? ''))] ?? null);
+		$normJaarCents = self::wntNormJaarCents();
+		if (is_array($employee) === false || $normJaarCents === null) {
+			return null;
+		}
+
+		return [
+			'topfunctionaris' => (($employee['wntTopfunctionaris'] ?? false) === true),
+			'exempt' => (($employee['wntUitzonderingReden'] ?? null) !== null),
+			'overNorm' => ((int)round(((float)($disclosure['totalCompensation'] ?? 0)) * 100) > $normJaarCents),
+		];
+
+	}//end normInputs()
+
+	/**
+	 * The WNT-norm closure as it stood before the table, kept so
+	 * NlWntTableParityTest can hold the two side by side; unregistered, and
+	 * removed after the OpenRegister audit run proves the table.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/wnt-disclosure/spec.md#REQ-WNT-003
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'WntDisclosure' => [
+				'nl-wnt-norm-overschrijding' => static fn (array $disclosure, array $context): bool => self::withinWntNorm($disclosure, $context),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

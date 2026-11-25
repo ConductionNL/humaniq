@@ -34,6 +34,7 @@ namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Payroll\TaxTableSourceInterface;
 use OCA\Humaniq\Standards\Checks\NlWntChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use OCA\Humaniq\Tests\Unit\Support\PackFixtures;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
@@ -63,7 +64,7 @@ class NlWntChecksNormSourceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->check = NlWntChecks::checks()['WntDisclosure']['nl-wnt-norm-overschrijding'];
+		$this->check = TableCheckRegistry::checks([NlWntChecks::class])['WntDisclosure']['nl-wnt-norm-overschrijding'];
 
 	}//end setUp()
 
