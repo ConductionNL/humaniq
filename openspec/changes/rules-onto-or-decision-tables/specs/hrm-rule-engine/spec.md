@@ -63,14 +63,3 @@ audit verdicts.
 - THEN their verdicts are identical for every fixture and every converted rule
 - @e2e exclude backend parity harness with no UI surface — the parity unit suite is itself the
   verification artefact
-
-#### Scenario: A proven oracle retires into a table-behaviour pin
-
-- GIVEN an OpenRegister-backed `occ humaniq:rules:audit` over seeded data covering a provider's
-  converted rules gives the same per-object verdicts with the legacy predicates registered as with
-  the tables registered
-- WHEN that provider's legacy predicates are retired
-- THEN its parity test becomes a pin of fixtures with their expected verdict per rule, the engine
-  registers no closure beside the tables, and every rule is pinned both satisfied and violated
-- @e2e exclude backend unit pin with no UI surface — the behaviour unit suite is itself the
-  verification artefact
