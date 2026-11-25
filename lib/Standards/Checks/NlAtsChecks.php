@@ -23,6 +23,13 @@
  * Applications reference (the NlOnboardingChecks precedent — a self-contained
  * sample cannot carry a resolvable vacancyId cross-reference).
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): each of the two retention rules is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -44,8 +51,12 @@ use OCA\Humaniq\Standards\RuleCatalogue;
 
 /**
  * Dutch ATS/recruitment AVG-retention executable checks.
+ *
+ * @spec openspec/specs/recruiting-applications/spec.md
  */
-final class NlAtsChecks implements CheckProvider {
+final class NlAtsChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * Fallback retention offset (days) without talent-pool consent, used only
@@ -66,26 +77,65 @@ final class NlAtsChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			'job-application' => [
-				// AVG art. 5 lid 1 sub e; AP richtlijn sollicitatiegegevens — the
-				// retention clock derivation must be correct on a rejected application.
-				'nl-ats-retentie-derivatie' => static fn (array $o): bool => self::derivatieSatisfied($o),
-				// AVG art. 5 lid 1 sub e; AP richtlijn sollicitatiegegevens — an
-				// application past its retention clock must no longer exist un-anonymised.
-				'nl-ats-retentie-verlopen' => static fn (array $o): bool => self::verlopenSatisfied($o),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Both job-application retention rules as derivation + FIRST-hit decision
+	 * tables. The date arithmetic (the expected expiry, the expiry passed)
+	 * stays in the derivations; an expiry that cannot be read derives null
+	 * for the expiry rule and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/recruiting-applications/spec.md
+	 */
+	public static function tables(): array {
+		return [
+			'job-application' => [
+				// AVG art. 5 lid 1 sub e; AP richtlijn sollicitatiegegevens — the
+				// retention clock derivation must be correct on a rejected application.
+				'nl-ats-retentie-derivatie' => [
+					'derive' => static fn (array $o): array => self::derivatieInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'rejected', 'type' => 'boolean'], ['name' => 'datesReadable', 'type' => 'boolean'], ['name' => 'clockMatches', 'type' => 'boolean']],
+						[
+							['id' => 'rejected-without-dates', 'inputEntries' => ['true', 'false', '-'], 'outputEntries' => [false]],
+							['id' => 'rejected-with-wrong-clock', 'inputEntries' => ['true', '-', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
+				// AVG art. 5 lid 1 sub e; AP richtlijn sollicitatiegegevens — an
+				// application past its retention clock must no longer exist un-anonymised.
+				'nl-ats-retentie-verlopen' => [
+					'derive' => static fn (array $o): ?array => self::verlopenInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'expired', 'type' => 'boolean']],
+						[['id' => 'held-past-expiry', 'inputEntries' => ['true'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/recruiting-applications/spec.md
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -187,5 +237,76 @@ final class NlAtsChecks implements CheckProvider {
 
 		return null;
 	}//end derivatieParameters()
+
+	/**
+	 * The derivation table's inputs: whether the application is rejected,
+	 * whether both dates read, and whether the expiry is the rejection date
+	 * plus the (opt-in dependent) retention days.
+	 *
+	 * @param array<string, mixed> $o The job application.
+	 *
+	 * @return array{rejected: bool, datesReadable: bool, clockMatches: bool}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function derivatieInputs(array $o): array {
+		$rejectedDate = trim((string)($o['rejectedDate'] ?? ''));
+		$expiryDate = trim((string)($o['retentionExpiryDate'] ?? ''));
+		$rejected = ($rejectedDate === '') ? false : strtotime($rejectedDate);
+		$expiry = ($expiryDate === '') ? false : strtotime($expiryDate);
+		$readable = ($rejected !== false && $expiry !== false);
+		$days = self::retentionDays(($o['talentPoolOptIn'] ?? false) === true);
+
+		return [
+			'rejected' => ((string)($o['status'] ?? 'nieuw') === 'afgewezen'),
+			'datesReadable' => $readable,
+			'clockMatches' => ($readable === true && $expiry === strtotime('+' . $days . ' days', $rejected)),
+		];
+
+	}//end derivatieInputs()
+
+	/**
+	 * The expiry table's input, or null when there is no readable expiry.
+	 *
+	 * @param array<string, mixed> $o The job application.
+	 *
+	 * @return array{expired: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function verlopenInputs(array $o): ?array {
+		$expiryDate = trim((string)($o['retentionExpiryDate'] ?? ''));
+		$expiry = ($expiryDate === '') ? false : strtotime($expiryDate);
+		if ($expiry === false) {
+			return null;
+		}
+
+		return ['expired' => ($expiry < (new DateTimeImmutable('today'))->getTimestamp())];
+
+	}//end verlopenInputs()
+
+	/**
+	 * The two retention closures from before the tables, kept as the oracle
+	 * NlAtsTableParityTest checks tables() against; unregistered, and retired
+	 * after the OpenRegister audit run.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/recruiting-applications/spec.md
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'job-application' => [
+				// AVG art. 5 lid 1 sub e; AP richtlijn sollicitatiegegevens — the
+				// retention clock derivation must be correct on a rejected application.
+				'nl-ats-retentie-derivatie' => static fn (array $o): bool => self::derivatieSatisfied($o),
+				// AVG art. 5 lid 1 sub e; AP richtlijn sollicitatiegegevens — an
+				// application past its retention clock must no longer exist un-anonymised.
+				'nl-ats-retentie-verlopen' => static fn (array $o): bool => self::verlopenSatisfied($o),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

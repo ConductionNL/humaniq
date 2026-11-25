@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlAtsChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use OCA\Humaniq\Standards\RuleCatalogue;
 use PHPUnit\Framework\TestCase;
 
@@ -51,7 +52,11 @@ class NlAtsChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->checks = NlAtsChecks::checks()['job-application'];
+		// The engine's table path; the context stays optional, as before.
+		$this->checks = array_map(
+			static fn (callable $predicate): callable => static fn (array $o, array $c = []): bool => $predicate($o, $c),
+			TableCheckRegistry::checks([NlAtsChecks::class])['job-application']
+		);
 
 	}//end setUp()
 
