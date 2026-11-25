@@ -134,8 +134,12 @@ remains the only create path. Generated payslips carry `payrollRunId`, the emplo
 
 ### Requirement: occ commands SHALL run and verify payroll; the corpus is the engine's self-check (REQ-PCE-006)
 
-`occ humaniq:payroll:run --period YYYY-MM [--administration ADM] [--recalculate]` SHALL
-create/recalculate draft runs and print the per-employee outcome (computed/skipped+reason). `occ
+`occ humaniq:payroll:run --period YYYY-MM --as-user ADMIN [--administration ADM] [--recalculate]`
+SHALL create/recalculate draft runs and print the per-employee outcome (computed/skipped+reason).
+It SHALL refuse, before reading any record, unless `--as-user` names a Nextcloud administrator,
+and SHALL then read and write as that user: a console process has no user, and the field
+authorization on `Employee.grossMonthlySalary` hides the salary from it, so a run without a session
+would skip every salaried employee and a recalculation would empty the draft. `occ
 humaniq:payroll:verify --period YYYY-MM [--administration ADM]` SHALL run the RuleEngine over exactly
 the run(s) + their payslips (the run-scoped corpus audit), print violations, and exit non-zero on
 any mandatory violation, `0` otherwise (the `humaniq:rules:audit` exit-code convention). Both are
