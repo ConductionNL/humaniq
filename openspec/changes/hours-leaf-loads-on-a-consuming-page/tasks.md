@@ -59,8 +59,12 @@
       a seeded host, read the total, book an hour, read the total again.
 - [x] 5.2 Assert the new entry carries the host's `domainObjectType` and
       `domainObjectRef`.
-- [ ] 5.3 Mutation-check: disable the booking call and confirm the spec fails
+- [x] 5.3 Mutation-check: disable the booking call and confirm the spec fails
       rather than passing on the seeded total.
+      Done 2026-11-25 on a sandbox Nextcloud 34.0.6 (MariaDB 10.11, OpenRegister main 7997381d, humaniq development 89e5e1bf, dossiq development 8d9de5d9 with `occ dossiq:demo:seed`): with `bookHours()` returning a faked success
+      instead of posting (served bundle only, rebuilt, not committed) the spec fails on
+      "the week total must grow by the hour booked" (expected 3, received 2); with the
+      call restored it passes again.
 
 ## 6. Verification
 
@@ -69,7 +73,17 @@
       Done 2026-11-22 on development 58e3582f: `./vendor/bin/phpunit` exits 0
       (4,656 tests, 1 skipped); the hours and leaf tests alone (`--filter
       'Hours|Leaf|Leaves'`) are 269 tests, all passing.
-- [ ] 6.2 Run vitest and the Playwright spec, and count the tests that ran.
+- [x] 6.2 Run vitest and the Playwright spec, and count the tests that ran.
+      Done 2026-11-25 on the same sandbox. The JS unit suite here is node:test, not vitest
+      (`npm run test:js`): 252 tests, 250 pass, 2 fail, the same two as development
+      (`every schema-bound index page allows the export`, `integrationsPage.test.mjs`); the
+      twelve hours and leaf files alone are 70 tests, all passing. Playwright
+      `tests/e2e/hours-leaf-on-a-host-page.spec.ts`: 1 test ran, 1 passed, after three spec
+      fixes the live run showed: the API context now sends its credentials always (OCS answered
+      401 without a challenge, so the journey skipped as if dossiq were absent), the host is a
+      case whose type places the hours card (dossiq's Overview tab shows it only when the type's
+      `overviewCards` is empty or lists it, and a special-categories type asks the reader's
+      purpose first), and the page is opened under `/index.php` (the CI server is `php -S`).
 - [x] 6.3 Run `npx openspec validate hours-leaf-loads-on-a-consuming-page --strict`.
       Done 2026-11-21: valid, after dropping the `status: proposed` front matter above the
       delta spec's first section, which strict mode reported as text archive does not carry.
@@ -83,9 +97,14 @@
       ALL CHECKS PASSED (lint, phpcs, phpmd, psalm 7, phpstan, PHPUnit 4,855 tests,
       1 skipped). phpmd and psalm inherited findings baselined; the PHPUnit red was
       a PHP 8.4 rounding drift in the personnel budget, fixed.
-- [ ] 6.5 On the dev instance, open a host detail page in another app and
+- [x] 6.5 On the dev instance, open a host detail page in another app and
       confirm the leaf renders. Confirm `js/humaniq-leaves.js` is requested by
       that page.
+      Done 2026-11-25 on the same sandbox: a dossiq Omgevingsvergunning case page requests
+      `apps/humaniq/js/humaniq-leaves.js` and renders the leaf on its Overview tab
+      (`cn-leaf-mount-host` > `hq-hours-widget` with the week line, form, timer and source
+      note). On the seeded Wmo-melding case the bundle loads too but the card is not placed,
+      by that case type's `overviewCards`, as dossiq intends.
 
 ## 7. Counterparts, raised elsewhere
 
@@ -98,6 +117,8 @@
       `{"type": "integration", "integrationId": "humaniq-hours"}`, the
       `log-hours` action is gone, and no part of the manifest names the
       humaniq register. 7.2 waits on the live check of 6.5.
-- [ ] 7.2 Tell the owners of `time-entry-domain-object-ref` and shillinq's
+- [x] 7.2 Tell the owners of `time-entry-domain-object-ref` and shillinq's
       `hours-to-humaniq` that the leaf now renders, because both were written
       against a leaf nobody could see.
+      Done 2026-11-25: told in the lanes' shared log (builders-idle.md on the pipeline state
+      branch), naming the live run of 6.5 and the passing journey spec.
