@@ -32,6 +32,13 @@
  * vacuous here until/unless a future change gives `GeneratedDocument` its
  * own `archive` config).
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): `nl-bewaartermijn-verstreken`, on every schema it covers, declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -53,8 +60,12 @@ use DateTimeImmutable;
 /**
  * Storage-limitation-ceiling check: an object still present past its own
  * OpenRegister-computed `retention.archiefactiedatum`.
+ *
+ * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
  */
-final class NlDossierRetentionChecks implements CheckProvider {
+final class NlDossierRetentionChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * The payroll/loonadministratie schema family this check applies to,
@@ -77,40 +88,81 @@ final class NlDossierRetentionChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		$checks = [];
-		foreach (self::SCOPED_SCHEMAS as $schema) {
-			$checks[$schema] = [
-				'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::notPastCeiling($object),
-			];
-		}
+		return [];
 
-		// Employee is scoped differently from the payroll family above. It carries no
-		// OpenRegister `@self.retention` ceiling of its own; its two document-retention
-		// dates ARE the ceiling, and each is the far end of a bewaarplicht rather than
-		// an archive action date. Passing an Employee through notPastCeiling() would
-		// therefore read every one of them as vacuous.
-		$checks['Employee'] = [
-			'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::employeeDocumentsNotPastCeiling($object),
-		];
-
-		// people-employee-relations-cases D3: a closed employee relations case
-		// carries its own retention date (two years after closing by default).
-		$checks['EmployeeRelationsCase'] = [
-			'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::relationsCaseNotPastRetention($object),
-		];
-
-		return $checks;
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * `nl-bewaartermijn-verstreken` as derivation + FIRST-hit decision table on
+	 * each of its three shapes: an OpenRegister retention ceiling (payroll
+	 * family), an Employee's two document-retention dates, and a closed
+	 * employee relations case's own retention date. A ceiling that cannot be
+	 * read derives null and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	public static function tables(): array {
+		$ceilingTable = [
+			'derive' => static fn (array $object): ?array => self::ceilingInputs($object),
+			'table' => self::satisfiedTable(
+				[['name' => 'destroyed', 'type' => 'boolean'], ['name' => 'ceilingPassed', 'type' => 'boolean']],
+				[['id' => 'kept-past-ceiling', 'inputEntries' => ['false', 'true'], 'outputEntries' => [false]]]
+			),
+		];
+
+		$tables = [];
+		foreach (self::SCOPED_SCHEMAS as $schema) {
+			$tables[$schema] = ['nl-bewaartermijn-verstreken' => $ceilingTable];
+		}
+
+		$tables['Employee'] = [
+			'nl-bewaartermijn-verstreken' => [
+				'derive' => static fn (array $object): array => [
+					'identityDocumentHeldPast' => self::heldPastCeiling($object, 'identityDocumentVerified', 'identityDocumentRetainedUntil'),
+					'verklaringHeldPast' => self::heldPastCeiling($object, 'loonheffingenVerklaringOnFile', 'loonheffingenVerklaringRetainedUntil'),
+				],
+				'table' => self::satisfiedTable(
+					[['name' => 'identityDocumentHeldPast', 'type' => 'boolean'], ['name' => 'verklaringHeldPast', 'type' => 'boolean']],
+					[
+						['id' => 'identity-document-past-ceiling', 'inputEntries' => ['true', '-'], 'outputEntries' => [false]],
+						['id' => 'verklaring-past-ceiling', 'inputEntries' => ['-', 'true'], 'outputEntries' => [false]],
+					]
+				),
+			],
+		];
+
+		$tables['EmployeeRelationsCase'] = [
+			'nl-bewaartermijn-verstreken' => [
+				'derive' => static fn (array $object): ?array => self::relationsCaseInputs($object),
+				'table' => self::satisfiedTable(
+					[['name' => 'closed', 'type' => 'boolean'], ['name' => 'retentionPassed', 'type' => 'boolean']],
+					[['id' => 'closed-case-past-retention', 'inputEntries' => ['true', 'true'], 'outputEntries' => [false]]]
+				),
+			],
+		];
+
+		return $tables;
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -228,5 +280,89 @@ final class NlDossierRetentionChecks implements CheckProvider {
 
 		return $ceiling < (new DateTimeImmutable('today'))->getTimestamp();
 	}//end heldPastCeiling()
+
+	/**
+	 * The ceiling table's inputs from the object's `@self.retention`, or null
+	 * when its archive action date is empty or cannot be read.
+	 *
+	 * @param array<string, mixed> $object The scoped object.
+	 *
+	 * @return array{destroyed: bool, ceilingPassed: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function ceilingInputs(array $object): ?array {
+		$retention = (array)(((array)($object['@self'] ?? []))['retention'] ?? []);
+		$archiefactiedatum = trim((string)($retention['archiefactiedatum'] ?? ''));
+		$ceiling = ($archiefactiedatum === '') ? false : strtotime($archiefactiedatum);
+		if ($ceiling === false) {
+			return null;
+		}
+
+		return [
+			'destroyed' => ((string)($retention['archiefstatus'] ?? '') === 'vernietigd'),
+			'ceilingPassed' => ($ceiling < (new DateTimeImmutable('today'))->getTimestamp()),
+		];
+
+	}//end ceilingInputs()
+
+	/**
+	 * The relations-case table's inputs, or null when its retention date
+	 * cannot be read.
+	 *
+	 * @param array<string, mixed> $object The EmployeeRelationsCase.
+	 *
+	 * @return array{closed: bool, retentionPassed: bool}|null
+	 *
+	 * @spec openspec/specs/employee-relations-cases/spec.md#REQ-ERC-003
+	 */
+	private static function relationsCaseInputs(array $object): ?array {
+		$ceiling = strtotime(trim((string)($object['retainedUntil'] ?? '')));
+		if ($ceiling === false) {
+			return null;
+		}
+
+		return [
+			'closed' => (($object['status'] ?? '') === 'afgesloten'),
+			'retentionPassed' => ($ceiling < (new DateTimeImmutable('today'))->getTimestamp()),
+		];
+
+	}//end relationsCaseInputs()
+
+	/**
+	 * The retention closures from before the tables, one per shape, held as
+	 * the oracle NlDossierRetentionTableParityTest compares with. Never
+	 * registered; removed after the OpenRegister audit run confirms them.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
+	 */
+	public static function legacyChecks(): array {
+		$checks = [];
+		foreach (self::SCOPED_SCHEMAS as $schema) {
+			$checks[$schema] = [
+				'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::notPastCeiling($object),
+			];
+		}
+
+		// Employee is scoped differently from the payroll family above. It carries no
+		// OpenRegister `@self.retention` ceiling of its own; its two document-retention
+		// dates ARE the ceiling, and each is the far end of a bewaarplicht rather than
+		// an archive action date. Passing an Employee through notPastCeiling() would
+		// therefore read every one of them as vacuous.
+		$checks['Employee'] = [
+			'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::employeeDocumentsNotPastCeiling($object),
+		];
+
+		// people-employee-relations-cases D3: a closed employee relations case
+		// carries its own retention date (two years after closing by default).
+		$checks['EmployeeRelationsCase'] = [
+			'nl-bewaartermijn-verstreken' => static fn (array $object): bool => self::relationsCaseNotPastRetention($object),
+		];
+
+		return $checks;
+	}//end legacyChecks()
 
 }//end class

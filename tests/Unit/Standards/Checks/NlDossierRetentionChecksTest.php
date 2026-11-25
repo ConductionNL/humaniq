@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlDossierRetentionChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -56,7 +57,7 @@ class NlDossierRetentionChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testRuleIsRegisteredForThePayrollFamilyAndGeneratedDocument(): void {
-		$checks = NlDossierRetentionChecks::checks();
+		$checks = TableCheckRegistry::checks([NlDossierRetentionChecks::class]);
 
 		foreach (['Payslip', 'PayrollRun', 'LoonaangifteFiling', 'PayrollMutationReport', 'WkrDeclaration', 'WkrAssessment', 'PensionFiling', 'HrGeneratedDocument'] as $schema) {
 			$this->assertArrayHasKey($schema, $checks);
@@ -159,7 +160,7 @@ class NlDossierRetentionChecksTest extends TestCase {
 	 * @spec openspec/specs/avg-dsr/spec.md#REQ-DSR-005
 	 */
 	public function testTheRuleIsAlsoRegisteredForEmployee(): void {
-		$checks = NlDossierRetentionChecks::checks();
+		$checks = TableCheckRegistry::checks([NlDossierRetentionChecks::class]);
 
 		$this->assertArrayHasKey('Employee', $checks);
 		$this->assertArrayHasKey(self::RULE_ID, $checks['Employee']);
@@ -296,7 +297,10 @@ class NlDossierRetentionChecksTest extends TestCase {
 	 * @return callable
 	 */
 	private function checkFor(string $schema): callable {
-		return NlDossierRetentionChecks::checks()[$schema][self::RULE_ID];
+		$predicate = TableCheckRegistry::checks([NlDossierRetentionChecks::class])[$schema][self::RULE_ID];
+
+		// The engine's table path; the context stays optional, as before.
+		return static fn (array $o, array $c = []): bool => $predicate($o, $c);
 	}//end checkFor()
 	/**
 	 * Vacuous (satisfied) when `retention.archiefactiedatum` is not a date --
