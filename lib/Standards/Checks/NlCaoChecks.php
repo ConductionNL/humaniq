@@ -34,6 +34,15 @@
  * re-seeding after a corpus edit converges the display objects instead of
  * silently going stale after the first seed run.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the three rules are declared as OpenRegister
+ * decision tables via the ProvidesTables capability. Resolving the CAO
+ * figures and the employee stays here as the derivation (null where a rule
+ * is advisory or undecidable); the shared Dmn\DecisionTableEvaluator
+ * decides. The pre-table closures stay as legacyChecks(), the oracle
+ * NlCaoTableParityTest compares with, never registered in the engine, until
+ * staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -59,7 +68,9 @@ use OCA\Humaniq\Standards\CaoRegistry;
  * Below-CAO-minimum (pay scale + leave) executable checks, plus the CAO
  * reference-object seed.
  */
-final class NlCaoChecks implements CheckProvider, SeedsObjects, UpsertsObjects {
+final class NlCaoChecks implements CheckProvider, ProvidesTables, SeedsObjects, UpsertsObjects {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * The statutory annual leave type value on the LeaveBalance schema
@@ -72,23 +83,143 @@ final class NlCaoChecks implements CheckProvider, SeedsObjects, UpsertsObjects {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the three rules this provider owns are table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
-	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-004
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
+		return [];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-cao-minimumloon-schaal`: a salary below the verified scale minimum
+	 * fails. `nl-cao-component-onbekend`: a contract naming a component its
+	 * agreement does not declare fails. `nl-cao-verlof-minimum`: annual leave
+	 * granted below the verified CAO minimum fails. Each derives null where the
+	 * rule is out of scope, advisory or undecidable, and then passes.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-004
+	 * @spec openspec/specs/payroll-cao-components/spec.md#REQ-CCP-002
+	 */
+	public static function tables(): array {
 		return [
 			'EmploymentContract' => [
-				'nl-cao-minimumloon-schaal' => static fn (array $o, array $context): bool => self::minimumloonSchaalSatisfied($o, $context),
-				'nl-cao-component-onbekend' => static fn (array $o): bool => self::componentsKnown($o),
+				'nl-cao-minimumloon-schaal' => [
+					'derive' => static fn (array $o, array $context): ?array => self::scaleInputs($o, $context),
+					'table' => self::satisfiedTable(
+						[['name' => 'shortfallCents', 'type' => 'number']],
+						[['id' => 'salary-below-scale-minimum', 'inputEntries' => ['> 0'], 'outputEntries' => [false]]]
+					),
+				],
+				'nl-cao-component-onbekend' => [
+					'derive' => static fn (array $o): array => self::componentInputs($o),
+					'table' => self::satisfiedTable(
+						[['name' => 'undeclaredComponents', 'type' => 'number']],
+						[['id' => 'component-not-declared', 'inputEntries' => ['> 0'], 'outputEntries' => [false]]]
+					),
+				],
 			],
 			'LeaveBalance' => [
-				'nl-cao-verlof-minimum' => static fn (array $o, array $context): bool => self::verlofMinimumSatisfied($o, $context),
+				'nl-cao-verlof-minimum' => [
+					'derive' => static fn (array $o, array $context): ?array => self::leaveInputs($o, $context),
+					'table' => self::satisfiedTable(
+						[['name' => 'shortfallHours', 'type' => 'number']],
+						[['id' => 'leave-below-cao-minimum', 'inputEntries' => ['> 0'], 'outputEntries' => [false]]]
+					),
+				],
 			],
 		];
 
-	}//end checks()
+	}//end tables()
+
+	/**
+	 * The scale table's input: how far the employee's monthly salary falls
+	 * short of the CAO scale's verified minimum, in cents. Null when the
+	 * contract names no CAO or scale, the minimum is unknown or unverified, or
+	 * the employee or a numeric salary does not resolve.
+	 *
+	 * @param array<string, mixed> $o       The EmploymentContract.
+	 * @param array<string, mixed> $context Evaluation context; reads `cao.employeesById`.
+	 *
+	 * @return array{shortfallCents: int}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function scaleInputs(array $o, array $context): ?array {
+		$caoId = trim((string)($o['cao'] ?? ''));
+		$schaal = trim((string)($o['caoSchaal'] ?? ''));
+		$minCents = null;
+		if ($caoId !== '' && $schaal !== '') {
+			$minCents = CaoRegistry::minMaandloonCents($caoId, $schaal);
+		}
+
+		$employee = ($context['cao']['employeesById'][trim((string)($o['employeeId'] ?? ''))] ?? null);
+		$salary = (is_array($employee) === true ? ($employee['grossMonthlySalary'] ?? null) : null);
+		if ($minCents === null || is_numeric($salary) === false) {
+			return null;
+		}
+
+		return ['shortfallCents' => ($minCents - (int)round(((float)$salary) * 100))];
+
+	}//end scaleInputs()
+
+	/**
+	 * The component table's input: how many of the components the contract
+	 * names its agreement does not declare (zero when it names none).
+	 *
+	 * @param array<string, mixed> $o The EmploymentContract.
+	 *
+	 * @return array{undeclaredComponents: int}
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function componentInputs(array $o): array {
+		$named = array_filter(array_map('strval', (array)($o['caoComponents'] ?? [])), static fn (string $key): bool => trim($key) !== '');
+		if ($named === []) {
+			return ['undeclaredComponents' => 0];
+		}
+
+		return ['undeclaredComponents' => count(array_diff($named, array_keys(CaoComponents::declared(trim((string)($o['cao'] ?? ''))))))];
+
+	}//end componentInputs()
+
+	/**
+	 * The leave table's input: how many hours the granted annual leave
+	 * (entitled plus bovenwettelijk) falls short of the CAO minimum for the
+	 * contract hours. Null for another leave type, an employee without a CAO,
+	 * non-numeric contract hours, or an unknown or unverified minimum.
+	 *
+	 * @param array<string, mixed> $o       The LeaveBalance.
+	 * @param array<string, mixed> $context Evaluation context; reads `cao.caoByEmployeeId`.
+	 *
+	 * @return array{shortfallHours: float}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function leaveInputs(array $o, array $context): ?array {
+		$caoId = trim((string)($context['cao']['caoByEmployeeId'][trim((string)($o['employeeId'] ?? ''))] ?? ''));
+		$hours = ($o['contractHoursPerWeek'] ?? null);
+		if ((string)($o['leaveType'] ?? '') !== self::ANNUAL_LEAVE_TYPE || $caoId === '' || is_numeric($hours) === false) {
+			return null;
+		}
+
+		$minHours = CaoRegistry::minLeaveHours($caoId, (float)$hours);
+		if ($minHours === null) {
+			return null;
+		}
+
+		return ['shortfallHours' => ((float)$minHours - ((float)($o['entitledHours'] ?? 0) + (float)($o['bovenwettelijkHours'] ?? 0)))];
+
+	}//end leaveInputs()
 
 	/**
 	 * {@inheritDoc}
@@ -313,5 +444,28 @@ final class NlCaoChecks implements CheckProvider, SeedsObjects, UpsertsObjects {
 
 		return implode('; ', $docs);
 	}//end sourcesSummary()
+
+	/**
+	 * What the engine ran for these three rules before tables(): the scale,
+	 * component and leave closures. NlCaoTableParityTest checks that the
+	 * tables agree with them; they are not registered.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'EmploymentContract' => [
+				'nl-cao-minimumloon-schaal' => static fn (array $o, array $context): bool => self::minimumloonSchaalSatisfied($o, $context),
+				'nl-cao-component-onbekend' => static fn (array $o): bool => self::componentsKnown($o),
+			],
+			'LeaveBalance' => [
+				'nl-cao-verlof-minimum' => static fn (array $o, array $context): bool => self::verlofMinimumSatisfied($o, $context),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

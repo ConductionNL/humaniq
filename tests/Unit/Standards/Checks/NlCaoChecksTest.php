@@ -152,7 +152,7 @@ class NlCaoChecksTest extends TestCase {
 	 * @spec openspec/specs/cao-library/spec.md#REQ-CAO-003
 	 */
 	public function testPayScaleCheckIsReachableFromTheEngine(): void {
-		$this->assertArrayHasKey('nl-cao-minimumloon-schaal', (NlCaoChecks::checks()['EmploymentContract'] ?? []));
+		$this->assertArrayHasKey('nl-cao-minimumloon-schaal', (NlCaoChecks::tables()['EmploymentContract'] ?? []));
 		$this->assertContains('nl-cao-minimumloon-schaal', RuleEngine::checkedRuleIds());
 		$this->assertContains('nl-cao-verlof-minimum', RuleEngine::checkedRuleIds());
 
