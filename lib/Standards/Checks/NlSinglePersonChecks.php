@@ -59,6 +59,8 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * DGA-single-person headcount drift check (recommended-severity lamp).
+ *
+ * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-005
  */
 final class NlSinglePersonChecks implements CheckProvider, ProvidesTables {
 

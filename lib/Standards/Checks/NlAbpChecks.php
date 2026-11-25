@@ -55,6 +55,8 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Fund- and tenant-scoped ABP mandatory-affiliation completeness check.
+ *
+ * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
  */
 final class NlAbpChecks implements CheckProvider, ProvidesTables {
 
@@ -119,6 +121,8 @@ final class NlAbpChecks implements CheckProvider, ProvidesTables {
 	 * {@inheritDoc}
 	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
 	 */
 	public static function seedSpec(): array {
 		return [];

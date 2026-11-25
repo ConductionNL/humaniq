@@ -58,6 +58,8 @@ use OCA\Humaniq\Payroll\TaxTables;
 /**
  * The WNT norm-overschrijding self-check: a topfunctionaris's annual
  * bezoldiging vs the sourced WNT-norm, cleared by a recorded exemption.
+ *
+ * @spec openspec/specs/wnt-disclosure/spec.md#REQ-WNT-003
  */
 final class NlWntChecks implements CheckProvider, ProvidesTables {
 
