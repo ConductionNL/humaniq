@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlThirdPartyChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -39,7 +40,7 @@ class NlThirdPartyChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testFebruaryWithoutAReport(): void {
-		$check = NlThirdPartyChecks::checks()['ThirdPartyPayment']['nl-ubd-deadline'];
+		$check = TableCheckRegistry::checks([NlThirdPartyChecks::class])['ThirdPartyPayment']['nl-ubd-deadline'];
 		$payment = ['payeeId' => 'p-1', 'paidOn' => '2026-03-10', 'amount' => 450.0, 'administrationId' => 'ADM-001'];
 
 		self::assertFalse($check($payment, ['ubd' => ['sent' => []], 'today' => '2027-02-01']));
@@ -56,7 +57,7 @@ class NlThirdPartyChecksTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPaidPayeeNeedsBsnAndDateOfBirth(): void {
-		$check = NlThirdPartyChecks::checks()['ThirdPartyPayee']['nl-ubd-payee-identification'];
+		$check = TableCheckRegistry::checks([NlThirdPartyChecks::class])['ThirdPartyPayee']['nl-ubd-payee-identification'];
 		$context = ['ubd' => ['paidPayees' => ['p-1' => true]]];
 
 		self::assertTrue($check(['id' => 'p-1', 'bsn' => '111222333', 'dateOfBirth' => '1971-05-14'], $context));
