@@ -225,8 +225,8 @@ final class RelatedContextIndexer {
 				// wnt-disclosure: the topfunctionaris's recorded
 				// transitional-exemption ground (overgangsrecht |
 				// ontheffing-minister | null), consumed by
-				// NlWntChecks::checks()['WntDisclosure']
-				// ['nl-wnt-norm-overschrijding'] -- a non-null value clears the
+				// NlWntChecks' table-declared nl-wnt-norm-overschrijding
+				// -- a non-null value clears the
 				// norm-overschrijding flag (design.md D4/D5).
 				'wntTopfunctionaris' => (bool)($employee['wntTopfunctionaris'] ?? false),
 				'wntUitzonderingReden' => (($employee['wntUitzonderingReden'] ?? null) === null) ? null : (string)$employee['wntUitzonderingReden'],

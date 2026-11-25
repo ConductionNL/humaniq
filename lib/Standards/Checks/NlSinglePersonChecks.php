@@ -34,6 +34,13 @@
  * Administration/Employee corpus and is vacuous for every standard-mode
  * administratie, so no seed backfill is needed for a green baseline.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the single-person employee-count rule is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -52,24 +59,61 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * DGA-single-person headcount drift check (recommended-severity lamp).
+ *
+ * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-005
  */
-final class NlSinglePersonChecks implements CheckProvider {
+final class NlSinglePersonChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
 	 *
-	 * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-005
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
+		return [];
+
+	}//end checks()
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * `nl-single-person-mode-employee-count` as derivation + FIRST-hit
+	 * decision table: in `dga_single_person` mode the administration needs
+	 * exactly one active employee, and that one is the DGA. An
+	 * administration without an id derives null and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-005
+	 */
+	public static function tables(): array {
 		return [
 			'Administration' => [
-				'nl-single-person-mode-employee-count' => static fn (array $object, array $context): bool => self::exactlyOneDgaEmployee($object, $context),
+				'nl-single-person-mode-employee-count' => [
+					'derive' => static fn (array $object, array $context): ?array => self::employeeCountInputs($object, $context),
+					'table' => self::satisfiedTable(
+						[
+							['name' => 'singlePersonMode', 'type' => 'boolean'],
+							['name' => 'activeEmployees', 'type' => 'number'],
+							['name' => 'soleEmployeeIsDga', 'type' => 'boolean'],
+						],
+						[
+							['id' => 'not-exactly-one-employee', 'inputEntries' => ['true', '!= 1', '-'], 'outputEntries' => [false]],
+							['id' => 'sole-employee-not-dga', 'inputEntries' => ['true', '-', 'false'], 'outputEntries' => [false]],
+						]
+					),
+				],
 			],
 		];
 
-	}//end checks()
+	}//end tables()
 
 	/**
 	 * {@inheritDoc}
@@ -147,5 +191,59 @@ final class NlSinglePersonChecks implements CheckProvider {
 		$byId = ($context['payroll']['employeesById'] ?? []);
 		return is_array($byId) === true ? array_values($byId) : [];
 	}//end employees()
+
+	/**
+	 * The employee-count table's inputs: the mode, how many active employees
+	 * the administration has, and whether the only one is the DGA. Null when
+	 * the administration has no id.
+	 *
+	 * @param array<string, mixed> $object  The Administration.
+	 * @param array<string, mixed> $context Evaluation context; reads `payroll.employeesById`.
+	 *
+	 * @return array{singlePersonMode: bool, activeEmployees: int, soleEmployeeIsDga: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function employeeCountInputs(array $object, array $context): ?array {
+		$administrationId = trim((string)($object['administrationId'] ?? ''));
+		if ($administrationId === '') {
+			return null;
+		}
+
+		$active = array_values(
+			array_filter(
+				self::employees($context),
+				static fn (mixed $employee): bool => is_array($employee) === true
+					&& trim((string)($employee['administrationId'] ?? '')) === $administrationId
+					&& trim((string)($employee['endDate'] ?? '')) === ''
+			)
+		);
+
+		return [
+			'singlePersonMode' => ((string)($object['mode'] ?? 'standard') === 'dga_single_person'),
+			'activeEmployees' => count($active),
+			'soleEmployeeIsDga' => (count($active) === 1 && ($active[0]['isDga'] ?? false) === true),
+		];
+
+	}//end employeeCountInputs()
+
+	/**
+	 * Oracle for the employee-count table: the closure the rule ran on
+	 * before, compared with tables() by NlSinglePersonTableParityTest and
+	 * never registered; it retires after the OpenRegister audit run.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/specs/single-person-modes/spec.md#REQ-SPM-005
+	 */
+	public static function legacyChecks(): array {
+		return [
+			'Administration' => [
+				'nl-single-person-mode-employee-count' => static fn (array $object, array $context): bool => self::exactlyOneDgaEmployee($object, $context),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class

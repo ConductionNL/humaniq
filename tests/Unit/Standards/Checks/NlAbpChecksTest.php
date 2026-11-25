@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards\Checks;
 
 use OCA\Humaniq\Standards\Checks\NlAbpChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
@@ -54,7 +55,7 @@ class NlAbpChecksTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->runChecks = NlAbpChecks::checks()['PayrollRun'];
+		$this->runChecks = TableCheckRegistry::checks([NlAbpChecks::class])['PayrollRun'];
 
 	}//end setUp()
 

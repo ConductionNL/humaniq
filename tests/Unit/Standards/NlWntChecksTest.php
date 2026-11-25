@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\Tests\Unit\Standards;
 
 use OCA\Humaniq\Standards\Checks\NlWntChecks;
+use OCA\Humaniq\Standards\TableCheckRegistry;
 use OCA\Humaniq\Standards\RuleEngine;
 use PHPUnit\Framework\TestCase;
 
@@ -67,7 +68,7 @@ class NlWntChecksTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		RuleEngine::reset();
-		$this->checks = NlWntChecks::checks();
+		$this->checks = TableCheckRegistry::checks([NlWntChecks::class]);
 
 	}//end setUp()
 

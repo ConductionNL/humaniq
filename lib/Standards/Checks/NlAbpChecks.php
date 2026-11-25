@@ -30,6 +30,13 @@
  * without a filing violating) lives in lib/Settings/register.d/hr-seed.json
  * (ADR-001) — the NlPensionFilingChecks precedent.
  *
+ * Converted to the table-backed check form (rules-onto-or-decision-tables,
+ * next conversion wave): the ABP fund rule is declared as an OpenRegister decision table via
+ * the ProvidesTables capability. The derivations stay here; the shared
+ * Dmn\DecisionTableEvaluator decides. The closure predicate remains
+ * available as legacyChecks() -- the parity oracle, NOT registered in the
+ * engine -- until staged retirement (REQ-RULE-009).
+ *
  * @category Standards
  * @package  OCA\Humaniq\Standards\Checks
  *
@@ -48,8 +55,12 @@ namespace OCA\Humaniq\Standards\Checks;
 
 /**
  * Fund- and tenant-scoped ABP mandatory-affiliation completeness check.
+ *
+ * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
  */
-final class NlAbpChecks implements CheckProvider {
+final class NlAbpChecks implements CheckProvider, ProvidesTables {
+
+	use BuildsSatisfiedTables;
 
 	/**
 	 * PayrollRun statuses that count as "approved or later" for this
@@ -62,28 +73,56 @@ final class NlAbpChecks implements CheckProvider {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Empty: the check this provider owns is table-declared (see tables()).
+	 *
 	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
 	 */
 	public static function checks(): array {
-		return [
-			// Additive on PayrollRun: NlPensionFilingChecks already registers
-			// nl-upa-monthly-completeness here (and NlPayrollChecks/NlGlPostChecks
-			// etc. register others); RuleEngine merges providers per object
-			// type, never overwrites (design.md D2).
-			'PayrollRun' => [
-				// Wet Privatisering ABP (1996) — an obligated administratie's own
-				// approved-or-later NL run must have its own ABP filing for its
-				// own period.
-				'nl-abp-fund-required' => static fn (array $run, array $c): bool => self::abpFundFiled($run, $c),
-			],
-		];
+		return [];
 
 	}//end checks()
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * `nl-abp-fund-required` as derivation + FIRST-hit decision table: an NL
+	 * run, approved or later, of an ABP-plichtige administratie without an
+	 * ABP PensionFiling for its period fails. A run without period or
+	 * administration derives null and passes, as before.
+	 *
+	 * @return array<string, array<string, array{derive: callable, table: array<string, mixed>}>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
+	 */
+	public static function tables(): array {
+		return [
+			'PayrollRun' => [
+				'nl-abp-fund-required' => [
+					'derive' => static fn (array $run, array $c): ?array => self::abpInputs($run, $c),
+					'table' => self::satisfiedTable(
+						[
+							['name' => 'nl', 'type' => 'boolean'],
+							['name' => 'status', 'type' => 'string'],
+							['name' => 'abpPlichtig', 'type' => 'boolean'],
+							['name' => 'abpFiled', 'type' => 'boolean'],
+						],
+						[['id' => 'plichtig-run-without-abp-filing', 'inputEntries' => ['true', 'in ("approved","posted","paid")', 'true', 'false'], 'outputEntries' => [false]]]
+					),
+				],
+			],
+		];
+
+	}//end tables()
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @return array<string, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
 	 */
 	public static function seedSpec(): array {
 		return [];
@@ -158,5 +197,58 @@ final class NlAbpChecks implements CheckProvider {
 		$map = ($c['related']['PensionFiling']['abpFiledPeriodsByAdministrationId'] ?? []);
 		return is_array($map) === true ? $map : [];
 	}//end abpFiledPeriodsByAdministrationId()
+
+	/**
+	 * The ABP table's inputs, or null when the run carries no period or no
+	 * administration to key the indexes on.
+	 *
+	 * @param array<string, mixed> $run The PayrollRun.
+	 * @param array<string, mixed> $c   Evaluation context; reads the Administration and PensionFiling indexes.
+	 *
+	 * @return array{nl: bool, status: string, abpPlichtig: bool, abpFiled: bool}|null
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-008
+	 */
+	private static function abpInputs(array $run, array $c): ?array {
+		$period = trim((string)($run['period'] ?? ''));
+		$administrationId = trim((string)($run['administrationId'] ?? ''));
+		if ($period === '' || $administrationId === '') {
+			return null;
+		}
+
+		return [
+			'nl' => (strtoupper((string)($run['jurisdiction'] ?? '')) === 'NL'),
+			'status' => (string)($run['status'] ?? ''),
+			'abpPlichtig' => ((self::abpPlichtigByAdministrationId($c)[$administrationId] ?? false) === true),
+			'abpFiled' => (((self::abpFiledPeriodsByAdministrationId($c)[$administrationId] ?? [])[$period] ?? false) === true),
+		];
+
+	}//end abpInputs()
+
+	/**
+	 * The ABP-fund predicate from before the table form, kept to check the
+	 * table against: NlAbpTableParityTest runs both, the engine runs only
+	 * tables(). Goes once an OpenRegister audit run confirms the table.
+	 *
+	 * @return array<string, array<string, callable>>
+	 *
+	 * @spec openspec/changes/rules-onto-or-decision-tables/specs/hrm-rule-engine/spec.md#REQ-RULE-009
+	 * @spec openspec/changes/abp-aansluiting/specs/abp-aansluiting/spec.md#REQ-ABP-003
+	 */
+	public static function legacyChecks(): array {
+		return [
+			// Additive on PayrollRun: NlPensionFilingChecks already registers
+			// nl-upa-monthly-completeness here (and NlPayrollChecks/NlGlPostChecks
+			// etc. register others); RuleEngine merges providers per object
+			// type, never overwrites (design.md D2).
+			'PayrollRun' => [
+				// Wet Privatisering ABP (1996) — an obligated administratie's own
+				// approved-or-later NL run must have its own ABP filing for its
+				// own period.
+				'nl-abp-fund-required' => static fn (array $run, array $c): bool => self::abpFundFiled($run, $c),
+			],
+		];
+
+	}//end legacyChecks()
 
 }//end class
