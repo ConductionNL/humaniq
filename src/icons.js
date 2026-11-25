@@ -102,6 +102,7 @@ import FileSendOutline from "vue-material-design-icons/FileSendOutline.vue";
 import FileSign from "vue-material-design-icons/FileSign.vue";
 import FolderOutline from "vue-material-design-icons/FolderOutline.vue";
 import FormSelect from "vue-material-design-icons/FormSelect.vue";
+import FormTextbox from "vue-material-design-icons/FormTextbox.vue";
 import Gavel from "vue-material-design-icons/Gavel.vue";
 import GiftOutline from "vue-material-design-icons/GiftOutline.vue";
 import HandshakeOutline from "vue-material-design-icons/HandshakeOutline.vue";
@@ -113,6 +114,7 @@ import PackageVariantClosed from "vue-material-design-icons/PackageVariantClosed
 import PencilOutline from "vue-material-design-icons/PencilOutline.vue";
 import Percent from "vue-material-design-icons/Percent.vue";
 import PercentOutline from "vue-material-design-icons/PercentOutline.vue";
+import PiggyBank from "vue-material-design-icons/PiggyBank.vue";
 import PiggyBankOutline from "vue-material-design-icons/PiggyBankOutline.vue";
 import PlusCircleOutline from "vue-material-design-icons/PlusCircleOutline.vue";
 import PowerPlugOutline from "vue-material-design-icons/PowerPlugOutline.vue";
@@ -228,6 +230,7 @@ export default {
 	FileSign,
 	FolderOutline,
 	FormSelect,
+	FormTextbox,
 	Gavel,
 	GiftOutline,
 	HandshakeOutline,
@@ -239,6 +242,7 @@ export default {
 	PencilOutline,
 	Percent,
 	PercentOutline,
+	PiggyBank,
 	PiggyBankOutline,
 	PlusCircleOutline,
 	PowerPlugOutline,
