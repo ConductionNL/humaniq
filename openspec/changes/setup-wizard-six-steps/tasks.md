@@ -118,6 +118,12 @@
         `CnSetupWizard` renders nothing for it, in 2.204.0 and in 2.225.1. Needs nextcloud-vue.
       - The recap's Wijzigen column is too narrow: it renders "Wi…", "Wij…", "Wijz…"; the board
         shows a full "Wijzigen" link per row. nextcloud-vue (`CnSetupWizard` summary rows).
+        Built 2026-11-25: nextcloud-vue#2379 (merged) draws the health line from the setup status
+        `health` block (`{ ok, checks: [{ label, ok }] }`) and keeps the Change button at full
+        width. `SetupHealthCheck` now reports `ok` and one translated row per check (nl "register
+        geïmporteerd met 54 schema's, achtergrondtaken draaien, loonpakket 2026 geladen"), and the
+        Klaar step sets `submitLabel` "Finish setup" (nl "Inrichting afronden"). Still to do: raise
+        `@conduction/nextcloud-vue` to the release that carries #2379, then the live re-check.
       - Dialog title "Humaniq instellen" (nextcloud-vue's "Set up {appName}") where the board says
         "Humaniq inrichten, stap 6 van 6" over the heading "Controleer en rond af"; the finish
         button reads "Afronden" where REQ-FTS-011 and the board say "Inrichting afronden".

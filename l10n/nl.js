@@ -4332,7 +4332,14 @@ OC.L10N.register(
         "None, I will set this up myself": "Geen, ik richt het zelf in",
         "Nothing is imported. You start with an empty app and add your own data.": "Er wordt niets geïmporteerd. Je begint met een lege app en voegt je eigen gegevens toe.",
         "Example data": "Voorbeeldgegevens",
-        "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Voorbeeldmedewerkers, -contracten, -verlofaanvragen en -salarisgegevens voor elk schema dat deze app levert, gemaakt uit de schema's zelf. Zo zie je de lijsten, detailpagina's en dashboards werken; het vertelt geen verhaal. Je kunt het vaker draaien en het daarna weer verwijderen."
+        "Sample employees, contracts, leave requests and payroll records for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Voorbeeldmedewerkers, -contracten, -verlofaanvragen en -salarisgegevens voor elk schema dat deze app levert, gemaakt uit de schema's zelf. Zo zie je de lijsten, detailpagina's en dashboards werken; het vertelt geen verhaal. Je kunt het vaker draaien en het daarna weer verwijderen.",
+        "Finish setup": "Inrichting afronden",
+        "register imported with %1$s schemas": "register geïmporteerd met %1$s schema's",
+        "the register was not imported": "het register is niet geïmporteerd",
+        "background jobs running": "achtergrondtaken draaien",
+        "background jobs are not running": "achtergrondtaken draaien niet",
+        "payroll tables %1$s loaded": "loonpakket %1$s geladen",
+        "no payroll tables are loaded": "geen loonpakket geladen"
     },
     "nplurals=2; plural=(n != 1);"
 )

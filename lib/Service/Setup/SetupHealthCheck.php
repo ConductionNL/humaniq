@@ -32,6 +32,7 @@ use OCA\Humaniq\Payroll\TaxTables;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use Psr\Container\ContainerInterface;
 use Throwable;
 
@@ -65,6 +66,7 @@ class SetupHealthCheck {
 	 * @param SettingsService    $settings  Names humaniq's register and says whether OpenRegister is on.
 	 * @param IAppConfig         $appConfig Holds Nextcloud's last background job run.
 	 * @param ITimeFactory       $time      The current time.
+	 * @param IL10N              $l10n      Translates the check labels the Klaar step shows.
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 */
@@ -73,13 +75,14 @@ class SetupHealthCheck {
 		private readonly SettingsService $settings,
 		private readonly IAppConfig $appConfig,
 		private readonly ITimeFactory $time,
+		private readonly IL10N $l10n,
 	) {
 	}//end __construct()
 
 	/**
 	 * Run the check.
 	 *
-	 * @return array{passed:bool,schemas:int,backgroundJobs:bool,payrollTablesYear:int|null,failures:array<int,string>,message:string}
+	 * @return array{passed:bool,ok:bool,schemas:int,backgroundJobs:bool,payrollTablesYear:int|null,failures:array<int,string>,checks:array<int,array{id:string,ok:bool,label:string}>,message:string}
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
 	 */
@@ -88,7 +91,12 @@ class SetupHealthCheck {
 		$jobs    = $this->backgroundJobsRun();
 		$year    = self::latestYear(ids: TaxTables::availableIds());
 
-		return self::report(schemas: $schemas, backgroundJobs: $jobs, payrollTablesYear: $year);
+		return self::report(
+			schemas: $schemas,
+			backgroundJobs: $jobs,
+			payrollTablesYear: $year,
+			translate: fn (string $text, array $params): string => $this->l10n->t($text, $params),
+		);
 	}//end check()
 
 	/**
@@ -97,12 +105,14 @@ class SetupHealthCheck {
 	 * @param integer      $schemas           Schemas in humaniq's register; 0 when the import left none.
 	 * @param boolean      $backgroundJobs    Whether the background jobs ran within the last hour.
 	 * @param integer|null $payrollTablesYear The newest loaded payroll tables year, or null.
+	 * @param callable|null $translate        Translates a label template with its parameters; English when null.
 	 *
-	 * @return array{passed:bool,schemas:int,backgroundJobs:bool,payrollTablesYear:int|null,failures:array<int,string>,message:string}
+	 * @return array{passed:bool,ok:bool,schemas:int,backgroundJobs:bool,payrollTablesYear:int|null,failures:array<int,string>,checks:array<int,array{id:string,ok:bool,label:string}>,message:string}
 	 *
 	 * @spec openspec/changes/setup-wizard-six-steps/specs/first-time-setup/spec.md#scenario-a-failed-health-check-is-shown-as-failed
+	 * @spec openspec/changes/setup-wizard-six-steps/tasks.md#task-5.2
 	 */
-	public static function report(int $schemas, bool $backgroundJobs, ?int $payrollTablesYear): array {
+	public static function report(int $schemas, bool $backgroundJobs, ?int $payrollTablesYear, ?callable $translate=null): array {
 		$failures = [];
 		if ($schemas === 0) {
 			$failures[] = 'the register was not imported';
@@ -123,13 +133,48 @@ class SetupHealthCheck {
 
 		return [
 			'passed'            => ($failures === []),
+			// `ok` and `checks` are the shape nextcloud-vue's CnSetupWizard draws
+			// as the Klaar step's health line (setup-summary-health-line).
+			'ok'                => ($failures === []),
 			'schemas'           => $schemas,
 			'backgroundJobs'    => $backgroundJobs,
 			'payrollTablesYear' => $payrollTablesYear,
 			'failures'          => $failures,
+			'checks'            => self::checks(
+				schemas: $schemas,
+				backgroundJobs: $backgroundJobs,
+				payrollTablesYear: $payrollTablesYear,
+				translate: $translate ?? static fn (string $text, array $params): string => vsprintf($text, $params),
+			),
 			'message'           => $message,
 		];
 	}//end report()
+
+	/**
+	 * One row per finding, labelled for what it found: the passing wording when it holds,
+	 * the failing wording when it does not. The wizard names all rows when every one
+	 * passes, and only the failing rows otherwise.
+	 *
+	 * @param integer      $schemas           Schemas in humaniq's register.
+	 * @param boolean      $backgroundJobs    Whether the background jobs ran within the last hour.
+	 * @param integer|null $payrollTablesYear The newest loaded payroll tables year, or null.
+	 * @param callable     $translate         Translates a label template with its parameters.
+	 *
+	 * @return array<int,array{id:string,ok:bool,label:string}>
+	 *
+	 * @spec openspec/changes/setup-wizard-six-steps/tasks.md#task-5.2
+	 */
+	private static function checks(int $schemas, bool $backgroundJobs, ?int $payrollTablesYear, callable $translate): array {
+		$register = ($schemas > 0) ? $translate('register imported with %1$s schemas', [$schemas]) : $translate('the register was not imported', []);
+		$jobs     = ($backgroundJobs === true) ? $translate('background jobs running', []) : $translate('background jobs are not running', []);
+		$tables   = ($payrollTablesYear !== null) ? $translate('payroll tables %1$s loaded', [$payrollTablesYear]) : $translate('no payroll tables are loaded', []);
+
+		return [
+			['id' => 'register', 'ok' => ($schemas > 0), 'label' => (string) $register],
+			['id' => 'background-jobs', 'ok' => $backgroundJobs, 'label' => (string) $jobs],
+			['id' => 'payroll-tables', 'ok' => ($payrollTablesYear !== null), 'label' => (string) $tables],
+		];
+	}//end checks()
 
 	/**
 	 * The newest year among payroll table ids such as `nl-2026`, or null when none names a year.
