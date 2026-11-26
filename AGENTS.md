@@ -55,7 +55,7 @@ Work is spec-driven (`openspec/config.yaml`).
 ## Architecture decisions
 
 ADRs for this app live in `openspec/architecture/` (`adr-001-information-architecture.md`,
-`adr-101-jurisdiction-packs.md`).
+`adr-101-jurisdiction-packs.md`, `adr-102-leave-approval-guard-is-an-or-lifecycle-guard.md`).
 
 ## Repo conventions
 
