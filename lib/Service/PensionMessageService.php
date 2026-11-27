@@ -59,7 +59,8 @@ class PensionMessageService {
 	}//end __construct()
 
 	/**
-	 * The scheme, the delivery format, one line per employee and the findings
+	 * The scheme, the delivery format, one line per employee in the scheme
+	 * (a PensionParticipation in the fund during the period) and the findings
 	 * of a pension filing. Any finding means no delivery can be made yet.
 	 *
 	 * @param array<string, mixed> $filing The PensionFiling.
@@ -94,7 +95,12 @@ class PensionMessageService {
 
 		$outcome['scheme'] = $scheme;
 		$outcome['messageFormat'] = (string)($scheme['messageFormat'] ?? '');
+		$participants = $this->participants(fund: $fund, period: $period);
 		foreach ($this->gateway->findFiltered('Payslip', ['payrollRunId' => (string)($run['id'] ?? '')]) as $slip) {
+			if (isset($participants[(string)($slip['employeeId'] ?? '')]) === false) {
+				continue;
+			}
+
 			$line = $this->line(slip: $slip, filing: ['scheme' => $scheme, 'period' => $period]);
 			if (isset($line['finding']) === true) {
 				$outcome['findings'][] = $line['finding'];
@@ -173,6 +179,29 @@ class PensionMessageService {
 
 		return $found;
 	}//end schemeFor()
+
+	/**
+	 * The employees with a PensionParticipation in the fund during the
+	 * period: the employees in the scheme, the only ones the delivery reports.
+	 *
+	 * @param string                      $fund   The filing's fund.
+	 * @param array{0: string, 1: string} $period The first and last day of the period.
+	 *
+	 * @return array<string, true> The employee ids, as keys.
+	 *
+	 * @spec openspec/changes/filings-pension-upa-message/specs/pension-upa-message/spec.md#REQ-PUM-001
+	 */
+	private function participants(string $fund, array $period): array {
+		$participants = [];
+		foreach ($this->gateway->findFiltered('PensionParticipation', ['fund' => $fund]) as $participation) {
+			$span = [substr((string)($participation['startDate'] ?? ''), 0, 10), substr((string)($participation['endDate'] ?? ''), 0, 10)];
+			if (self::covers(span: $span, period: $period) === true) {
+				$participants[(string)($participation['employeeId'] ?? '')] = true;
+			}
+		}
+
+		return $participants;
+	}//end participants()
 
 	/**
 	 * The run the filing names, when it is approved, posted or paid.

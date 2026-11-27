@@ -14,5 +14,13 @@
 
 ## 3. The flow as the only approver
 
-- [ ] 3.1 Once adopted flows carry approval everywhere, guard the raw `status` edit so the
+- [x] 3.1 Once adopted flows carry approval everywhere, guard the raw `status` edit so the
       recorded decision is the only approver. (Was `payroll-run-as-a-flow` 7.3.)
+      Done: "adopted" is read per instance as the shipped Loonrun flow being enabled
+      (`ShippedFlowAdoption`, by import identity). `PayrollRunApprovalGuard` (pre-save, PayrollRun)
+      then refuses a write that moves a run from draft, or a create, into approved, posted or paid,
+      naming the review step; the approve step writes under the internal-write marker and passes, a
+      shipped import too. A disabled flow refuses nothing, and a flow store that cannot be read
+      counts as not adopted (logged). PHPUnit: `PayrollRunApprovalGuardTest`,
+      `ShippedFlowAdoptionTest`, `PayrollApproveNodeTest::testApprovalIsWrittenUnderTheInternalWriteMarker`.
+      Docs: `docs/payroll/loonrun-flow.md`. The scenario stays `@e2e exclude` (server-side guard).

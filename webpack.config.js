@@ -181,4 +181,11 @@ webpackConfig.resolve.fallback = {
 	path: false,
 }
 
-module.exports = webpackConfig
+// css-loader follows `devtool`, so the production `source-map` embedded every
+// stylesheet's map (sourcesContent included) in the JavaScript that
+// style-loader runs, nextcloud-vue's sheet among them. withLeanBundles turns
+// those CSS maps off (JavaScript maps stay) and keeps lazy library chunks
+// lazy (nextcloud-vue#2363; speed budget, hydra ADR-124).
+const { withLeanBundles } = require('@conduction/nextcloud-vue/webpack')
+
+module.exports = withLeanBundles(webpackConfig)

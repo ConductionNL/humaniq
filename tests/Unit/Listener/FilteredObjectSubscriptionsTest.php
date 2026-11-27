@@ -27,6 +27,7 @@ use OCA\Humaniq\Listener\InterviewInterviewersListener;
 use OCA\Humaniq\Listener\ManagerAccessOrgChangeListener;
 use OCA\Humaniq\Listener\ManagerAccessStampListener;
 use OCA\Humaniq\Listener\PayrollOpeningBalanceUniqueGuard;
+use OCA\Humaniq\Listener\PayrollRunApprovalGuard;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -97,7 +98,7 @@ class FilteredObjectSubscriptionsTest extends TestCase {
 	}//end testTheManagerAccessSubscriptionsFollowUnchanged()
 
 	/**
-	 * The opening balance guard comes last, on create and update of a balance only.
+	 * The opening balance guard follows, on create and update of a balance only.
 	 *
 	 * @return void
 	 *
@@ -109,7 +110,24 @@ class FilteredObjectSubscriptionsTest extends TestCase {
 				['event' => ObjectCreatingEvent::class, 'listener' => PayrollOpeningBalanceUniqueGuard::class, 'schemas' => ['payrollopeningbalance']],
 				['event' => ObjectUpdatingEvent::class, 'listener' => PayrollOpeningBalanceUniqueGuard::class, 'schemas' => ['payrollopeningbalance']],
 			],
-			array_slice($this->subscriptions(), 7)
+			array_slice($this->subscriptions(), 7, 2)
 		);
 	}//end testTheOpeningBalanceGuardIsSubscribedBeforeEverySave()
+
+	/**
+	 * The payroll run approval guard comes last, on create and update of a run only.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 */
+	public function testThePayrollRunApprovalGuardIsSubscribedBeforeEverySave(): void {
+		self::assertSame(
+			[
+				['event' => ObjectCreatingEvent::class, 'listener' => PayrollRunApprovalGuard::class, 'schemas' => ['payrollrun']],
+				['event' => ObjectUpdatingEvent::class, 'listener' => PayrollRunApprovalGuard::class, 'schemas' => ['payrollrun']],
+			],
+			array_slice($this->subscriptions(), 9)
+		);
+	}//end testThePayrollRunApprovalGuardIsSubscribedBeforeEverySave()
 }//end class

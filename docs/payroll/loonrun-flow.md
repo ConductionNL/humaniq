@@ -20,6 +20,12 @@ happens until an administrator adopts it.
 The review step is a task for a person: the run is only approved, posted and paid after someone
 in that group has looked at the payslips and chosen *Approve*.
 
+**The flow is the only approver once enabled.** While Loonrun is enabled, a run can no longer be
+approved by editing its status directly: a save that moves a draft run to approved, posted or paid
+is refused with a message pointing at the review step. Only the flow's own approve step, after the
+reviewer's decision, sets a run to approved. While the flow is disabled, the status edit works as
+before, so an administration that has not adopted the flow keeps its current way of approving.
+
 ## Run it every month
 
 Humaniq does not ship a schedule, because a scheduled flow runs as a named account and only you

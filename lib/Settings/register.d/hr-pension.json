@@ -6,7 +6,7 @@
                 "slug": "PensionFiling",
                 "authorization": {"read": ["humaniq-hr", "humaniq-payroll"], "create": ["humaniq-hr", "humaniq-payroll"], "update": ["humaniq-hr", "humaniq-payroll"], "delete": ["humaniq-hr", "humaniq-payroll"]},
                 "icon": "PiggyBankOutline",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "title": "Pension filing",
                 "description": "A UPA (Uniforme Pensioenaangifte) delivery to one sector pension fund for one wage period, reporting an approved PayrollRun (pension-filing-upa-mvp). The APG-administered funds are gated on the referenced payroll run being approved before the filing can progress past review: the verified Loket.nl/APG gating rule. Via a declarative create->review->confirm->send lifecycle (concept -> gecontroleerd -> bevestigd -> verzonden) mirroring the loonaangifte filing flow.",
                 "type": "object",
@@ -30,8 +30,8 @@
                                     "concept"
                                 ],
                                 "to": "gecontroleerd",
-                                "requires": "OCA\\Humaniq\\Lifecycle\\PayrollRunApprovedGuard",
-                                "description": "Marks the filing as reviewed. PayrollRunApprovedGuard denies the transition unless the referenced PayrollRun's status is approved, posted or paid: an HR admin may still prepare a concept filing while the run is in review, but cannot progress it further until the run is approved."
+                                "requires": "OCA\\Humaniq\\Lifecycle\\PensionMessageGuard",
+                                "description": "Marks the filing as reviewed. PensionMessageGuard first applies PayrollRunApprovedGuard, which denies the transition unless the referenced PayrollRun's status is approved, posted or paid: an HR admin may still prepare a concept filing while the run is in review, but cannot progress it further until the run is approved. Then, for a fund with a PensionScheme in the period, it denies while an employee in the scheme has no employment contract or no hours per week, and names them (filings-pension-upa-message)."
                             },
                             "bevestigen": {
                                 "from": [

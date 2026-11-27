@@ -180,7 +180,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 * @throws RuntimeException When the service reports `failed` or `refused-not-draft`.
 	 *
 	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-002
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
 	 */
 	private function calculateFor(array $json, array $config): array {
 		$period = $this->render((string)($config['period'] ?? ''), $json);
@@ -218,7 +218,7 @@ class PayrollCalculateNode extends PayrollFlowNodeBase {
 	 *
 	 * @return mixed The paymentDayOfMonth as stored, or null.
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
 	 */
 	private function payDayOf(string $administrationId): mixed {
 		if ($administrationId === '') {
