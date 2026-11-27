@@ -656,6 +656,7 @@
    "overlay": null,
    "specs": [
     "payroll-run-as-a-flow",
+    "payroll-run-pay-date-and-schedule",
     "payroll-run-checks",
     "payroll-mutation-reports",
     "audit-trail-payroll",

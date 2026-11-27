@@ -28,7 +28,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+ * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Psr\Log\LoggerInterface;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+ * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
  */
 class PayrollRunApprovalGuard implements IEventListener {
 
@@ -70,7 +70,7 @@ class PayrollRunApprovalGuard implements IEventListener {
 	 * @param ShippedFlowAdoption  $adoption Whether the Loonrun flow is adopted.
 	 * @param LoggerInterface      $logger   Logs an adoption lookup that failed.
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function __construct(
 		private readonly HoursRegisterGateway $gateway,
@@ -87,7 +87,7 @@ class PayrollRunApprovalGuard implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) PreSaveEvents::entityOf and ::refuse are the shared reader and refusal every pre-save guard uses.
 	 */
@@ -126,7 +126,7 @@ class PayrollRunApprovalGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	private function approves(string $newStatus, ?string $oldStatus): bool {
 		if (in_array($newStatus, self::APPROVED_STATUSES, true) === false) {
@@ -143,7 +143,7 @@ class PayrollRunApprovalGuard implements IEventListener {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	private function oldStatus(Event $event): ?string {
 		if ($event instanceof ObjectUpdatingEvent === false) {
@@ -160,7 +160,7 @@ class PayrollRunApprovalGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	private function flowAdopted(): bool {
 		try {
@@ -182,7 +182,7 @@ class PayrollRunApprovalGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	private function isRun(object $entity): bool {
 		return strtolower($this->gateway->resolveSchemaSlug((string)$entity->getSchema())) === self::SCHEMA_SLUG;

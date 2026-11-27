@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+ * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Psr\Container\ContainerInterface;
 /**
  * Whether a shipped flow is enabled on this instance.
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+ * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
  */
 class ShippedFlowAdoption {
 
@@ -54,7 +54,7 @@ class ShippedFlowAdoption {
 	 * @param OpenRegisterAvailabilityInterface $openRegister Whether OpenRegister is installed.
 	 * @param ContainerInterface                $container    Resolves OpenRegister's flow store lazily.
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function __construct(
 		private readonly OpenRegisterAvailabilityInterface $openRegister,
@@ -75,7 +75,7 @@ class ShippedFlowAdoption {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function isAdopted(string $app, string $name, string $triggerSchema): bool {
 		if ($this->openRegister->isAvailable() === false) {

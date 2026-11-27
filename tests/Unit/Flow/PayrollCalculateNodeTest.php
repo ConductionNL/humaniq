@@ -241,7 +241,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 	 * The run's pay date travels on the item as `payroll.payDate`, from the
 	 * administration's pay day in the run's month, for the flow to wait on.
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
 	 *
 	 * @return void
 	 */
@@ -264,7 +264,7 @@ class PayrollCalculateNodeTest extends FlowNodeTestCase {
 	 * Without a pay day, or when administrations cannot be read, the run has
 	 * no pay date and still calculates: the flow then posts on approval.
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
 	 *
 	 * @return void
 	 */

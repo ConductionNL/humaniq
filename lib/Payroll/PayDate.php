@@ -20,7 +20,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+ * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use DateTimeImmutable;
 /**
  * The pay date of a monthly wage period.
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+ * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
  */
 final class PayDate {
 
@@ -48,7 +48,7 @@ final class PayDate {
 	 *
 	 * @return string|null The pay date.
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
 	 */
 	public function forPeriod(string $period, mixed $dayOfMonth): ?string {
 		if (preg_match('/^(\d{4})-(0[1-9]|1[0-2])$/', trim($period), $match) !== 1) {

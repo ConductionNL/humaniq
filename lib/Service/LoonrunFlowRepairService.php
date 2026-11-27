@@ -275,7 +275,7 @@ class LoonrunFlowRepairService implements LoonrunFlowRepairServiceInterface {
 	 * @return bool True when nodes and edges equal the v1 import exactly.
 	 *
 	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-007
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
+	 * @spec openspec/changes/archive/2026-11-27-payroll-run-pay-date-and-schedule/tasks.md
 	 */
 	private function matchesShippedV1(array $published): bool {
 		$declaration = $this->shippedDeclaration();
