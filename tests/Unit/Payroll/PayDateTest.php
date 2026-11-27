@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+ * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
  */
 
 declare(strict_types=1);
@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The pay date of a monthly wage period.
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
+ * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-001
  */
 class PayDateTest extends TestCase {
 

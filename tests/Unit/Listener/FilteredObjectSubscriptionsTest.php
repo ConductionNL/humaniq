@@ -119,7 +119,7 @@ class FilteredObjectSubscriptionsTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function testThePayrollRunApprovalGuardIsSubscribedBeforeEverySave(): void {
 		self::assertSame(

@@ -206,7 +206,7 @@ class LoonrunFlowRepairServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
+	 * @spec openspec/changes/archive/2026-11-27-payroll-run-pay-date-and-schedule/tasks.md
 	 */
 	public function testWithoutStepSplicesAPassThroughStepOut(): void {
 		$nodes = [['id' => 'approve'], ['id' => 'payday'], ['id' => 'glpost']];

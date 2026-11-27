@@ -76,7 +76,7 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	 * @param InternalWriteMarker     $marker   The shared marker the approval is written under, so
 	 *                                          the pre-save guard tells this step from a raw edit.
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function __construct(
 		PayrollFlowNodeServices $services,
@@ -129,7 +129,7 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	 * @throws RuntimeException When the run is missing, not draft, or the write fails.
 	 *
 	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function execute(FlowNodeCall $call): array {
 		$items = $call->items;

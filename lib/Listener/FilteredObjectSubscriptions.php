@@ -46,7 +46,7 @@ final class FilteredObjectSubscriptions {
 	 * @return void
 	 *
 	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md#requirement-an-interview-shall-be-a-calendar-event-with-the-interviewers-as-attendees-req-intv-010
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function register(callable $subscribe): void {
 		// An Interview's interviewers are Nextcloud users, checked on every save.
