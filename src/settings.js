@@ -8,7 +8,8 @@ import AdminSettings from './views/settings/AdminSettings.vue'
 
 // Library CSS. This entry is its own bundle, so the import in main.js does not
 // reach the admin page: without this line the admin shell renders unstyled.
-import '@conduction/nextcloud-vue/css/index.css'
+// The library stylesheet is linked by templates/settings/admin.php
+// (css/nextcloud-vue.css, copied by LibraryStylesheetCopy).
 
 try {
 	registerTranslations()

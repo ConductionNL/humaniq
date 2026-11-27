@@ -186,6 +186,11 @@ webpackConfig.resolve.fallback = {
 // style-loader runs, nextcloud-vue's sheet among them. withLeanBundles turns
 // those CSS maps off (JavaScript maps stay) and keeps lazy library chunks
 // lazy (nextcloud-vue#2363; speed budget, hydra ADR-124).
-const { withLeanBundles } = require('@conduction/nextcloud-vue/webpack')
+const { LibraryStylesheetCopy, withLeanBundles } = require('@conduction/nextcloud-vue/webpack')
+
+// nextcloud-vue's stylesheet goes to css/nextcloud-vue.css, which the app's
+// pages link (templates/index.php, templates/settings/admin.php) instead of a
+// bundle inserting ~1.1 MB of CSS text on every load.
+webpackConfig.plugins.push(new LibraryStylesheetCopy())
 
 module.exports = withLeanBundles(webpackConfig)

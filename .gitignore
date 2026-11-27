@@ -46,3 +46,5 @@ task-audit.json
 .stale/
 /.e2e-state/
 .phpunit.result.cache
+# nextcloud-vue stylesheet, copied by webpack.config.js (LibraryStylesheetCopy)
+/css/nextcloud-vue.css
