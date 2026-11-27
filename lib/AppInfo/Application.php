@@ -113,6 +113,8 @@ use OCA\Humaniq\Service\TaxTableSetService;
 use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\JurisdictionPackService;
 use OCA\Humaniq\Service\RosterCheckService;
+use OCA\Humaniq\Service\PensionMessageService;
+use OCA\Humaniq\Service\RecordStoreInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -343,9 +345,6 @@ class Application extends App implements IBootstrap {
 		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
 		$context->registerService(UbdReportReadyGuard::class, static fn ($c): UbdReportReadyGuard => new UbdReportReadyGuard());
 		$context->registerService(LoonaangifteMessageGuard::class, static fn ($c): LoonaangifteMessageGuard => new LoonaangifteMessageGuard());
-		// filings-pension-upa-message D3: the PensionFiling `controleren` guard, the
-		// approved-run rule first, then every employee in the fund's scheme reportable.
-		$context->registerService(PensionMessageGuard::class, static fn ($c): PensionMessageGuard => new PensionMessageGuard(runApproved: $c->get(PayrollRunApprovedGuard::class), messages: new \OCA\Humaniq\Service\PensionMessageService(gateway: $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class))));
 		$context->registerService(SurveyOpenGuard::class, static fn ($c): SurveyOpenGuard => new SurveyOpenGuard($c->get(InternalWriteMarker::class)));
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —
@@ -384,6 +383,8 @@ class Application extends App implements IBootstrap {
 	 * hr-reopens-an-approved-claim: only HR outside the claim reopens an approved Expense.
 	 * payroll-reservation-payouts D8: an individual choice budget spend is approved by
 	 * someone other than the requester and never above the balance.
+	 * filings-pension-upa-message D3: a PensionFiling is checked only on an approved
+	 * run and with every employee in the fund's scheme reportable.
 	 *
 	 * @param IRegistrationContext $context The registration context.
 	 *
@@ -392,6 +393,7 @@ class Application extends App implements IBootstrap {
 	private function registerRecordStoreGuards(IRegistrationContext $context): void {
 		$context->registerService(HrReopenGuard::class, static fn ($c): HrReopenGuard => new HrReopenGuard($c->get(\OCA\Humaniq\Service\HumaniqRoles::class), $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
 		$context->registerService(IkbSpendApprovalGuard::class, static fn ($c): IkbSpendApprovalGuard => new IkbSpendApprovalGuard(records: $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class)));
+		$context->registerService(PensionMessageGuard::class, static fn ($c): PensionMessageGuard => new PensionMessageGuard(runApproved: $c->get(PayrollRunApprovedGuard::class), messages: new PensionMessageService(gateway: $c->get(RecordStoreInterface::class))));
 	}//end registerRecordStoreGuards()
 
 	/**
