@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\SettingsService;
 use OCP\IURLGenerator;
 use OCP\IL10N;
@@ -42,12 +43,17 @@ final class PayrollFlowNodeServices {
 	 * @param IURLGenerator $urls URL generator for the node icon.
 	 * @param \Psr\Container\ContainerInterface $container DI container for lazy ObjectService resolution.
 	 * @param SettingsService $settingsService Register slug + OpenRegister availability.
+	 * @param InternalWriteMarker $marker The shared marker a node's own writes run under, so the
+	 *                                    pre-save guards tell a flow step from a raw edit.
+	 *
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function __construct(
 		public readonly IL10N $l10n,
 		public readonly IURLGenerator $urls,
 		public readonly \Psr\Container\ContainerInterface $container,
 		public readonly SettingsService $settingsService,
+		public readonly InternalWriteMarker $marker = new InternalWriteMarker(),
 	) {
 
 	}//end __construct()

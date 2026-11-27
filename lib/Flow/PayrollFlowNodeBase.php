@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\Humaniq\Service\SettingsService;
 use Closure;
 use OCA\Humaniq\Support\ConvertsRowsToArrays;
@@ -123,8 +124,17 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 	protected readonly SettingsService $settingsService;
 
 	/**
+	 * The shared marker a node's own writes run under.
+	 *
+	 * @var InternalWriteMarker
+	 */
+	protected readonly InternalWriteMarker $marker;
+
+	/**
 	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
 	 * @param LoggerInterface $logger Logger.
+	 *
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function __construct(
 		PayrollFlowNodeServices $services,
@@ -134,6 +144,7 @@ abstract class PayrollFlowNodeBase implements ICallFlowNode {
 		$this->urls = $services->urls;
 		$this->container = $services->container;
 		$this->settingsService = $services->settingsService;
+		$this->marker = $services->marker;
 
 	}//end __construct()
 

@@ -109,6 +109,7 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	 * @throws RuntimeException When the run is missing, not draft, or the write fails.
 	 *
 	 * @spec openspec/specs/payroll-run-as-a-flow/spec.md#REQ-PRF-003
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function execute(FlowNodeCall $call): array {
 		$items = $call->items;
@@ -136,15 +137,20 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 			$runUpdate = array_merge($run, ['status' => 'approved']);
 			unset($runUpdate['@self']);
 
+			// Under the internal-write marker: this step is the recorded review
+			// decision, which PayrollRunApprovalGuard lets through once the
+			// flow is adopted while it refuses a raw status edit (REQ-PRD-003).
 			try {
-				$this->objectService()->saveObject(
-					object: $runUpdate,
-					options: new ObjectSaveOptions(
-						target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun'),
-						uuid: $runId
-					),
-					_rbac: false,
-					_multitenancy: false
+				$this->marker->runInternal(
+					fn () => $this->objectService()->saveObject(
+						object: $runUpdate,
+						options: new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun'),
+							uuid: $runId
+						),
+						_rbac: false,
+						_multitenancy: false
+					)
 				);
 			} catch (\Throwable $e) {
 				throw new RuntimeException(
