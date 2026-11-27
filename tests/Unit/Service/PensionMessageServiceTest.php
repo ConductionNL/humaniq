@@ -108,6 +108,13 @@ class PensionMessageServiceTest extends TestCase {
 				['payrollRunId' => 'run-06', 'employeeId' => 'e-1', 'grossPay' => 5000.0],
 				['payrollRunId' => 'run-06', 'employeeId' => 'e-2', 'grossPay' => 2000.0],
 				['payrollRunId' => 'run-05', 'employeeId' => 'e-3', 'grossPay' => 9999.0],
+				['payrollRunId' => 'run-06', 'employeeId' => 'e-4', 'grossPay' => 800.0],
+			],
+			'PensionParticipation' => [
+				['employeeId' => 'e-1', 'fund' => 'pfab', 'startDate' => '2026-01-01'],
+				['employeeId' => 'e-2', 'fund' => 'pfab', 'startDate' => '2026-03-01', 'endDate' => '2026-12-31'],
+				['employeeId' => 'e-4', 'fund' => 'pfab', 'startDate' => '2025-01-01', 'endDate' => '2026-05-31'],
+				['employeeId' => 'e-4', 'fund' => 'abp', 'startDate' => '2026-01-01'],
 			],
 			'Employee' => [
 				['id' => 'e-1', 'firstName' => 'Anna', 'lastName' => 'de Vries', 'employeeNumber' => 'N-1'],
@@ -117,6 +124,7 @@ class PensionMessageServiceTest extends TestCase {
 				['id' => 'c-old', 'employeeId' => 'e-1', 'startDate' => '2020-01-01', 'endDate' => '2025-12-31', 'hoursPerWeek' => 8],
 				['id' => 'c-1', 'employeeId' => 'e-1', 'startDate' => '2026-01-01', 'endDate' => '', 'hoursPerWeek' => 40],
 				['id' => 'c-2', 'employeeId' => 'e-2', 'startDate' => '2026-03-01', 'endDate' => '2026-12-31', 'hoursPerWeek' => $secondHours],
+				['id' => 'c-4', 'employeeId' => 'e-4', 'startDate' => '2025-01-01', 'endDate' => '', 'hoursPerWeek' => 0],
 			],
 		];
 	}
@@ -159,6 +167,35 @@ class PensionMessageServiceTest extends TestCase {
 			],
 			$outcome['lines']
 		);
+	}
+
+	/**
+	 * An employee of the run who is not in the fund's scheme in the period is
+	 * left out, so their contract cannot hold the delivery up.
+	 *
+	 * @return void
+	 */
+	public function testAnEmployeeOutsideTheFundsSchemeIsLeftOut(): void {
+		$outcome = $this->service($this->register())->lines(self::FILING);
+
+		$this->assertSame([], $outcome['findings']);
+		$this->assertSame(['e-1', 'e-2'], array_column($outcome['lines'], 'employeeId'));
+	}
+
+	/**
+	 * Without any participation in the fund, the delivery has no lines.
+	 *
+	 * @return void
+	 */
+	public function testAFundWithoutParticipantsHasNoLines(): void {
+		$register = $this->register();
+		$register['PensionParticipation'] = [];
+
+		$outcome = $this->service($register)->lines(self::FILING);
+
+		$this->assertSame('upa', $outcome['messageFormat']);
+		$this->assertSame([], $outcome['lines']);
+		$this->assertSame([], $outcome['findings']);
 	}
 
 	/**

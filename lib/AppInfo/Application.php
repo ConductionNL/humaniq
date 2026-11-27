@@ -48,6 +48,7 @@ use OCA\Humaniq\Lifecycle\LeaveTypeConditionGuard;
 use OCA\Humaniq\Lifecycle\LeaveSettlementPeriodGuard;
 use OCA\Humaniq\Lifecycle\NoSelfApprovalGuard;
 use OCA\Humaniq\Lifecycle\PayrollRunApprovedGuard;
+use OCA\Humaniq\Lifecycle\PensionMessageGuard;
 use OCA\Humaniq\Lifecycle\ReviewSignOffGuard;
 use OCA\Humaniq\Lifecycle\RightToWorkGuard;
 use OCA\Humaniq\Lifecycle\RosterCompetenceGuard;
@@ -342,6 +343,9 @@ class Application extends App implements IBootstrap {
 		$context->registerService(HandoffCloseGuard::class, static fn ($c): HandoffCloseGuard => new HandoffCloseGuard());
 		$context->registerService(UbdReportReadyGuard::class, static fn ($c): UbdReportReadyGuard => new UbdReportReadyGuard());
 		$context->registerService(LoonaangifteMessageGuard::class, static fn ($c): LoonaangifteMessageGuard => new LoonaangifteMessageGuard());
+		// filings-pension-upa-message D3: the PensionFiling `controleren` guard, the
+		// approved-run rule first, then every employee in the fund's scheme reportable.
+		$context->registerService(PensionMessageGuard::class, static fn ($c): PensionMessageGuard => new PensionMessageGuard(runApproved: $c->get(PayrollRunApprovedGuard::class), messages: new \OCA\Humaniq\Service\PensionMessageService(gateway: $c->get(\OCA\Humaniq\Service\RecordStoreInterface::class))));
 		$context->registerService(SurveyOpenGuard::class, static fn ($c): SurveyOpenGuard => new SurveyOpenGuard($c->get(InternalWriteMarker::class)));
 
 		// jurisdiction-packs (design.md D7): the pack resolver spans two homes —
