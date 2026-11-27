@@ -37,6 +37,7 @@
     "OCA\\Humaniq\\Listener\\ManagerAccessOrgChangeListener::$gateway",
     "OCA\\Humaniq\\Listener\\PayrollAdjustmentLineGuard::$gateway",
     "OCA\\Humaniq\\Listener\\PayrollOpeningBalanceUniqueGuard::$gateway",
+    "OCA\\Humaniq\\Listener\\PayrollRunApprovalGuard::$gateway",
     "OCA\\Humaniq\\Listener\\PensionParticipationOverlapListener::$gateway",
     "OCA\\Humaniq\\Listener\\RecurringAllowanceStampListener::$gateway",
     "OCA\\Humaniq\\Listener\\ReferralListener::$gateway",
