@@ -15,6 +15,7 @@ namespace OCA\Humaniq\Tests\Unit\AppInfo;
 
 use OCA\Humaniq\AppInfo\ShellRegistrations;
 use OCA\Humaniq\Listener\PwaHeadListener;
+use OCA\Humaniq\Listener\SetupStatusInitialStateListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use PHPUnit\Framework\TestCase;
@@ -27,8 +28,9 @@ use PHPUnit\Framework\TestCase;
 final class ShellRegistrationsTest extends TestCase {
 
 	/**
-	 * The head link is registered, and without a reachable OpenRegister the
-	 * store stays unbound instead of aborting the app's registration.
+	 * The head link and the setup-status carry (REQ-FTS-008) are registered,
+	 * and without a reachable OpenRegister the store stays unbound instead of
+	 * aborting the app's registration.
 	 *
 	 * @return void
 	 */
@@ -44,6 +46,12 @@ final class ShellRegistrationsTest extends TestCase {
 
 		(new ShellRegistrations())->register($context);
 
-		self::assertSame([[BeforeTemplateRenderedEvent::class, PwaHeadListener::class]], $listeners);
+		self::assertSame(
+			[
+				[BeforeTemplateRenderedEvent::class, PwaHeadListener::class],
+				[BeforeTemplateRenderedEvent::class, SetupStatusInitialStateListener::class],
+			],
+			$listeners
+		);
 	}
 }

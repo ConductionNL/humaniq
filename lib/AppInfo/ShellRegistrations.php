@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Humaniq\AppInfo;
 
 use OCA\Humaniq\Listener\PwaHeadListener;
+use OCA\Humaniq\Listener\SetupStatusInitialStateListener;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
@@ -46,18 +47,22 @@ final class ShellRegistrations {
 	private const APPHOST_BOOTSTRAP = 'OCA\\OpenRegister\\AppHost\\Bootstrap';
 
 	/**
-	 * Register the head link and bind the store controller.
+	 * Register the head link and the setup-status carry, and bind the store controller.
 	 *
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-store-page-shall-install-published-configuration-sets-through-openregister-req-fts-006
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-the-page-carries-the-setup-status-for-an-administrator-req-fts-008
 	 */
 	public function register(IRegistrationContext $context): void {
 		// self-service-mobile (design.md D1): link the web manifest from the
 		// head of humaniq's own pages, so a phone browser offers to install Mijn HR.
 		$context->registerEventListener(BeforeTemplateRenderedEvent::class, PwaHeadListener::class);
+		// ADR-124: an administrator's page carries the setup status, so the
+		// shell asks no endpoint for it (REQ-FTS-008).
+		$context->registerEventListener(BeforeTemplateRenderedEvent::class, SetupStatusInitialStateListener::class);
 
 		$this->bindStoreController(context: $context);
 	}//end register()
