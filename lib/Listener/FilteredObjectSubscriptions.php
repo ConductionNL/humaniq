@@ -46,6 +46,7 @@ final class FilteredObjectSubscriptions {
 	 * @return void
 	 *
 	 * @spec openspec/changes/interview-in-the-interviewers-calendars/specs/interview-scheduling/spec.md#requirement-an-interview-shall-be-a-calendar-event-with-the-interviewers-as-attendees-req-intv-010
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
 	 */
 	public function register(callable $subscribe): void {
 		// An Interview's interviewers are Nextcloud users, checked on every save.
@@ -59,6 +60,12 @@ final class FilteredObjectSubscriptions {
 		// year -- a second would count the previous package's months twice in the annual statement.
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
 			$subscribe(['event' => $event, 'listener' => PayrollOpeningBalanceUniqueGuard::class, 'schemas' => [PayrollOpeningBalanceUniqueGuard::SCHEMA_SLUG]]);
+		}
+
+		// payroll-run-pay-date-and-schedule REQ-PRD-003: once the Loonrun flow is adopted, its
+		// review step is the only approval of a run; a raw status edit out of draft is refused.
+		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
+			$subscribe(['event' => $event, 'listener' => PayrollRunApprovalGuard::class, 'schemas' => [PayrollRunApprovalGuard::SCHEMA_SLUG]]);
 		}
 	}//end register()
 

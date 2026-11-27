@@ -41,9 +41,11 @@ declare(strict_types=1);
 
 namespace OCA\Humaniq\Flow;
 
+use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -65,6 +67,24 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 	 * @var string
 	 */
 	public const OUTCOME_KEY = 'approval';
+
+	/**
+	 * Constructor.
+	 *
+	 * @param PayrollFlowNodeServices $services Translations, icon URL, container and settings.
+	 * @param LoggerInterface         $logger   Logger.
+	 * @param InternalWriteMarker     $marker   The shared marker the approval is written under, so
+	 *                                          the pre-save guard tells this step from a raw edit.
+	 *
+	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 */
+	public function __construct(
+		PayrollFlowNodeServices $services,
+		LoggerInterface $logger,
+		private readonly InternalWriteMarker $marker = new InternalWriteMarker(),
+	) {
+		parent::__construct($services, $logger);
+	}//end __construct()
 
 	/**
 	 * The step type.
@@ -140,17 +160,10 @@ class PayrollApproveNode extends PayrollFlowNodeBase {
 			// Under the internal-write marker: this step is the recorded review
 			// decision, which PayrollRunApprovalGuard lets through once the
 			// flow is adopted while it refuses a raw status edit (REQ-PRD-003).
+			$target = new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun');
 			try {
 				$this->marker->runInternal(
-					fn () => $this->objectService()->saveObject(
-						object: $runUpdate,
-						options: new ObjectSaveOptions(
-							target: new ObjectFindTarget(register: $this->register(), schema: 'PayrollRun'),
-							uuid: $runId
-						),
-						_rbac: false,
-						_multitenancy: false
-					)
+					fn () => $this->objectService()->saveObject(object: $runUpdate, options: new ObjectSaveOptions(target: $target, uuid: $runId), _rbac: false, _multitenancy: false)
 				);
 			} catch (\Throwable $e) {
 				throw new RuntimeException(

@@ -692,13 +692,6 @@ class Application extends App implements IBootstrap {
 			);
 		}
 
-		// payroll-run-pay-date-and-schedule REQ-PRD-003: once the Loonrun flow
-		// is adopted, its review step is the only approval of a run; a raw
-		// status edit out of draft is refused.
-		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $event) {
-			$this->registerFilteredObjectListener(dispatcher: $dispatcher, event: $event, listener: \OCA\Humaniq\Listener\PayrollRunApprovalGuard::class, registers: null, schemas: [\OCA\Humaniq\Listener\PayrollRunApprovalGuard::SCHEMA_SLUG]);
-		}
-
 		// estimate-spent-and-remaining-on-an-hours-leaf REQ-HL-EST-001/-004:
 		// refuse a second estimate for one object and role, and refuse a
 		// booking that would carry an ENFORCED estimate past its ceiling. In

@@ -163,8 +163,9 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 			}
 		};
 		$node = new PayrollApproveNode(
-			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container($objectService), $this->settings(), $marker),
-			$this->logger()
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container($objectService), $this->settings()),
+			$this->logger(),
+			$marker
 		);
 
 		$node->execute(new FlowNodeCall(items: [$this->item(['payroll' => ['runId' => 'run-1']])], config: [], context: []));
