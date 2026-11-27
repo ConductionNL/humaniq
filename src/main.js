@@ -24,7 +24,8 @@ import { registerServiceWorker } from './pwa/registerServiceWorker.js'
 import registry from './registry.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
-import '@conduction/nextcloud-vue/css/index.css'
+// The library stylesheet is linked by templates/index.php (css/nextcloud-vue.css,
+// copied by LibraryStylesheetCopy), not inserted from this bundle as text.
 // gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
 // declares, and its stylesheet is the silent half: humaniq ships two
 // `type: "dashboard"` pages, and gridstack v12 sizes every item with
