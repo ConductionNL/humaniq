@@ -25,6 +25,7 @@ namespace OCA\Humaniq\Tests\Unit\Flow;
 
 use OCA\Humaniq\Flow\PayrollApproveNode;
 use OCA\Humaniq\Flow\PayrollFlowNodeServices;
+use OCA\Humaniq\Service\InternalWriteMarker;
 use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use RuntimeException;
 
@@ -96,6 +97,82 @@ class PayrollApproveNodeTest extends FlowNodeTestCase {
 		);
 		$this->assertSame('approved', $out[0]['json']['approval']['status']);
 	}//end testApprovesDraftRunStatusOnly()
+
+	/**
+	 * The approval is written under the shared internal-write marker, so the
+	 * pre-save guard lets the flow's own step through once the flow is
+	 * adopted, and the marker is released afterwards.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/payroll-run-pay-date-and-schedule/spec.md#REQ-PRD-003
+	 */
+	public function testApprovalIsWrittenUnderTheInternalWriteMarker(): void {
+		$marker = new InternalWriteMarker();
+		$objectService = new class($this->draftRun(), $marker) {
+
+			/**
+			 * Whether each save ran marked.
+			 *
+			 * @var list<bool>
+			 */
+			public array $seen = [];
+
+			/**
+			 * @param array<string, mixed> $run    The stored run.
+			 * @param InternalWriteMarker  $marker The shared marker.
+			 */
+			public function __construct(private array $run, private InternalWriteMarker $marker) {
+			}
+
+			/**
+			 * @param string $register Register slug.
+			 *
+			 * @return self
+			 */
+			public function setRegister(string $register): self {
+				return $this;
+			}
+
+			/**
+			 * @param string $schema Schema name.
+			 *
+			 * @return self
+			 */
+			public function setSchema(string $schema): self {
+				return $this;
+			}
+
+			/**
+			 * @param array<string, mixed> $options The query.
+			 *
+			 * @return list<array<string, mixed>>
+			 */
+			public function findAll(array $options=[]): array {
+				return [$this->run];
+			}
+
+			/**
+			 * @param mixed ...$args The save arguments.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function saveObject(...$args): array {
+				$this->seen[] = $this->marker->isInternal();
+				return $this->run;
+			}
+		};
+		$node = new PayrollApproveNode(
+			new PayrollFlowNodeServices($this->l10n(), $this->urls(), $this->container($objectService), $this->settings()),
+			$this->logger(),
+			$marker
+		);
+
+		$node->execute(new FlowNodeCall(items: [$this->item(['payroll' => ['runId' => 'run-1']])], config: [], context: []));
+
+		$this->assertSame([true], $objectService->seen);
+		$this->assertFalse($marker->isInternal());
+	}//end testApprovalIsWrittenUnderTheInternalWriteMarker()
 
 	/**
 	 * A non-draft run refuses: approved/posted/paid runs are booked truth.

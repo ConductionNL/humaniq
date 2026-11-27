@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
+ * @spec openspec/changes/archive/2026-11-27-payroll-run-pay-date-and-schedule/tasks.md
  */
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ namespace OCA\Humaniq\Service;
 /**
  * Removes one pass-through step from a flow graph and rewires its edges.
  *
- * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
+ * @spec openspec/changes/archive/2026-11-27-payroll-run-pay-date-and-schedule/tasks.md
  */
 class FlowStepSplicer {
 
@@ -48,7 +48,7 @@ class FlowStepSplicer {
 	 *
 	 * @return array{nodes: array<int, mixed>, edges: array<int, mixed>} The graph without the step.
 	 *
-	 * @spec openspec/changes/payroll-run-pay-date-and-schedule/tasks.md
+	 * @spec openspec/changes/archive/2026-11-27-payroll-run-pay-date-and-schedule/tasks.md
 	 */
 	public function withoutStep(array $nodes, array $edges, string $nodeId): array {
 		$outgoing = array_values(

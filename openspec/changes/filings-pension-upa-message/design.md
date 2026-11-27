@@ -54,6 +54,11 @@ factor (`hoursPerWeek / fullTimeHoursWeek`), pension base `max(0, min(wage, max)
 `PensionMessageGuard` on `controleren`, after `PayrollRunApprovedGuard`, renders and
 validates, stores the file and format, or refuses with `messageFindings`.
 
+Built so far: the guard chains `PayrollRunApprovedGuard` and refuses with the findings of
+`PensionMessageService::lines()` while a fund with a scheme has an employee in it who cannot be
+reported. OpenRegister guards are read-only, so storing the file belongs to the render step that
+writes it, with the guard reading what is stored (the `LoonaangifteMessageGuard` precedent).
+
 ## Declarative-vs-imperative decision (ADR-031)
 
 | behaviour | path | why |

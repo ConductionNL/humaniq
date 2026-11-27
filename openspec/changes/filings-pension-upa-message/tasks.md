@@ -13,6 +13,9 @@
 
 - [ ] 2.1 Ship the UPA and APG format schemas for 2026 under `lib/Standards/pension/`. Verify: a
       test loads both.
+      Blocked 2026-11-27: the schemas are third-party files (SIVI's UPA XSD, APG's delivery
+      format for ABP). They have to be obtained from SIVI and APG with their licence terms recorded
+      in a NOTICE, as `lib/Standards/loonaangifte/NOTICE` does; they are not invented here.
 - [x] 2.2 Add `PensionMessageService` with the pension base of design D2. Verify: unit tests for
       a full-timer, a part-timer and a salary above the maximum.
       > `lib/Payroll/Pension/PensionBase.php` (pure; the scheme's yearly franchise and maximum taken
@@ -24,6 +27,18 @@
       validate against the schemas.
 - [ ] 2.4 Add `PensionMessageGuard` on `controleren`. Verify: tests for a stored file and a
       refusal listing an employee without a contract.
+      Partly done, left open on 2.3: `lib/Lifecycle/PensionMessageGuard.php` is the `controleren`
+      guard now. It runs `PayrollRunApprovedGuard` first, then for a fund with a scheme in the
+      period refuses while an employee in the scheme has no contract or no hours per week, and
+      names them (`PensionMessageGuardTest`). `PensionMessageService::lines()` counts only the
+      employees with a `PensionParticipation` in the fund during the period, the spec's "employee
+      in the scheme", so someone outside the fund cannot hold the filing up
+      (`PensionMessageServiceTest`). A fund without a scheme passes as before, since its delivery
+      is still made outside humaniq. Left open: the stored file. OpenRegister guards are read-only,
+      so the file is rendered and stored by the render step (the `LoonaangifteMessageGuard`
+      precedent: render stores, the guard reads), which waits for the builders of 2.3.
+      e2e: `tests/e2e/spec-coverage/filings-pension-upa-message.spec.ts` (refusal and the
+      outside-the-scheme pass; the two delivery scenarios are `test.fixme` until 2.3).
 
 ## 3. Verification
 
